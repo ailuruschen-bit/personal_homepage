@@ -1,0 +1,95 @@
+/* 内容页外壳。深色负责惊艳，浅色负责阅读 */
+.page {
+  position: fixed;
+  inset: 0;
+  overflow-y: auto;
+  background: var(--paper-2);
+  color: var(--ink);
+  animation: page-in var(--dur) var(--ease-out) both;
+}
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.page__bar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px max(24px, calc(50% - 560px));
+  background: color-mix(in srgb, var(--paper) 88%, transparent);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--line);
+}
+.page__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.page__back:hover {
+  color: var(--accent);
+}
+.page__kicker {
+  font-family: var(--font-pixel);
+  font-size: 13px;
+  letter-spacing: 0.14em;
+  color: var(--accent);
+}
+
+.page__body {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: clamp(32px, 6vw, 72px) max(24px, 4vw) 120px;
+}
+.page__title {
+  margin: 0 0 8px;
+  font-size: clamp(30px, 4vw, 44px);
+  font-weight: 900;
+  line-height: 1.25;
+}
+.page__lede {
+  margin: 0 0 40px;
+  max-width: 60ch;
+  color: var(--ink-2);
+  line-height: 1.8;
+}
+
+/* 占位块：正式内容接入后删除 */
+.ph {
+  border: 2px dashed var(--line);
+  background: var(--paper);
+  padding: 20px;
+  margin-bottom: 16px;
+}
+.ph__tag {
+  display: inline-block;
+  margin-bottom: 8px;
+  padding: 2px 8px;
+  background: var(--paper-2);
+  font-family: var(--font-pixel);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+}
+.ph p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.7;
+}

@@ -1,0 +1,25 @@
+/* 全局基础样式 */
+@import './tokens.css';
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: #07060f;
+  overflow: hidden;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  font-family: var(--font-sans);
+  color: var(--ink);
+  background: var(--night);
+}
+#app {
+  height: 100%;
+}
+:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 3px;
+}

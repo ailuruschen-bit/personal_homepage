@@ -1,0 +1,26 @@
+/* 设计变量。改这里就能整体换色，不要在组件里写死颜色 */
+:root {
+  /* 夜车 / 赛博夜景 */
+  --night: #07060f;
+  --night-2: #17153a;
+  --cyan: #5ff2e6;
+  --magenta: #ff6ad5;
+  --amber: #ffd97a;
+
+  /* 内容页（浅色，负责阅读） */
+  --paper: #fdfcff;
+  --paper-2: #f3f0fb;
+  --ink: #2b2540;
+  --ink-2: #3b3552;
+  --muted: #5d5674;
+  --line: #ddd6f0;
+  --accent: #6b52c8;
+  --leica: #e0283a; /* 徕卡红，全站只用在极小面积 */
+
+  --font-sans: 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans', system-ui, sans-serif;
+  --font-pixel: 'DotGothic16', 'Noto Sans SC', monospace;
+
+  --dur-fast: 0.16s;
+  --dur: 0.32s;
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+}

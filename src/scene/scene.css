@@ -1,0 +1,970 @@
+/* ===========================================================================
+   车厢场景样式
+   坐标系：场景是一个 480×480 的正方形，所有静态元素的 left/top/width/height
+   都是该正方形内的百分比。运行时由 scene/units.ts 做场景坐标与屏幕坐标的换算。
+   阶段 class 挂在 .stage 上：intro / idle / back / hub / peek
+   =========================================================================== */
+
+.stage {
+  --u: calc(100vmax/480);
+  --os: 0.42;
+  --oy: calc(5vmax - 50vh);
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  font-family: 'Noto Sans SC', 'PingFang SC', system-ui, sans-serif;
+  color: #2b2540;
+  user-select: none;
+  -webkit-user-select: none;
+}
+@media (orientation: portrait) {
+  .stage {
+    --os: 0.9;
+    --oy: calc(25vmax - 50vh);
+  }
+}
+.ly,
+.room {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+.sky {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    #0b0a1e 0 22%,
+    #131032 22% 40%,
+    #1e1648 40% 55%,
+    #31205e 55% 68%,
+    #4d2a70 68% 80%,
+    #70387c 80%
+  );
+}
+.stars {
+  position: absolute;
+  left: 8%;
+  top: 9%;
+  width: 3px;
+  height: 3px;
+  background: #fff;
+  box-shadow:
+    14vw 6vh 0 #fff,
+    31vw -2vh 0 #cdd8ff,
+    47vw 11vh 0 #fff,
+    62vw 3vh 0 #ffe9a8,
+    78vw 14vh 0 #fff,
+    22vw 20vh 0 #cdd8ff,
+    55vw 24vh 0 #fff,
+    70vw 30vh 0 #cdd8ff,
+    5vw 32vh 0 #fff,
+    88vw 6vh 0 #fff;
+}
+.out {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 100%;
+  transform: translateY(var(--oy)) scale(var(--os));
+}
+.ly {
+  position: absolute;
+  left: -100vw;
+  bottom: 0;
+  height: 384px;
+  width: calc(300vw + 1440px);
+  background-repeat: repeat-x;
+  background-position: left bottom;
+  background-size: auto 384px;
+  will-change: transform;
+}
+.c1 {
+  background-image: url(/assets/c1.png);
+  animation: loop 120s linear infinite;
+}
+.c2 {
+  background-image: url(/assets/c2.png);
+  animation: loop 38s linear infinite;
+}
+.c3 {
+  background-image: url(/assets/c3.png);
+  animation: loop 8s linear infinite;
+}
+.base {
+  position: absolute;
+  top: calc(100% - 2px);
+  left: -100vw;
+  width: 300vw;
+  height: 100vh;
+  background: #17153a;
+}
+.rain2 {
+  position: absolute;
+  inset: -10% 0 0 0;
+  opacity: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    105deg,
+    transparent 0 22px,
+    rgba(190, 225, 255, 0.18) 22px 23.5px,
+    transparent 23.5px 41px
+  );
+  background-size: 164px 100px;
+  animation: rain2 0.45s linear infinite;
+}
+.cam {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 100vmax;
+  height: 100vmax;
+  margin: -50vmax 0 0 -50vmax;
+  transform-origin: 50% 43.71%;
+}
+.sway,
+.scene {
+  position: absolute;
+  inset: 0;
+}
+.sway {
+  animation: sway 1.3s steps(1) infinite;
+}
+.win {
+  position: absolute;
+  left: 31.25%;
+  top: 25.833%;
+  width: 37.5%;
+  height: 29.167%;
+  overflow: hidden;
+  border-radius: calc(var(--u) * 10);
+}
+.glass {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    115deg,
+    transparent 0 30%,
+    rgba(255, 255, 255, 0.07) 30% 36%,
+    transparent 36% 44%,
+    rgba(255, 255, 255, 0.04) 44% 47%,
+    transparent 47%
+  );
+}
+.rain {
+  position: absolute;
+  inset: -20% 0 0 0;
+  background: repeating-linear-gradient(
+    105deg,
+    transparent 0 calc(var(--u) * 9),
+    rgba(190, 225, 255, 0.22) calc(var(--u) * 9) calc(var(--u) * 9.6),
+    transparent calc(var(--u) * 9.6) calc(var(--u) * 17)
+  );
+  background-size: calc(var(--u) * 66) calc(var(--u) * 40);
+  animation: rain 0.5s linear infinite;
+}
+.blinds {
+  position: absolute;
+  inset: 0;
+}
+.blinds i {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 7.3%;
+  background: linear-gradient(
+    to bottom,
+    #e3e0f2 0 18%,
+    #bcb8d6 18% 70%,
+    #8480a6 70% 88%,
+    #3a3658 88%
+  );
+  transform-origin: 50% 0;
+  transform: scaleY(0.16);
+}
+.blinds b {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: calc(var(--u) * 1.5);
+  background: #56527a;
+}
+.pass {
+  position: absolute;
+  inset: 0;
+  mix-blend-mode: screen;
+  opacity: 0.25;
+  background: linear-gradient(
+      100deg,
+      transparent 38%,
+      rgba(95, 242, 230, 0.3) 47%,
+      rgba(255, 106, 213, 0.22) 53%,
+      transparent 62%
+    )
+    0 0/300% 100%;
+  animation: pass 1.5s linear infinite;
+}
+.room {
+  position: absolute;
+  inset: 0;
+  background: url(/assets/room.png) 0 0/100% 100%;
+}
+.glow {
+  position: absolute;
+  border-radius: 50%;
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+.g-lamp {
+  left: 61.25%;
+  top: 18.333%;
+  width: 37.5%;
+  height: 37.5%;
+  background: radial-gradient(
+    rgba(255, 200, 120, 0.42),
+    rgba(255, 180, 90, 0.12) 45%,
+    transparent 68%
+  );
+}
+.g-neon {
+  left: 7.5%;
+  top: 18.75%;
+  width: 25%;
+  height: 41.667%;
+  background: radial-gradient(rgba(255, 106, 213, 0.38), transparent 66%);
+  animation: flick 3.1s steps(1) infinite;
+}
+.g-lap {
+  left: 23.75%;
+  top: 54.583%;
+  width: 29.167%;
+  height: 25%;
+  background: radial-gradient(rgba(110, 200, 255, 0.26), transparent 66%);
+}
+.g-out {
+  left: 10.417%;
+  top: 31.25%;
+  width: 79.167%;
+  height: 54.167%;
+  background: radial-gradient(ellipse, rgba(120, 150, 255, 0.22), transparent 68%);
+}
+.vig {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 50% 42%, transparent 34%, rgba(5, 4, 14, 0.62) 78%);
+}
+.steam {
+  position: absolute;
+  left: 59.167%;
+  top: 67.083%;
+  width: calc(var(--u) * 3);
+  height: calc(var(--u) * 3);
+  background: #fff;
+  opacity: 0;
+  animation: steam 2.6s steps(10) infinite;
+}
+.s2 {
+  animation-delay: 0.9s;
+}
+.s3 {
+  animation-delay: 1.7s;
+}
+.cur {
+  position: absolute;
+  left: 40.833%;
+  top: 69.167%;
+  width: calc(var(--u) * 4);
+  height: calc(var(--u) * 1.4);
+  background: #5ff2e6;
+  animation: blink 1s steps(2) infinite;
+}
+.hs {
+  position: absolute;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: inherit;
+  pointer-events: none;
+  outline: none;
+}
+.hub .hs {
+  pointer-events: auto;
+}
+.look,
+.ow {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 50%;
+  will-change: transform;
+}
+.spot,
+.beam {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  --sx: 50%;
+  --sy: 50%;
+  --rx: 20%;
+  --ry: 20%;
+}
+.spot {
+  background: radial-gradient(
+    ellipse var(--rx) var(--ry) at var(--sx) var(--sy),
+    rgba(5, 4, 14, 0) 0 70%,
+    rgba(5, 4, 14, 0.2) 120%,
+    rgba(5, 4, 14, 0.4) 320%
+  );
+}
+.beam {
+  mix-blend-mode: screen;
+  background: radial-gradient(
+    ellipse var(--rx) var(--ry) at var(--sx) var(--sy),
+    rgba(255, 236, 200, 0.26),
+    rgba(255, 236, 200, 0.12) 58%,
+    transparent 112%
+  );
+}
+.ml {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 9vmax;
+  height: 9vmax;
+  margin: -4.5vmax 0 0 -4.5vmax;
+  pointer-events: none;
+  opacity: 0;
+  mix-blend-mode: screen;
+  will-change: transform;
+  transition: opacity 0.08s;
+}
+.ml i {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: radial-gradient(
+    rgba(255, 246, 226, 0.9),
+    rgba(255, 242, 214, 0.5) 13%,
+    rgba(255, 238, 205, 0.16) 32%,
+    transparent 56%
+  );
+  transition:
+    transform 0.16s cubic-bezier(0.3, 1.5, 0.5, 1),
+    opacity 0.16s;
+}
+.snap .ml i {
+  transform: scale(0.7);
+  opacity: 0.9;
+}
+.cap {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 2.5vh;
+  text-align: center;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(6px);
+  transition:
+    opacity 0.35s,
+    transform 0.35s;
+  color: #f3f0fb;
+  font:
+    22px/1.2 'DotGothic16',
+    'Noto Sans SC',
+    monospace;
+  letter-spacing: 0.3em;
+  text-indent: 0.3em;
+  text-shadow:
+    0 2px 0 rgba(5, 4, 14, 0.8),
+    0 0 18px rgba(5, 4, 14, 0.9);
+}
+.cap small {
+  display: block;
+  margin-top: 8px;
+  font:
+    12px/1 'Noto Sans SC',
+    system-ui,
+    sans-serif;
+  letter-spacing: 0.2em;
+  text-indent: 0.2em;
+  color: #c9c3e6;
+}
+.hub .cap.on {
+  opacity: 1;
+  transform: none;
+}
+.hero {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+.txt {
+  position: absolute;
+  left: max(24px, calc(50% - 560px));
+  top: clamp(90px, 17vh, 160px);
+  right: 24px;
+}
+.txt h1 {
+  margin: 0;
+  font-family: 'DotGothic16', 'Noto Sans SC', monospace;
+  font-weight: 400;
+  font-size: clamp(44px, 6.4vw, 88px);
+  line-height: 1;
+  color: #f3f0fb;
+  text-shadow: 0 4px 0 rgba(11, 10, 30, 0.6);
+}
+.txt p {
+  margin: 18px 0 0;
+  max-width: 520px;
+  font-size: clamp(16px, 1.4vw, 20px);
+  line-height: 1.7;
+  color: #d7dcf5;
+}
+.ghost {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 7vh;
+  pointer-events: none;
+  opacity: 0;
+  transition:
+    transform 0.9s cubic-bezier(0.2, 0.8, 0.2, 1),
+    opacity 0.9s;
+  background: linear-gradient(
+    to bottom,
+    #e3e0f2 0 14%,
+    #bcb8d6 14% 70%,
+    #8480a6 70% 90%,
+    #3a3658 90%
+  );
+}
+.gt {
+  top: 0;
+  transform: translateY(-100%);
+}
+.gb {
+  bottom: 0;
+  transform: translateY(100%);
+}
+.idle.hinted .gt {
+  opacity: 0.5;
+  transform: translateY(-45%);
+}
+.idle.hinted .gb {
+  opacity: 0.5;
+  transform: translateY(45%);
+}
+.hint {
+  position: absolute;
+  left: 50%;
+  bottom: 11vh;
+  transform: translate(-50%, 10px);
+  opacity: 0;
+  transition:
+    opacity 0.6s,
+    transform 0.6s;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+  color: #f3f0fb;
+  font:
+    16px/1 'DotGothic16',
+    'Noto Sans SC',
+    monospace;
+  letter-spacing: 0.08em;
+  background: rgba(20, 18, 48, 0.78);
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  padding: 12px 18px;
+}
+.hint i {
+  font-style: normal;
+  animation: nudge 1.2s steps(2) infinite;
+}
+.idle.hinted .hint {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+.skip,
+.re {
+  min-height: 40px;
+  padding: 0 13px;
+  border: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7);
+  font:
+    13px 'Noto Sans SC',
+    system-ui,
+    sans-serif;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.re {
+  position: absolute;
+  right: 10px;
+  bottom: 8px;
+  display: none;
+  z-index: 9;
+}
+.hub .re {
+  display: block;
+}
+.skip {
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+  display: none;
+  z-index: 9;
+}
+.intro .skip {
+  display: block;
+}
+/* phases */
+.intro .blinds i {
+  animation: tilt 0.62s steps(6) 1s both;
+}
+.intro .pass {
+  animation:
+    pass 1.5s linear infinite,
+    passoff 0.7s 1s both;
+}
+.intro .g-out {
+  animation: fadein 0.9s 1s both;
+}
+.intro .cam,
+.peek .cam {
+  animation: push 1.45s linear 2.05s both;
+}
+.intro .out,
+.peek .out {
+  animation: outgo 1.55s cubic-bezier(0.5, 0, 0.5, 1) 2.05s both;
+}
+.intro .rain2,
+.peek .rain2 {
+  animation:
+    rain2 0.45s linear infinite,
+    fadein 0.7s 3s both;
+}
+.intro .hero,
+.peek .hero {
+  animation: heroin 0.7s 3.75s both;
+}
+.peek .cam {
+  animation-duration: 1.5s;
+  animation-delay: 0s;
+}
+.peek .out {
+  animation-duration: 1.6s;
+  animation-delay: 0s;
+}
+.peek .rain2 {
+  animation-delay: 0s, 0.8s;
+}
+.peek .hero {
+  animation-duration: 0.6s;
+  animation-delay: 1.5s;
+}
+.idle .cam {
+  transform: scale(80);
+  opacity: 0;
+  visibility: hidden;
+}
+.idle .out {
+  transform: none;
+}
+.idle .hero {
+  opacity: 1;
+}
+.idle .rain2 {
+  opacity: 1;
+}
+.idle {
+  cursor: pointer;
+}
+.back .cam {
+  animation: pull 1.4s linear both;
+}
+.back .out {
+  animation: outback 1.4s cubic-bezier(0.3, 0, 0.4, 1) both;
+}
+.back .hero {
+  animation: fadeout 0.3s both;
+}
+.back .rain2 {
+  animation:
+    rain2 0.45s linear infinite,
+    fadeout 0.5s both;
+}
+@keyframes loop {
+  to {
+    transform: translateX(-1440px);
+  }
+}
+@keyframes sway {
+  0%,
+  100% {
+    transform: none;
+  }
+  30% {
+    transform: translateY(calc(var(--u) * 1));
+  }
+  55% {
+    transform: none;
+  }
+  80% {
+    transform: translateX(calc(var(--u) * -1));
+  }
+}
+@keyframes outgo {
+  from {
+    transform: translateY(var(--oy)) scale(var(--os));
+  }
+  to {
+    transform: none;
+  }
+}
+@keyframes outback {
+  from {
+    transform: none;
+  }
+  to {
+    transform: translateY(var(--oy)) scale(var(--os));
+  }
+}
+@keyframes tilt {
+  from {
+    transform: scaleY(1);
+  }
+  to {
+    transform: scaleY(0.16);
+  }
+}
+@keyframes pass {
+  from {
+    background-position: 150% 0;
+  }
+  to {
+    background-position: -50% 0;
+  }
+}
+@keyframes passoff {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0.25;
+  }
+}
+@keyframes rain {
+  to {
+    background-position: calc(var(--u) * -11) calc(var(--u) * 40);
+  }
+}
+@keyframes rain2 {
+  to {
+    background-position: -27px 100px;
+  }
+}
+@keyframes fadein {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes fadeout {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+@keyframes heroin {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes flick {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  43% {
+    opacity: 0.55;
+  }
+  46% {
+    opacity: 1;
+  }
+  71% {
+    opacity: 0.7;
+  }
+  73% {
+    opacity: 1;
+  }
+}
+@keyframes steam {
+  0% {
+    transform: translate(0, 0);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.6;
+  }
+  50% {
+    transform: translate(calc(var(--u) * 3), calc(var(--u) * -16));
+    opacity: 0.4;
+  }
+  100% {
+    transform: translate(calc(var(--u) * -2), calc(var(--u) * -34));
+    opacity: 0;
+  }
+}
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+@keyframes pulse {
+  50% {
+    box-shadow:
+      0 0 0 2px rgba(95, 242, 230, 0.35),
+      0 0 4px 0 rgba(95, 242, 230, 0.2);
+  }
+}
+@keyframes nudge {
+  50% {
+    transform: translateY(3px);
+  }
+}
+.ext {
+  position: absolute;
+  pointer-events: none;
+}
+.ext.l,
+.ext.r {
+  top: -60%;
+  height: 220%;
+  width: 100%;
+  background:
+    linear-gradient(rgba(5, 4, 14, 0.45), rgba(5, 4, 14, 0.45)),
+    linear-gradient(
+      to bottom,
+      #161a2e 0 32.76%,
+      #20263e 32.76% 55.3%,
+      #5ff2e6 55.3% 55.48%,
+      #39446a 55.68% 56.44%,
+      #1a1f34 56.44% 68.94%,
+      #12152a 68.94%
+    );
+}
+.ext.l {
+  right: 99.9%;
+}
+.ext.r {
+  left: 99.9%;
+}
+.ext.t {
+  left: 0;
+  width: 100%;
+  bottom: 99.9%;
+  height: 60%;
+  background: #0e1120;
+}
+.ext.b {
+  left: 0;
+  width: 100%;
+  top: 99.9%;
+  height: 60%;
+  background: #0b0d1c;
+}
+.pop {
+  position: absolute;
+  background-image: url(/assets/room.png);
+  image-rendering: pixelated;
+  pointer-events: none;
+  transform-origin: 50% 85%;
+  transition:
+    transform 0.2s cubic-bezier(0.3, 1.9, 0.5, 1),
+    filter 0.1s;
+}
+.hub:not(.snap) .pop {
+  animation: glint 5s ease-in-out infinite;
+}
+.hub .pop.on {
+  animation: none;
+  transform: translateY(calc(var(--u) * -1.5)) scale(1.07);
+  filter: brightness(1.3) saturate(1.1)
+    drop-shadow(0 calc(var(--u) * 2.5) calc(var(--u) * 2) rgba(5, 4, 14, 0.55));
+}
+@keyframes glint {
+  0%,
+  76%,
+  100% {
+    filter: brightness(1);
+  }
+  86% {
+    filter: brightness(1.45);
+  }
+}
+.hub.snap {
+  cursor: pointer;
+}
+@keyframes push {
+  0.00% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  6.19% {
+    transform: scale(1.016);
+    opacity: 1;
+  }
+  12.38% {
+    transform: scale(1.046);
+    opacity: 1;
+  }
+  18.56% {
+    transform: scale(1.087);
+    opacity: 1;
+  }
+  24.75% {
+    transform: scale(1.141);
+    opacity: 1;
+  }
+  30.94% {
+    transform: scale(1.208);
+    opacity: 1;
+  }
+  37.12% {
+    transform: scale(1.293);
+    opacity: 1;
+  }
+  43.31% {
+    transform: scale(1.4);
+    opacity: 1;
+  }
+  49.50% {
+    transform: scale(1.536);
+    opacity: 1;
+  }
+  55.69% {
+    transform: scale(1.714);
+    opacity: 1;
+  }
+  61.88% {
+    transform: scale(1.953);
+    opacity: 1;
+  }
+  68.06% {
+    transform: scale(2.288);
+    opacity: 1;
+  }
+  74.25% {
+    transform: scale(2.789);
+    opacity: 1;
+  }
+  80.44% {
+    transform: scale(3.613);
+    opacity: 1;
+  }
+  86.62% {
+    transform: scale(5.215);
+    opacity: 1;
+  }
+  92.81% {
+    transform: scale(9.651);
+    opacity: 1;
+  }
+  99.00% {
+    transform: scale(80);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(80);
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+@keyframes pull {
+  0% {
+    transform: scale(80);
+    opacity: 0;
+  }
+  1.00% {
+    transform: scale(80);
+    opacity: 1;
+  }
+  7.19% {
+    transform: scale(9.651);
+    opacity: 1;
+  }
+  13.38% {
+    transform: scale(5.215);
+    opacity: 1;
+  }
+  19.56% {
+    transform: scale(3.613);
+    opacity: 1;
+  }
+  25.75% {
+    transform: scale(2.789);
+    opacity: 1;
+  }
+  31.94% {
+    transform: scale(2.288);
+    opacity: 1;
+  }
+  38.12% {
+    transform: scale(1.953);
+    opacity: 1;
+  }
+  44.31% {
+    transform: scale(1.714);
+    opacity: 1;
+  }
+  50.50% {
+    transform: scale(1.536);
+    opacity: 1;
+  }
+  56.69% {
+    transform: scale(1.4);
+    opacity: 1;
+  }
+  62.88% {
+    transform: scale(1.293);
+    opacity: 1;
+  }
+  69.06% {
+    transform: scale(1.208);
+    opacity: 1;
+  }
+  75.25% {
+    transform: scale(1.141);
+    opacity: 1;
+  }
+  81.44% {
+    transform: scale(1.087);
+    opacity: 1;
+  }
+  87.62% {
+    transform: scale(1.046);
+    opacity: 1;
+  }
+  93.81% {
+    transform: scale(1.016);
+    opacity: 1;
+  }
+  100.00% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
