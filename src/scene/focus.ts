@@ -1,4 +1,5 @@
 import type { SceneEls } from './dom';
+import type { Phase } from './opening';
 import { hotspotByTarget, hotspots, nearestHotspot, zoneDistance } from './hotspots';
 import { toScene, toScreen, unitSize, type Camera, type ScenePoint } from './units';
 
@@ -10,12 +11,14 @@ const PULL_RANGE = 78;
 const PULL_MAX = 0.42;
 /** 距离变化超过这个量才算「在移动」，用来忽略抖动 */
 const DIRECTION_EPSILON = 1.2;
+/** .cam 的缩放原点（scene.css 里的 transform-origin: 50% 43.71%）对应的场景 y */
+const CAM_ORIGIN_Y = 480 * 0.4371;
 /** 自由状态下光池的半径（场景单位），吸附动画从这个大小展开 */
 const FREE_RADIUS = 30;
 
 /** 各项指数平滑的时间常数（秒），越小越跟手 */
 const TAU = {
-  camera: 0.45,
+  camera: 0.34,
   parallax: 0.09,
   pull: 0.07,
   poolMove: 0.045,
@@ -38,6 +41,10 @@ export class FocusEngine {
   private focus: string | null = null;
   private pointer: { x: number; y: number } | null = null;
   private camera: Camera = { z: 1, by: 0, px: 0, py: 0 };
+  private outside = { x: 0, y: 0 };
+  private frameKey = '';
+  private lookTransform = '';
+  private lastPhase: Phase | null = null;
   /** 物件上的光池 */
   private pool = { x: 240, y: 240, rx: FREE_RADIUS, ry: FREE_RADIUS, alpha: 0, dim: 0 };
   /** 光点（跟随指针）所在的场景坐标，光池从这里展开 */
@@ -51,7 +58,7 @@ export class FocusEngine {
 
   constructor(
     private readonly els: SceneEls,
-    private readonly isActive: () => boolean,
+    private readonly phase: () => Phase,
     private readonly labelOf: (target: string) => string,
   ) {}
 
@@ -75,6 +82,11 @@ export class FocusEngine {
     this.pointer = { x, y };
     this.setFocus(this.resolveFocus(toScene(x, y, this.camera)));
     this.placeLight();
+  }
+
+  /** 只记录指针位置，不做聚焦判定（主菜单以外的阶段用，给视差提前就位） */
+  trackPointer(x: number, y: number) {
+    this.pointer = { x, y };
   }
 
   clearPointer() {
@@ -172,9 +184,10 @@ export class FocusEngine {
   private tick(now: number) {
     const dt = Math.min(0.05, (now - this.lastFrame) / 1000 || 0.016);
     this.lastFrame = now;
-    const active = this.isActive();
+    const active = this.phase() === 'hub';
 
-    this.updateCamera(dt, active);
+    this.syncFrame();
+    this.updateParallax(dt);
 
     this.pull += (this.pullTarget - this.pull) * smoothing(dt, TAU.pull);
     if (active && this.pointer) this.placeLight();
@@ -183,28 +196,64 @@ export class FocusEngine {
     this.updatePool(dt, active);
   }
 
-  /** 主菜单下略微拉远，让行李架到桌面都在一屏内；之后只有几像素视差 */
-  private updateCamera(dt: number, active: boolean) {
+  /**
+   * 主菜单的构图：略微拉远，让行李架到桌面都在一屏内。
+   *
+   * 构图不由这里逐帧驱动，而是写进 .stage 的 --fz / --fy，交给 .cam 的 CSS 使用：
+   * 回程动画直接落在这个构图上，跳过开幕时由 CSS 过渡补间。开幕阶段保持原始的近景。
+   */
+  syncFrame() {
     const vw = window.innerWidth;
     const vh = window.innerHeight;
     const u = unitSize();
+    const framed = this.phase() !== 'intro';
 
-    const zoom = active ? clamp(Math.min(vw / (u * 300), vh / (u * 335)), 0.72, 1) : 1;
-    const baseY = active ? (240 - 216) * u * zoom : 0;
-    const parallaxX = active && this.pointer ? -(this.pointer.x - vw / 2) * 0.02 : 0;
-    const parallaxY = active && this.pointer ? -(this.pointer.y - vh / 2) * 0.02 : 0;
+    const zoom = framed ? clamp(Math.min(vw / (u * 300), vh / (u * 335)), 0.72, 1) : 1;
+    const baseY = framed ? (240 - 216) * u * zoom : 0;
+    this.camera.z = zoom;
+    this.camera.by = baseY;
 
+    // .cam 的缩放原点在窗缝处而不是画面中心，换算成等价的位移
+    const shift = baseY + (240 - CAM_ORIGIN_Y) * u * (1 - zoom);
+    const key = `${zoom.toFixed(4)},${shift.toFixed(2)}`;
+    if (key === this.frameKey) return;
+    this.frameKey = key;
+    this.els.stage.style.setProperty('--fz', zoom.toFixed(4));
+    this.els.stage.style.setProperty('--fy', `${shift.toFixed(2)}px`);
+  }
+
+  /** 跟随指针的几像素视差：车厢动得多，窗外动得少 */
+  private updateParallax(dt: number) {
+    const phase = this.phase();
+    const seated = phase === 'hub' || phase === 'back';
     const c = this.camera;
-    const slow = smoothing(dt, TAU.camera);
-    const fast = smoothing(dt, TAU.parallax);
-    c.z += (zoom - c.z) * slow;
-    c.by += (baseY - c.by) * slow;
-    c.px += (parallaxX - c.px) * fast;
-    c.py += (parallaxY - c.py) * fast;
+    const tx = seated && this.pointer ? -(this.pointer.x - window.innerWidth / 2) * 0.02 : 0;
+    const ty = seated && this.pointer ? -(this.pointer.y - window.innerHeight / 2) * 0.02 : 0;
 
-    this.els.look.style.transform = `translate3d(${c.px.toFixed(2)}px,${(c.by + c.py).toFixed(2)}px,0) scale(${c.z.toFixed(4)})`;
-    // 窗外移动得比车厢少，形成前后层次
-    this.els.ow.style.transform = `translate3d(${(c.px * 0.5).toFixed(2)}px,${(c.by * 0.35 + c.py * 0.5).toFixed(2)}px,0)`;
+    // .look 只在主菜单里逐帧更新（那时它是独立的合成层）。
+    // 镜头还在推拉时改它会让整个车厢逐帧重绘，所以其余阶段只在看不见的时候一步到位：
+    // 回程开始的那一帧对准指针，看向窗外时保持不动，其余归零。
+    if (phase === 'hub') {
+      const fast = smoothing(dt, TAU.parallax);
+      c.px += (tx - c.px) * fast;
+      c.py += (ty - c.py) * fast;
+    } else if (phase === 'back' ? phase !== this.lastPhase : phase !== 'peek') {
+      c.px = tx;
+      c.py = ty;
+    }
+    this.lastPhase = phase;
+    const look = `translate3d(${c.px.toFixed(2)}px,${c.py.toFixed(2)}px,0)`;
+    if (look !== this.lookTransform) {
+      this.lookTransform = look;
+      this.els.look.style.transform = look;
+    }
+
+    // 窗外一直可见，位移始终平滑过渡
+    const slow = smoothing(dt, TAU.camera);
+    const o = this.outside;
+    o.x += (tx * 0.5 - o.x) * slow;
+    o.y += ((seated ? c.by * 0.35 : 0) + ty * 0.5 - o.y) * slow;
+    this.els.ow.style.transform = `translate3d(${o.x.toFixed(2)}px,${o.y.toFixed(2)}px,0)`;
   }
 
   private updatePool(dt: number, active: boolean) {

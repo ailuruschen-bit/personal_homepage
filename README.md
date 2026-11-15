@@ -23,7 +23,8 @@ npm run format   # Prettier 格式化
 ## 目录
 
 ```
-public/assets/        像素素材（PNG，nearest 放大，勿压缩重采样）
+public/assets/        场景素材（WebP，由脚本生成，勿手工改）
+tools/art/            生成上述素材的脚本（Python）
 src/
   main.ts             入口：按路由渲染场景或板块页
   router.ts           hash 路由
@@ -44,6 +45,27 @@ src/
     tokens.css        颜色、字体、动效变量  ← 换色改这里
     base.css
 ```
+
+## 素材
+
+`public/assets/` 里的场景图（天空、三层城市、车厢）都由 `tools/art/` 的脚本生成，
+不是手工导出的。改画面就改脚本，然后重新生成：
+
+```bash
+pip install pillow numpy scipy
+python3 tools/art/build.py
+```
+
+- `street.py` / `city.py` 中景：霓虹街区 + 一段破败街区（`c2.webp`，长图循环）
+- `far.py` 远景天际线 `c1.webp`、轨旁设施 `c3.webp`、天空 `sky.webp`
+- `room.py` 车厢 `room.webp` 及左右延伸段 `room-l.webp` / `room-r.webp`
+- `px.py` / `parts.py` 画布、打光与各种零件
+
+素材按 1 倍的像素坐标来画，输出时放大到 2 倍：固有色用 EPX 算法削掉斜线上的阶梯，
+光照和辉光直接在 2 倍分辨率上计算。倍率在 `build.py` 的 `px.SCALE`。
+
+车厢里可聚焦物件的位置要和 `src/scene/hotspots.ts` 对得上；城市素材的尺寸变了，
+要同步改 `scene.css` 里 `.ly` 的高度和各层的 `--tile`。
 
 ## 几个关键设计
 
@@ -66,5 +88,4 @@ TS 只切 class。想调开幕节奏，改 CSS 里 `.intro .xxx` 那几行的 du
 - [ ] 对话板块与机器可读入口
 - [ ] 回访者跳过开幕（目前只在单次访问内记住）
 - [ ] 移动端真机验证：触摸是「点一下聚焦、再点进入」
-- [ ] 车厢拉远后两侧露出的墙面是临时色块，需要补画
 - [ ] 多语言

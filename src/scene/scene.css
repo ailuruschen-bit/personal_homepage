@@ -11,7 +11,8 @@
   --oy: calc(5vmax - 50vh);
   position: fixed;
   inset: 0;
-  overflow: hidden;
+  /* clip 而非 hidden：hidden 的容器仍可被焦点、scrollIntoView 滚动，场景会整体偏移 */
+  overflow: clip;
   font-family: 'Noto Sans SC', 'PingFang SC', system-ui, sans-serif;
   color: #2b2540;
   user-select: none;
@@ -23,42 +24,15 @@
     --oy: calc(25vmax - 50vh);
   }
 }
-.ly,
-.room {
-  image-rendering: pixelated;
-  image-rendering: crisp-edges;
-}
+/* 明确的绘制顺序。
+   窗外的城市、车厢、颗粒都会被 Chrome 提升成各自的合成层，层数一多，
+   仅凭 DOM 顺序推断出的叠放次序会在动画切换时排错——窗外的景色会盖到车厢上面并闪烁。
+   写死 z-index 后次序就没有推断的余地了。 */
 .sky {
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    to bottom,
-    #0b0a1e 0 22%,
-    #131032 22% 40%,
-    #1e1648 40% 55%,
-    #31205e 55% 68%,
-    #4d2a70 68% 80%,
-    #70387c 80%
-  );
-}
-.stars {
-  position: absolute;
-  left: 8%;
-  top: 9%;
-  width: 3px;
-  height: 3px;
-  background: #fff;
-  box-shadow:
-    14vw 6vh 0 #fff,
-    31vw -2vh 0 #cdd8ff,
-    47vw 11vh 0 #fff,
-    62vw 3vh 0 #ffe9a8,
-    78vw 14vh 0 #fff,
-    22vw 20vh 0 #cdd8ff,
-    55vw 24vh 0 #fff,
-    70vw 30vh 0 #cdd8ff,
-    5vw 32vh 0 #fff,
-    88vw 6vh 0 #fff;
+  z-index: 0;
+  background: #0a0920 url(/assets/sky.webp) center bottom / cover no-repeat;
 }
 .out {
   position: absolute;
@@ -68,25 +42,30 @@
 }
 .ly {
   position: absolute;
-  left: -100vw;
+  left: -25vw;
   bottom: 0;
-  height: 384px;
-  width: calc(300vw + 1440px);
+  /* 素材高 640 像素，按 1:1 显示；--tile 是这一层素材的显示宽度，也是循环的位移。
+     宽度要够：缩到 --os 看窗外时盖住车窗，放到原大时盖住整个视口，再加一个 --tile 给循环走。 */
+  height: 640px;
+  width: calc(150vw + var(--tile));
   background-repeat: repeat-x;
   background-position: left bottom;
-  background-size: auto 384px;
+  background-size: auto 640px;
   will-change: transform;
 }
 .c1 {
-  background-image: url(/assets/c1.png);
+  --tile: 1440px;
+  background-image: url(/assets/c1.webp);
   animation: loop 120s linear infinite;
 }
 .c2 {
-  background-image: url(/assets/c2.png);
-  animation: loop 38s linear infinite;
+  --tile: 4320px;
+  background-image: url(/assets/c2.webp);
+  animation: loop 114s linear infinite;
 }
 .c3 {
-  background-image: url(/assets/c3.png);
+  --tile: 1440px;
+  background-image: url(/assets/c3.webp);
   animation: loop 8s linear infinite;
 }
 .base {
@@ -95,17 +74,18 @@
   left: -100vw;
   width: 300vw;
   height: 100vh;
-  background: #17153a;
+  background: #14142b;
 }
 .rain2 {
   position: absolute;
+  z-index: 2;
   inset: -10% 0 0 0;
   opacity: 0;
   pointer-events: none;
   background: repeating-linear-gradient(
     105deg,
     transparent 0 22px,
-    rgba(190, 225, 255, 0.18) 22px 23.5px,
+    rgba(190, 225, 255, 0.11) 22px 23.5px,
     transparent 23.5px 41px
   );
   background-size: 164px 100px;
@@ -113,12 +93,20 @@
 }
 .cam {
   position: absolute;
+  z-index: 3;
   left: 50%;
   top: 50%;
   width: 100vmax;
   height: 100vmax;
   margin: -50vmax 0 0 -50vmax;
+  /* 缩放原点落在两片百叶之间，镜头从这道缝穿出去。改它要同步 focus.ts 的 CAM_ORIGIN_Y */
   transform-origin: 50% 43.71%;
+  /* --fz / --fy 是主菜单的构图（缩放与位移），由 focus.ts 写在 .stage 上；开幕阶段为 1 / 0 */
+  transform: translateY(var(--fy, 0px)) scale(var(--fz, 1));
+}
+.hub .cam {
+  /* 窗口尺寸变化时，构图平滑过渡 */
+  transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .sway,
 .scene {
@@ -127,6 +115,15 @@
 }
 .sway {
   animation: sway 1.3s steps(1) infinite;
+}
+/* 镜头被放大的阶段（待机、回程）停掉车厢里所有循环动画，.look 也不单独成层。
+   Chrome 对「自身在做变换动画」或带 will-change 的合成层只会调高光栅倍率、不会调回来：
+   这些层一旦在放大状态下存在过，回到车厢后就停在数倍的分辨率上，
+   窗内逐帧重绘的雨丝和反光跟不上，表现为百叶、玻璃消失。
+   让它们在落座那一刻才重新出现，就始终按 1 倍创建。 */
+.idle .cam *,
+.back .cam * {
+  animation: none !important;
 }
 .win {
   position: absolute;
@@ -155,7 +152,7 @@
   background: repeating-linear-gradient(
     105deg,
     transparent 0 calc(var(--u) * 9),
-    rgba(190, 225, 255, 0.22) calc(var(--u) * 9) calc(var(--u) * 9.6),
+    rgba(190, 225, 255, 0.16) calc(var(--u) * 9) calc(var(--u) * 9.6),
     transparent calc(var(--u) * 9.6) calc(var(--u) * 17)
   );
   background-size: calc(var(--u) * 66) calc(var(--u) * 40);
@@ -205,7 +202,7 @@
 .room {
   position: absolute;
   inset: 0;
-  background: url(/assets/room.png) 0 0/100% 100%;
+  background: url(/assets/room.webp) 0 0/100% 100%;
 }
 .glow {
   position: absolute;
@@ -219,8 +216,8 @@
   width: 37.5%;
   height: 37.5%;
   background: radial-gradient(
-    rgba(255, 200, 120, 0.42),
-    rgba(255, 180, 90, 0.12) 45%,
+    rgba(255, 200, 120, 0.2),
+    rgba(255, 180, 90, 0.06) 45%,
     transparent 68%
   );
 }
@@ -229,7 +226,7 @@
   top: 18.75%;
   width: 25%;
   height: 41.667%;
-  background: radial-gradient(rgba(255, 106, 213, 0.38), transparent 66%);
+  background: radial-gradient(rgba(255, 106, 213, 0.24), transparent 66%);
   animation: flick 3.1s steps(1) infinite;
 }
 .g-lap {
@@ -237,20 +234,20 @@
   top: 54.583%;
   width: 29.167%;
   height: 25%;
-  background: radial-gradient(rgba(110, 200, 255, 0.26), transparent 66%);
+  background: radial-gradient(rgba(110, 200, 255, 0.14), transparent 66%);
 }
 .g-out {
   left: 10.417%;
   top: 31.25%;
   width: 79.167%;
   height: 54.167%;
-  background: radial-gradient(ellipse, rgba(120, 150, 255, 0.22), transparent 68%);
+  background: radial-gradient(ellipse, rgba(120, 150, 255, 0.14), transparent 68%);
 }
 .vig {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: radial-gradient(ellipse at 50% 42%, transparent 34%, rgba(5, 4, 14, 0.62) 78%);
+  background: radial-gradient(ellipse at 50% 42%, transparent 38%, rgba(5, 4, 14, 0.5) 82%);
 }
 .steam {
   position: absolute;
@@ -289,11 +286,17 @@
 .hub .hs {
   pointer-events: auto;
 }
+.ow {
+  z-index: 1;
+}
 .look,
 .ow {
   position: absolute;
   inset: 0;
   transform-origin: 50% 50%;
+}
+.ow,
+.hub .look {
   will-change: transform;
 }
 .spot,
@@ -326,6 +329,7 @@
 }
 .ml {
   position: absolute;
+  z-index: 8;
   left: 0;
   top: 0;
   width: 9vmax;
@@ -358,6 +362,7 @@
 }
 .cap {
   position: absolute;
+  z-index: 8;
   left: 0;
   right: 0;
   bottom: 2.5vh;
@@ -396,9 +401,17 @@
 }
 .hero {
   position: absolute;
+  z-index: 4;
   inset: 0;
   opacity: 0;
   pointer-events: none;
+  /* 标题压在楼群上：左上角垫一层暗色，保证可读 */
+  background: linear-gradient(
+    115deg,
+    rgba(8, 7, 24, 0.62) 0%,
+    rgba(8, 7, 24, 0.3) 34%,
+    transparent 58%
+  );
 }
 .txt {
   position: absolute;
@@ -413,7 +426,12 @@
   font-size: clamp(44px, 6.4vw, 88px);
   line-height: 1;
   color: #f3f0fb;
-  text-shadow: 0 4px 0 rgba(11, 10, 30, 0.6);
+  /* 青/品红错位描边：霓虹灯牌的色散感 */
+  text-shadow:
+    -2px 0 0 rgba(64, 226, 255, 0.55),
+    2px 0 0 rgba(255, 64, 178, 0.55),
+    0 4px 0 rgba(11, 10, 30, 0.7),
+    0 0 28px rgba(255, 64, 178, 0.28);
 }
 .txt p {
   margin: 18px 0 0;
@@ -421,9 +439,11 @@
   font-size: clamp(16px, 1.4vw, 20px);
   line-height: 1.7;
   color: #d7dcf5;
+  text-shadow: 0 1px 0 rgba(8, 7, 24, 0.8);
 }
 .ghost {
   position: absolute;
+  z-index: 5;
   left: 0;
   right: 0;
   height: 7vh;
@@ -458,6 +478,7 @@
 }
 .hint {
   position: absolute;
+  z-index: 8;
   left: 50%;
   bottom: 11vh;
   transform: translate(-50%, 10px);
@@ -512,6 +533,58 @@
 .hub .re {
   display: block;
 }
+/* 全画面的暗角与胶片颗粒：压在场景之上、按钮和文字提示之下 */
+.lens {
+  position: absolute;
+  z-index: 6;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 50% 46%, transparent 52%, rgba(5, 4, 14, 0.42) 100%);
+}
+.grain {
+  position: absolute;
+  z-index: 7;
+  inset: -192px;
+  pointer-events: none;
+  background: url(/assets/grain.png) 0 0/192px 192px;
+  /* 不用 mix-blend-mode：那会逼着 Chrome 每帧把下面所有层先合成成一张底图再混合，
+     正是动画最密集的时候，层的排序和光栅最容易出问题。黑白点直接叠加也够看。 */
+  opacity: 0.5;
+  will-change: transform;
+  /* 每 80ms 换一个位置，颗粒看起来在跳动 */
+  animation: grain 0.64s steps(1) infinite;
+}
+@keyframes grain {
+  0% {
+    transform: translate(0, 0);
+  }
+  12.5% {
+    transform: translate(-61px, 37px);
+  }
+  25% {
+    transform: translate(43px, -89px);
+  }
+  37.5% {
+    transform: translate(-113px, -23px);
+  }
+  50% {
+    transform: translate(71px, 101px);
+  }
+  62.5% {
+    transform: translate(-17px, -131px);
+  }
+  75% {
+    transform: translate(127px, 53px);
+  }
+  87.5% {
+    transform: translate(-83px, 139px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .grain {
+    animation: none;
+  }
+}
 .skip {
   position: absolute;
   right: 14px;
@@ -522,53 +595,51 @@
 .intro .skip {
   display: block;
 }
-/* phases */
+/* phases
+   开幕时间线：0.7s 叶片翻开 → 1.4s 镜头推进（1.4s）→ 2.85s 标题浮现 → 3.45s 待机 */
 .intro .blinds i {
-  animation: tilt 0.62s steps(6) 1s both;
+  animation: tilt 0.55s steps(6) 0.7s both;
 }
 .intro .pass {
   animation:
     pass 1.5s linear infinite,
-    passoff 0.7s 1s both;
+    passoff 0.6s 0.7s both;
 }
 .intro .g-out {
-  animation: fadein 0.9s 1s both;
+  animation: fadein 0.8s 0.7s both;
 }
 .intro .cam,
 .peek .cam {
-  animation: push 1.45s linear 2.05s both;
+  animation: push 1.4s linear 1.4s both;
 }
 .intro .out,
 .peek .out {
-  animation: outgo 1.55s cubic-bezier(0.5, 0, 0.5, 1) 2.05s both;
+  animation: outgo 1.4s linear 1.4s both;
 }
 .intro .rain2,
 .peek .rain2 {
   animation:
     rain2 0.45s linear infinite,
-    fadein 0.7s 3s both;
+    fadein 0.6s 2.1s both;
 }
 .intro .hero,
 .peek .hero {
-  animation: heroin 0.7s 3.75s both;
+  animation: heroin 0.6s 2.85s both;
 }
-.peek .cam {
-  animation-duration: 1.5s;
-  animation-delay: 0s;
-}
+.peek .cam,
 .peek .out {
-  animation-duration: 1.6s;
+  animation-duration: 1.3s;
   animation-delay: 0s;
 }
 .peek .rain2 {
-  animation-delay: 0s, 0.8s;
+  animation-delay: 0s, 0.6s;
 }
 .peek .hero {
-  animation-duration: 0.6s;
-  animation-delay: 1.5s;
+  animation-duration: 0.5s;
+  animation-delay: 1.25s;
 }
 .idle .cam {
-  transform: scale(80);
+  transform: translateY(0px) scale(calc(var(--fz, 1) * 6.5));
   opacity: 0;
   visibility: hidden;
 }
@@ -585,13 +656,17 @@
   cursor: pointer;
 }
 .back .cam {
-  animation: pull 1.4s linear both;
+  animation: push 1.2s linear both reverse;
 }
 .back .out {
-  animation: outback 1.4s cubic-bezier(0.3, 0, 0.4, 1) both;
+  animation: outgo 1.2s linear both reverse;
 }
 .back .hero {
   animation: fadeout 0.3s both;
+}
+.hub .rain2 {
+  /* 主菜单里它完全透明，动画只是白费重绘 */
+  animation: none;
 }
 .back .rain2 {
   animation:
@@ -600,7 +675,7 @@
 }
 @keyframes loop {
   to {
-    transform: translateX(-1440px);
+    transform: translateX(calc(var(--tile) * -1));
   }
 }
 @keyframes sway {
@@ -619,19 +694,96 @@
   }
 }
 @keyframes outgo {
-  from {
+  0% {
     transform: translateY(var(--oy)) scale(var(--os));
   }
-  to {
-    transform: none;
+  4.17% {
+    transform: translateY(calc(var(--oy) * 0.9957))
+      scale(calc(var(--os) + (1 - var(--os)) * 0.0043));
   }
-}
-@keyframes outback {
-  from {
-    transform: none;
+  8.33% {
+    transform: translateY(calc(var(--oy) * 0.983)) scale(calc(var(--os) + (1 - var(--os)) * 0.017));
   }
-  to {
-    transform: translateY(var(--oy)) scale(var(--os));
+  12.5% {
+    transform: translateY(calc(var(--oy) * 0.9619))
+      scale(calc(var(--os) + (1 - var(--os)) * 0.0381));
+  }
+  16.67% {
+    transform: translateY(calc(var(--oy) * 0.933)) scale(calc(var(--os) + (1 - var(--os)) * 0.067));
+  }
+  20.83% {
+    transform: translateY(calc(var(--oy) * 0.8967))
+      scale(calc(var(--os) + (1 - var(--os)) * 0.1033));
+  }
+  25% {
+    transform: translateY(calc(var(--oy) * 0.8536))
+      scale(calc(var(--os) + (1 - var(--os)) * 0.1464));
+  }
+  29.17% {
+    transform: translateY(calc(var(--oy) * 0.8044))
+      scale(calc(var(--os) + (1 - var(--os)) * 0.1956));
+  }
+  33.33% {
+    transform: translateY(calc(var(--oy) * 0.75)) scale(calc(var(--os) + (1 - var(--os)) * 0.25));
+  }
+  37.5% {
+    transform: translateY(calc(var(--oy) * 0.6913))
+      scale(calc(var(--os) + (1 - var(--os)) * 0.3087));
+  }
+  41.67% {
+    transform: translateY(calc(var(--oy) * 0.6294))
+      scale(calc(var(--os) + (1 - var(--os)) * 0.3706));
+  }
+  45.83% {
+    transform: translateY(calc(var(--oy) * 0.5653))
+      scale(calc(var(--os) + (1 - var(--os)) * 0.4347));
+  }
+  50% {
+    transform: translateY(calc(var(--oy) * 0.5)) scale(calc(var(--os) + (1 - var(--os)) * 0.5));
+  }
+  54.17% {
+    transform: translateY(calc(var(--oy) * 0.4347))
+      scale(calc(var(--os) + (1 - var(--os)) * 0.5653));
+  }
+  58.33% {
+    transform: translateY(calc(var(--oy) * 0.3706))
+      scale(calc(var(--os) + (1 - var(--os)) * 0.6294));
+  }
+  62.5% {
+    transform: translateY(calc(var(--oy) * 0.3087))
+      scale(calc(var(--os) + (1 - var(--os)) * 0.6913));
+  }
+  66.67% {
+    transform: translateY(calc(var(--oy) * 0.25)) scale(calc(var(--os) + (1 - var(--os)) * 0.75));
+  }
+  70.83% {
+    transform: translateY(calc(var(--oy) * 0.1956))
+      scale(calc(var(--os) + (1 - var(--os)) * 0.8044));
+  }
+  75% {
+    transform: translateY(calc(var(--oy) * 0.1464))
+      scale(calc(var(--os) + (1 - var(--os)) * 0.8536));
+  }
+  79.17% {
+    transform: translateY(calc(var(--oy) * 0.1033))
+      scale(calc(var(--os) + (1 - var(--os)) * 0.8967));
+  }
+  83.33% {
+    transform: translateY(calc(var(--oy) * 0.067)) scale(calc(var(--os) + (1 - var(--os)) * 0.933));
+  }
+  87.5% {
+    transform: translateY(calc(var(--oy) * 0.0381))
+      scale(calc(var(--os) + (1 - var(--os)) * 0.9619));
+  }
+  91.67% {
+    transform: translateY(calc(var(--oy) * 0.017)) scale(calc(var(--os) + (1 - var(--os)) * 0.983));
+  }
+  95.83% {
+    transform: translateY(calc(var(--oy) * 0.0043))
+      scale(calc(var(--os) + (1 - var(--os)) * 0.9957));
+  }
+  100% {
+    transform: none;
   }
 }
 @keyframes tilt {
@@ -752,52 +904,52 @@
 }
 .ext.l,
 .ext.r {
-  top: -60%;
-  height: 220%;
-  width: 100%;
-  background:
-    linear-gradient(rgba(5, 4, 14, 0.45), rgba(5, 4, 14, 0.45)),
-    linear-gradient(
-      to bottom,
-      #161a2e 0 32.76%,
-      #20263e 32.76% 55.3%,
-      #5ff2e6 55.3% 55.48%,
-      #39446a 55.68% 56.44%,
-      #1a1f34 56.44% 68.94%,
-      #12152a 68.94%
-    );
+  top: 0;
+  height: 100%;
+  width: 25%;
+  background: #05040c 0 0/100% 100% no-repeat;
 }
 .ext.l {
   right: 99.9%;
+  background-image: url(/assets/room-l.webp);
 }
 .ext.r {
   left: 99.9%;
+  background-image: url(/assets/room-r.webp);
+}
+.ext.t,
+.ext.b {
+  left: -25%;
+  width: 150%;
+  height: 60%;
 }
 .ext.t {
-  left: 0;
-  width: 100%;
   bottom: 99.9%;
-  height: 60%;
-  background: #0e1120;
+  background: #111224;
 }
 .ext.b {
-  left: 0;
-  width: 100%;
   top: 99.9%;
-  height: 60%;
-  background: #0b0d1c;
+  background: #100c1f;
 }
 .pop {
   position: absolute;
-  background-image: url(/assets/room.png);
-  image-rendering: pixelated;
   pointer-events: none;
   transform-origin: 50% 85%;
+  /* 常驻合成层：聚焦时才临时提升，会在切换焦点的那一两帧引起整屏的层重排 */
+  will-change: transform, filter;
   transition:
     transform 0.2s cubic-bezier(0.3, 1.9, 0.5, 1),
     filter 0.1s;
 }
-.hub:not(.snap) .pop {
+/* 轮廓裁在内层：外层的投影才能落在物件之外，而不是被裁掉 */
+.pop > i {
+  position: absolute;
+  inset: 0;
+  background-image: url(/assets/room.webp);
+}
+/* 对所有物件一直开着：原来是「有东西被选中时全部停掉」，
+   一次切焦点就要动四个元素的动画，层重排正好撞在抽搐的那一帧上 */
+.hub .pop {
   animation: glint 5s ease-in-out infinite;
 }
 .hub .pop.on {
@@ -819,152 +971,110 @@
 .hub.snap {
   cursor: pointer;
 }
+/* 镜头穿过车窗。缩放按对数均匀变化（看起来才是匀速推进），整体套一条正弦缓入缓出；
+   起点是主菜单的构图（--fz / --fy），最大放到它的 6.5 倍：这时车厢早已出画，
+   叶片随镜头一起淡出，不再靠放大 80 倍把它们甩出去。
+   回程是同一段动画倒放。outgo 用同一条曲线，窗外与镜头始终同步。 */
 @keyframes push {
-  0.00% {
-    transform: scale(1);
+  0% {
+    transform: translateY(var(--fy, 0px)) scale(var(--fz, 1));
     opacity: 1;
   }
-  6.19% {
-    transform: scale(1.016);
+  4.17% {
+    transform: translateY(calc(var(--fy, 0px) * 0.9957)) scale(calc(var(--fz, 1) * 1.008));
     opacity: 1;
   }
-  12.38% {
-    transform: scale(1.046);
+  8.33% {
+    transform: translateY(calc(var(--fy, 0px) * 0.983)) scale(calc(var(--fz, 1) * 1.0324));
     opacity: 1;
   }
-  18.56% {
-    transform: scale(1.087);
+  12.5% {
+    transform: translateY(calc(var(--fy, 0px) * 0.9619)) scale(calc(var(--fz, 1) * 1.0738));
     opacity: 1;
   }
-  24.75% {
-    transform: scale(1.141);
+  16.67% {
+    transform: translateY(calc(var(--fy, 0px) * 0.933)) scale(calc(var(--fz, 1) * 1.1336));
     opacity: 1;
   }
-  30.94% {
-    transform: scale(1.208);
+  20.83% {
+    transform: translateY(calc(var(--fy, 0px) * 0.8967)) scale(calc(var(--fz, 1) * 1.2134));
     opacity: 1;
   }
-  37.12% {
-    transform: scale(1.293);
+  25% {
+    transform: translateY(calc(var(--fy, 0px) * 0.8536)) scale(calc(var(--fz, 1) * 1.3154));
     opacity: 1;
   }
-  43.31% {
-    transform: scale(1.4);
+  29.17% {
+    transform: translateY(calc(var(--fy, 0px) * 0.8044)) scale(calc(var(--fz, 1) * 1.4422));
     opacity: 1;
   }
-  49.50% {
-    transform: scale(1.536);
+  33.33% {
+    transform: translateY(calc(var(--fy, 0px) * 0.75)) scale(calc(var(--fz, 1) * 1.5967));
     opacity: 1;
   }
-  55.69% {
-    transform: scale(1.714);
+  37.5% {
+    transform: translateY(calc(var(--fy, 0px) * 0.6913)) scale(calc(var(--fz, 1) * 1.782));
     opacity: 1;
   }
-  61.88% {
-    transform: scale(1.953);
+  41.67% {
+    transform: translateY(calc(var(--fy, 0px) * 0.6294)) scale(calc(var(--fz, 1) * 2.0011));
     opacity: 1;
   }
-  68.06% {
-    transform: scale(2.288);
+  45.83% {
+    transform: translateY(calc(var(--fy, 0px) * 0.5653)) scale(calc(var(--fz, 1) * 2.2563));
     opacity: 1;
   }
-  74.25% {
-    transform: scale(2.789);
+  50% {
+    transform: translateY(calc(var(--fy, 0px) * 0.5)) scale(calc(var(--fz, 1) * 2.5495));
     opacity: 1;
   }
-  80.44% {
-    transform: scale(3.613);
+  54.17% {
+    transform: translateY(calc(var(--fy, 0px) * 0.4347)) scale(calc(var(--fz, 1) * 2.8808));
     opacity: 1;
   }
-  86.62% {
-    transform: scale(5.215);
+  58.33% {
+    transform: translateY(calc(var(--fy, 0px) * 0.3706)) scale(calc(var(--fz, 1) * 3.2483));
     opacity: 1;
   }
-  92.81% {
-    transform: scale(9.651);
-    opacity: 1;
+  62.5% {
+    transform: translateY(calc(var(--fy, 0px) * 0.3087)) scale(calc(var(--fz, 1) * 3.6475));
+    opacity: 0.967;
   }
-  99.00% {
-    transform: scale(80);
-    opacity: 1;
+  66.67% {
+    transform: translateY(calc(var(--fy, 0px) * 0.25)) scale(calc(var(--fz, 1) * 4.0708));
+    opacity: 0.811;
+  }
+  70.83% {
+    transform: translateY(calc(var(--fy, 0px) * 0.1956)) scale(calc(var(--fz, 1) * 4.507));
+    opacity: 0.597;
+  }
+  75% {
+    transform: translateY(calc(var(--fy, 0px) * 0.1464)) scale(calc(var(--fz, 1) * 4.9416));
+    opacity: 0.385;
+  }
+  79.17% {
+    transform: translateY(calc(var(--fy, 0px) * 0.1033)) scale(calc(var(--fz, 1) * 5.357));
+    opacity: 0.214;
+  }
+  83.33% {
+    transform: translateY(calc(var(--fy, 0px) * 0.067)) scale(calc(var(--fz, 1) * 5.734));
+    opacity: 0.098;
+  }
+  87.5% {
+    transform: translateY(calc(var(--fy, 0px) * 0.0381)) scale(calc(var(--fz, 1) * 6.053));
+    opacity: 0.034;
+  }
+  91.67% {
+    transform: translateY(calc(var(--fy, 0px) * 0.017)) scale(calc(var(--fz, 1) * 6.296));
+    opacity: 0.007;
+  }
+  95.83% {
+    transform: translateY(calc(var(--fy, 0px) * 0.0043)) scale(calc(var(--fz, 1) * 6.4482));
+    opacity: 0;
   }
   100% {
-    transform: scale(80);
+    transform: translateY(0px) scale(calc(var(--fz, 1) * 6.5));
     opacity: 0;
     visibility: hidden;
-  }
-}
-@keyframes pull {
-  0% {
-    transform: scale(80);
-    opacity: 0;
-  }
-  1.00% {
-    transform: scale(80);
-    opacity: 1;
-  }
-  7.19% {
-    transform: scale(9.651);
-    opacity: 1;
-  }
-  13.38% {
-    transform: scale(5.215);
-    opacity: 1;
-  }
-  19.56% {
-    transform: scale(3.613);
-    opacity: 1;
-  }
-  25.75% {
-    transform: scale(2.789);
-    opacity: 1;
-  }
-  31.94% {
-    transform: scale(2.288);
-    opacity: 1;
-  }
-  38.12% {
-    transform: scale(1.953);
-    opacity: 1;
-  }
-  44.31% {
-    transform: scale(1.714);
-    opacity: 1;
-  }
-  50.50% {
-    transform: scale(1.536);
-    opacity: 1;
-  }
-  56.69% {
-    transform: scale(1.4);
-    opacity: 1;
-  }
-  62.88% {
-    transform: scale(1.293);
-    opacity: 1;
-  }
-  69.06% {
-    transform: scale(1.208);
-    opacity: 1;
-  }
-  75.25% {
-    transform: scale(1.141);
-    opacity: 1;
-  }
-  81.44% {
-    transform: scale(1.087);
-    opacity: 1;
-  }
-  87.62% {
-    transform: scale(1.046);
-    opacity: 1;
-  }
-  93.81% {
-    transform: scale(1.016);
-    opacity: 1;
-  }
-  100.00% {
-    transform: scale(1);
-    opacity: 1;
   }
 }

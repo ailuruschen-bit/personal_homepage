@@ -29,11 +29,11 @@ export function buildScene(root: HTMLElement): SceneEls {
     .filter((h) => h.shape)
     .map((h, i) => {
       const s = popStyle(h.shape!);
-      const css =
-        `left:${s.left};top:${s.top};width:${s.width};height:${s.height};` +
+      const box = `left:${s.left};top:${s.top};width:${s.width};height:${s.height};animation-delay:${i}s`;
+      const cut =
         `background-size:${s.backgroundSize};background-position:${s.backgroundPosition};` +
-        `clip-path:${s.clipPath};animation-delay:${i}s`;
-      return `<div class="pop" data-pop="${h.target}" style="${css}"></div>`;
+        `clip-path:${s.clipPath}`;
+      return `<div class="pop" data-pop="${h.target}" style="${box}"><i style="${cut}"></i></div>`;
     })
     .join('');
 
@@ -51,7 +51,7 @@ export function buildScene(root: HTMLElement): SceneEls {
 
   root.innerHTML = `
 <div class="stage intro" id="stage">
-  <div class="sky"></div><div class="stars"></div>
+  <div class="sky"></div>
 
   <!-- 窗外：三层城市做视差 -->
   <div class="ow" id="ow"><div class="out">
@@ -90,6 +90,7 @@ export function buildScene(root: HTMLElement): SceneEls {
 
   <!-- 待机时的回车厢引导 -->
   <div class="ghost gt"></div><div class="ghost gb"></div>
+  <div class="lens"></div><div class="grain"></div>
   <div class="hint" id="hint"><i>▼</i><span id="hintt">点击 · 回到车厢</span></div>
 
   <button class="skip" id="skip" type="button">跳过 →</button>

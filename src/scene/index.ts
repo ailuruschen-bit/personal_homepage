@@ -22,10 +22,13 @@ export function mountScene(root: HTMLElement, { onEnter, skipOpening }: SceneOpt
   const opening = new Opening(els);
   const focus = new FocusEngine(
     els,
-    () => opening.phase === 'hub',
+    () => opening.phase,
     (target) => (target === COVER ? '窗外' : (sectionById(target)?.title ?? target)),
   );
+  // 阶段一变就同步构图，赶在同一帧的样式计算之前
+  opening.onPhase = () => focus.syncFrame();
   if (skipOpening) opening.skip();
+  focus.syncFrame();
   focus.start();
 
   let pointerType = 'mouse';
@@ -41,11 +44,10 @@ export function mountScene(root: HTMLElement, { onEnter, skipOpening }: SceneOpt
     if (e.pointerType === 'touch') return;
     opening.hintOnMove();
     if (opening.phase === 'hub') focus.movePointer(e.clientX, e.clientY);
+    else focus.trackPointer(e.clientX, e.clientY);
   };
 
-  const onPointerLeave = () => {
-    if (opening.phase === 'hub') focus.clearPointer();
-  };
+  const onPointerLeave = () => focus.clearPointer();
 
   const onPointerDown = (e: PointerEvent) => {
     pointerType = e.pointerType;
