@@ -2,7 +2,7 @@
    车厢场景样式
    坐标系：场景是一个 480×480 的正方形，所有静态元素的 left/top/width/height
    都是该正方形内的百分比。运行时由 scene/units.ts 做场景坐标与屏幕坐标的换算。
-   阶段 class 挂在 .stage 上：intro / idle / back / hub / peek
+   阶段 class 挂在 .stage 上：intro / idle / back / settling / hub / peek
    =========================================================================== */
 
 .stage {
@@ -116,13 +116,11 @@
 .sway {
   animation: sway 1.3s steps(1) infinite;
 }
-/* 镜头被放大的阶段（待机、回程）停掉车厢里所有循环动画，.look 也不单独成层。
-   Chrome 对「自身在做变换动画」或带 will-change 的合成层只会调高光栅倍率、不会调回来：
-   这些层一旦在放大状态下存在过，回到车厢后就停在数倍的分辨率上，
-   窗内逐帧重绘的雨丝和反光跟不上，表现为百叶、玻璃消失。
-   让它们在落座那一刻才重新出现，就始终按 1 倍创建。 */
+/* 窗外待机、正常回程和跳过回位期间暂停车厢内部循环动画。
+   回位完成后再随 hub 恢复，避免镜头缩放与内部滤镜动画同时切换。 */
 .idle .cam *,
-.back .cam * {
+.back .cam *,
+.settling .cam * {
   animation: none !important;
 }
 .win {
@@ -664,7 +662,8 @@
 .back .hero {
   animation: fadeout 0.3s both;
 }
-.hub .rain2 {
+.hub .rain2,
+.settling .rain2 {
   /* 主菜单里它完全透明，动画只是白费重绘 */
   animation: none;
 }
@@ -935,8 +934,8 @@
   position: absolute;
   pointer-events: none;
   transform-origin: 50% 85%;
-  /* 常驻合成层：聚焦时才临时提升，会在切换焦点的那一两帧引起整屏的层重排 */
-  will-change: transform, filter;
+  /* 不常驻 will-change：Chrome 中经过开场缩放后，常驻提升会导致聚焦进出时闪烁。
+     由浏览器按需管理物品动画与滤镜的合成层。 */
   transition:
     transform 0.2s cubic-bezier(0.3, 1.9, 0.5, 1),
     filter 0.1s;
@@ -947,8 +946,7 @@
   inset: 0;
   background-image: url(/assets/room.webp);
 }
-/* 对所有物件一直开着：原来是「有东西被选中时全部停掉」，
-   一次切焦点就要动四个元素的动画，层重排正好撞在抽搐的那一帧上 */
+/* 周期闪光；聚焦时由下方规则接管滤镜。 */
 .hub .pop {
   animation: glint 5s ease-in-out infinite;
 }
