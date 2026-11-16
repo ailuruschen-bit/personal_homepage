@@ -104,7 +104,7 @@ requirement.
 ### Browser support
 
 The code assumes a modern evergreen browser. The notable requirements are
-`clip-path: polygon()`, CSS custom properties in `calc()`, the Web Animations
+CSS custom properties in `calc()`, the Web Animations
 API (`Element.animate`, used by `Opening.skip`), `overflow: clip` and
 `:focus-visible`. `prefers-reduced-motion: reduce` is honoured by skipping
 straight to the hub and freezing the film grain.
@@ -113,7 +113,7 @@ straight to the hub and freezing the film grain.
 
 - `src/scene/units.ts` `SCENE = 480` and the 480x480 grid assumed throughout
   `scene.css` — see [02](02-scene-coordinates.md).
-- `CAM_ORIGIN_Y` in `focus.ts` and `transform-origin` on `.cam` in
-  `scene.css` — see [03](03-phases-and-opening.md).
-- The outlines in `hotspots.ts` and what `tools/art/room.py` draws — see
-  [06](06-art-pipeline.md).
+- Nothing positional: object geometry, the window, the camera origin and the
+  glows are generated from `tools/art/room.py` into `src/scene/geometry.gen.*`,
+  and `npm run art:check` fails the build if they drift — see
+  [06](06-art-pipeline.md#geometry-comes-from-the-art).

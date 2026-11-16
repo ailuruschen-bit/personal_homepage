@@ -40,8 +40,8 @@ recipes, and a log of fixes worth remembering. Start at
 
 **One scene grid.** The carriage is a 480x480 drawing. Object positions, snap
 regions and light pools are all expressed on that grid, independent of screen
-size; `units.ts` does the conversion. Moving an object means editing
-`hotspots.ts` and nothing else.
+size; `units.ts` does the conversion. Every position is defined once, in the art
+script that draws it, and generated for the page.
 
 **Focus, not zoom.** Pointing at the scene never moves the camera. What snaps
 is the light and the object: the light is pulled in as the pointer approaches,
@@ -86,8 +86,9 @@ reachable by deep link. The voice is the second layer, never the carrier.
 - [ ] **Content model** — split sections into artifact, annotation and plain
       facts, per [docs/11](docs/11-premise-and-voice.md)
 - [ ] Write the real copy: `content/site.ts`, `content/sections.ts`
-- [ ] notes / hobby / chat have no object yet — draw the artwork, then register
-      them in `hotspots.ts`
+- [ ] notes / hobby / chat have no object yet — draw the artwork in `room.py`,
+      then register them in `hotspots.ts`
+- [ ] **Art redraw** — the staged plan in [docs/13](docs/13-art-review.md)
 - [ ] Section entry transition (currently a fade; the goal is an object being
       picked up)
 - [ ] Notes system: Markdown sources, categories, search

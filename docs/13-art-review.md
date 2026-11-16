@@ -398,7 +398,7 @@ this workflow decode the images and compare pixels, never bytes.
 **Changes no pixel.** The point of this stage is that every later stage can
 move objects without anything else having to be updated by hand. It removes the
 root of the bug class described in
-[06](06-art-pipeline.md#keeping-the-outlines-in-sync): geometry written down
+[06](06-art-pipeline.md#this-used-to-be-a-source-of-bugs): geometry written down
 twice.
 
 ### 0.1 Geometry manifest
@@ -417,15 +417,22 @@ lines — and takes everything else from the manifest by id.
 **Done when** the rebuilt assets are pixel-identical to the baseline and the
 hub behaves exactly as before.
 
-### 0.2 Window and camera from the manifest
+### 0.2 Window, camera and glows from the manifest
 
-The window is written down four times: `hole.png`, the `.win` rectangle in
+The window was written down four times: `hole.png`, the `.win` rectangle in
 `scene.css` (150, 124, 180 × 140 in scene units), `transform-origin: 50%
-43.71%` on `.cam`, and `CAM_ORIGIN_Y` in `focus.ts`. Make `room.py` the owner:
-it draws the hole from a constant rectangle rather than reading `hole.png`, and
-the build writes `src/scene/geometry.gen.css` with custom properties for the
-window rectangle and the camera origin. `scene.css` and `focus.ts` read those.
-`hole.png` is deleted.
+43.71%` on `.cam`, and `CAM_ORIGIN_Y` in `focus.ts`. The four animated glows
+(`.g-lamp`, `.g-neon`, `.g-lap`, `.g-out`) were placed by hand over the
+artwork as well, and `.g-lap` would have stayed behind the moment the laptop
+moved.
+
+`room.py` now owns all of it: `WINDOW`, `CAM_GAP` (the gap in the blinds,
+relative to the window) and `GLOWS` (the laptop's and the window's relative to
+their objects). The hole is drawn from `WINDOW` — one unit inside it, which is
+exactly what `hole.png` held — and `hole.png` is gone. The build writes
+`src/scene/geometry.gen.css` with the position rules for `.win`, `.cam`'s
+origin and the glows, and `CAMERA` into the manifest for `focus.ts`.
+`scene.css` keeps only appearance.
 
 **Done when** the assets are pixel-identical to the baseline and the opening,
 the skip and the return look the same frame for frame.
@@ -451,11 +458,16 @@ cleaner at the edges, and the Layers count has not changed.
 
 ### 0.4 Check
 
-`tools/art/check.py`, run as `npm run art:check` and as the first step of
-`npm run build`: every manifest id has exactly one hotspot and every hotspot an
-id; every sprite exists; every asset has the size the CSS expects; the window
-rectangle sits inside the room. A mismatch fails the build with a message that
-names the file to fix.
+`tools/art/check.mjs`, run as `npm run art:check`, at the end of `npm run art`,
+and as the first step of `npm run build`: every manifest id has exactly one
+hotspot and every hotspot an id; every sprite exists and covers its box; the
+room, side and city assets have the sizes `scene.css` lays them out at, `--tile`
+included; the window sits inside the scene. A mismatch fails with a message
+that names the file to fix.
+
+It is written for Node with no dependencies rather than in Python, because
+`npm run build` has to work on any machine that builds the site, and those are
+not guaranteed to have Python and Pillow.
 
 ### 0.5 Debug overlay
 
@@ -466,12 +478,22 @@ From stage 1 it adds the vanishing point and horizon.
 
 ### 0.6 Preview
 
-`tools/art/preview.py`, run as `npm run art:preview [id]`: the full hub
-composite, each object focused, 3× nearest-neighbour crops of every object, the
-debug overlay baked in, and the same set from the baseline beside it. From
-stage 3 it also writes a luminance-only image for judging values.
+`tools/art/preview.py`, run as `npm run art:preview -- [label]`, reads the built
+assets and the generated geometry and writes to `.review/<label>/` (the label
+defaults to the current commit):
 
-Scripts added to `package.json`: `art`, `art:check`, `art:preview`.
+- `hub.png` — the carriage composited as the page lays it out;
+- `hub-debug.png` — the same with the geometry drawn over it;
+- `luma.png` — luminance only, for judging values in stage 3;
+- `objects.png` — every sprite at 3× on magenta, so stray pixels show;
+- `crops/` — the seats, the table, the rack, both walls and the window at 3×;
+- `compare-*.png` — the baseline on the left and now on the right, for the hub
+  and every crop. `--against DIR` compares with another asset folder.
+
+It takes about a second, so it runs after every step.
+
+Scripts added to `package.json`: `art` (build, then check), `art:check`,
+`art:preview`.
 
 ### 0.7 Chrome smoke test — optional
 
@@ -583,12 +605,12 @@ Updated in the same commit as each step.
 
 | Stage | Step | Status  |
 | ----- | ---- | ------- |
-| 0     | 0.1  | pending |
-| 0     | 0.2  | pending |
-| 0     | 0.3  | pending |
-| 0     | 0.4  | pending |
-| 0     | 0.5  | pending |
-| 0     | 0.6  | pending |
+| 0     | 0.1  | done    |
+| 0     | 0.2  | done    |
+| 0     | 0.3  | done    |
+| 0     | 0.4  | done    |
+| 0     | 0.5  | done    |
+| 0     | 0.6  | done    |
 | 0     | 0.7  | pending |
 | 1     | 1.0  | pending |
 | 1     | 1.1  | pending |

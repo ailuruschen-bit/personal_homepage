@@ -2,6 +2,7 @@ import type { SceneEls } from './dom';
 import type { Phase } from './opening';
 import { hotspotByTarget, hotspots, nearestHotspot, zoneDistance } from './hotspots';
 import { toScene, toScreen, unitSize, type Camera, type ScenePoint } from './units';
+import { CAMERA } from './geometry.gen';
 
 /** How many scene units beyond its region an object still snaps from */
 const SNAP_RANGE = 22;
@@ -11,8 +12,8 @@ const PULL_RANGE = 78;
 const PULL_MAX = 0.42;
 /** Distance must change by at least this much to count as movement; ignores jitter */
 const DIRECTION_EPSILON = 1.2;
-/** Scene y of .cam's zoom origin (transform-origin: 50% 43.71% in scene.css) */
-const CAM_ORIGIN_Y = 480 * 0.4371;
+/** Scene y of .cam's zoom origin; geometry.gen.css sets the same point as its transform-origin */
+const CAM_ORIGIN_Y = CAMERA.y;
 /** Radius of the free-floating pool in scene units; the snap animation grows from it */
 const FREE_RADIUS = 30;
 

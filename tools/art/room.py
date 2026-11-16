@@ -6,7 +6,7 @@ central 480 plus a 120-wide extension on each side.
 import random
 
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageDraw
 
 import parts
 import px
@@ -25,69 +25,222 @@ WOOD = (150, 98, 76)
 WARM = (255, 200, 120)
 AMBER = (255, 206, 110)
 
+# ------------------------------------------------------------------ Geometry
+# Where things are. build.py writes this out to src/scene/geometry.gen.ts and
+# geometry.gen.css, and nothing under src/ repeats a coordinate by hand. Scene
+# units on the 480 grid throughout.
+
+# Interactive objects, in the order the page lists them. `at` is the object's
+# top-left corner. `zone` (the snap region, x0 y0 x1 y1) and `light` (the pool of
+# light on focus: centre x y, radii rx ry) are relative to `at`, so moving an
+# object moves its focus target with it.
+OBJECTS = {
+    'projects': dict(at=(148, 288), zone=(-11, -9, 104, 88), light=(47, 40, 62, 52)),
+    'about': dict(at=(316, 344), zone=(-10, -8, 42, 26), light=(16, 9, 30, 20)),
+    'stack': dict(at=(318, 55), zone=(-10, -9, 78, 45), light=(34, 20, 48, 28)),
+    'journey': dict(at=(173, 67), zone=(-7, -7, 127, 27), light=(67, 10, 78, 18)),
+}
+
+# The window opening (x y w h) and its corner radius. The page lays .win over it:
+# the city is seen through it and the camera flies through it in the opening.
+# The opening punched out of the carriage is one unit inside this on every side,
+# so the frame overlaps the edge of .win and no seam shows.
+WINDOW = (150, 124, 180, 140)
+WINDOW_RADIUS = 10
+
+# Where .cam zooms about, as an offset from the opening's top-left corner: the
+# middle of the gap between the 9th and 10th blind slats, the gap the camera
+# flies through. The blinds are laid out relative to the opening (dom.ts,
+# scene.css), so this moves with the window.
+CAM_GAP = (90, 85.808)
+
+# The page's animated glows (.g-*), each x y w h. Two sit over light sources on
+# the walls, one over the laptop and one over the window; those two are relative
+# to the object they belong to.
+GLOWS = {
+    'lamp': (294, 88, 180, 180),
+    'neon': (36, 90, 120, 200),
+    'lap': ('projects', -34, -26, 140, 120),
+    'out': ('window', -100, 26, 380, 260),
+}
+
+
+def geometry(masks):
+    """What build.py writes out for the page: the window, and for every focusable
+    object its snap zone, its light and, for drawn objects, the bounding box of
+    its silhouette and the sprite cut from it. The window is focusable too: it snaps within 8 of the opening
+    and its light is 1.2 times the opening."""
+    wx, wy, ww, wh = WINDOW
+    objects = {
+        'cover': dict(
+            zone=(wx - 8, wy - 8, wx + ww + 8, wy + wh + 8),
+            light=(wx + ww / 2, wy + wh / 2, ww * 0.6, wh * 0.6),
+        )
+    }
+    for key, o in OBJECTS.items():
+        ax, ay = o['at']
+        z, li = o['zone'], o['light']
+        x0, y0, x1, y1 = masks[key].getbbox()
+        objects[key] = dict(
+            zone=(ax + z[0], ay + z[1], ax + z[2], ay + z[3]),
+            light=(ax + li[0], ay + li[1], li[2], li[3]),
+            box=(x0 - OX, y0, x1 - x0, y1 - y0),
+            sprite=f'/assets/obj-{key}.webp',
+        )
+    glows = {}
+    for key, gl in GLOWS.items():
+        if isinstance(gl[0], str):
+            ax, ay = (wx, wy) if gl[0] == 'window' else OBJECTS[gl[0]]['at']
+            gl = (ax + gl[1], ay + gl[2], gl[3], gl[4])
+        glows[key] = gl
+    return dict(
+        window=dict(x=wx, y=wy, w=ww, h=wh, r=WINDOW_RADIUS),
+        camera=dict(x=wx + CAM_GAP[0], y=wy + CAM_GAP[1]),
+        glows=glows,
+        objects=objects,
+    )
+
+
+def hole_mask():
+    """The window opening as a 1x mask over the 480 scene, white where the
+    carriage is cut away: one unit inside WINDOW, so the frame overlaps .win."""
+    x, y, w, h = WINDOW
+    m = Image.new('L', (480, 480), 0)
+    ImageDraw.Draw(m).rounded_rectangle([x + 1, y + 1, x + w - 1, y + h - 1], WINDOW_RADIUS - 1, fill=255)
+    return np.asarray(m)
+
 
 class Off:
-    """Canvas wrapper with a horizontal offset, so everything below is written in
-    scene coordinates."""
+    """Canvas wrapper with an offset, so everything below is written in scene
+    coordinates.
 
-    def __init__(self, cv):
-        self.cv = cv
+    It can also carry a tag. While a tag is set, every solid or lit shape drawn is
+    recorded in that tag's silhouette mask as well; shadows, light and texture are
+    not, because they are not part of an object's outline. build.py turns the masks
+    into the objects' sprites and bounding boxes."""
+
+    def __init__(self, cv, dx=OX, dy=0, tag=None, masks=None):
+        self.cv, self.dx, self.dy, self.tag = cv, dx, dy, tag
+        self.masks = {} if masks is None else masks
+
+    def at(self, dx, dy, tag=None):
+        """The same canvas shifted by (dx, dy), recording into silhouette `tag`."""
+        return Off(self.cv, self.dx + dx, self.dy + dy, tag, self.masks)
 
     def _p(self, pts):
-        return [(x + OX, y) for x, y in pts]
+        return [(x + self.dx, y + self.dy) for x, y in pts]
+
+    def _m(self):
+        """Drawing handle on this tag's silhouette mask; None when untagged."""
+        if self.tag is None:
+            return None
+        if self.tag not in self.masks:
+            self.masks[self.tag] = Image.new('L', (self.cv.w, self.cv.h), 0)
+        return ImageDraw.Draw(self.masks[self.tag])
+
+    def _box(self, x, y, w, h):
+        return [x + self.dx, y + self.dy, x + self.dx + w - 1, y + self.dy + h - 1]
+
+    def _mrect(self, x, y, w, h):
+        m = self._m()
+        if m and w > 0 and h > 0:
+            m.rectangle(self._box(x, y, w, h), fill=255)
+
+    def _mline(self, pts, width):
+        m = self._m()
+        if m:
+            m.line([(round(x), round(y)) for x, y in self._p(pts)], fill=255, width=max(1, round(width)))
 
     def rect(self, x, y, w, h, c):
-        self.cv.rect(x + OX, y, w, h, c)
+        self.cv.rect(x + self.dx, y + self.dy, w, h, c)
+        self._mrect(x, y, w, h)
 
     def px(self, x, y, c):
-        self.cv.px(x + OX, y, c)
+        self.cv.px(x + self.dx, y + self.dy, c)
+        self._mrect(x, y, 1, 1)
 
     def line(self, pts, c, width=1):
         self.cv.line(self._p(pts), c, width)
+        self._mline(pts, width)
 
     def poly(self, pts, c):
         self.cv.poly(self._p(pts), c)
+        m = self._m()
+        if m:
+            m.polygon(self._p(pts), fill=255)
 
     def ellipse(self, x, y, w, h, c):
-        self.cv.ellipse(x + OX, y, w, h, c)
+        self.cv.ellipse(x + self.dx, y + self.dy, w, h, c)
+        m = self._m()
+        if m:
+            m.ellipse(self._box(x, y, w, h), fill=255)
 
     def rrect(self, x, y, w, h, r, c):
-        self.cv.rrect(x + OX, y, w, h, r, c)
+        self.cv.rrect(x + self.dx, y + self.dy, w, h, r, c)
+        m = self._m()
+        if m:
+            m.rounded_rectangle(self._box(x, y, w, h), r, fill=255)
 
     def mask(self, x, y, m, c):
-        self.cv.mask(x + OX, y, m, c)
+        self.cv.mask(x + self.dx, y + self.dy, m, c)
+        if self._m():
+            self.masks[self.tag].paste(255, (x + self.dx, y + self.dy), m)
 
     def lrect(self, x, y, w, h, c, k=1.0, body=None):
-        self.cv.lrect(x + OX, y, w, h, c, k, body)
+        self.cv.lrect(x + self.dx, y + self.dy, w, h, c, k, body)
+        self._mrect(x, y, w, h)
 
     def lpx(self, x, y, c, k=1.0):
-        self.cv.lpx(x + OX, y, c, k)
+        self.cv.lpx(x + self.dx, y + self.dy, c, k)
+        self._mrect(x, y, 1, 1)
 
     def lline(self, pts, c, k=1.0, width=1, body=None):
         self.cv.lline(self._p(pts), c, k, width, body)
+        self._mline(pts, width)
 
     def fline(self, pts, c, k=0.0, width=1, body=None):
-        self.cv.fline([(x + OX, y) for x, y in pts], c, k, width, body)
+        self.cv.fline(self._p(pts), c, k, width, body)
+        self._mline(pts, width)
 
     def lpoly(self, pts, c, k=1.0, body=None):
         p = self._p(pts)
         self.cv.d.polygon(p, fill=tuple(body or c) + (255,))
         self.cv.e.polygon(p, fill=mul(c, k))
+        m = self._m()
+        if m:
+            m.polygon(p, fill=255)
 
     def lellipse(self, x, y, w, h, c, k=1.0, body=None):
-        self.cv.lellipse(x + OX, y, w, h, c, k, body)
+        self.cv.lellipse(x + self.dx, y + self.dy, w, h, c, k, body)
+        m = self._m()
+        if m:
+            m.ellipse(self._box(x, y, w, h), fill=255)
 
+    # ---- not part of any outline
     def light(self, x, y, w, h, c, k=1.0):
-        self.cv.light(x + OX, y, w, h, c, k)
+        self.cv.light(x + self.dx, y + self.dy, w, h, c, k)
 
     def shadow(self, x, y, w, h, k=0.5, ell=False):
-        self.cv.shadow(x + OX, y, w, h, k, ell)
+        self.cv.shadow(x + self.dx, y + self.dy, w, h, k, ell)
 
     def shade(self, x, y, w, h, k):
-        parts.shade(self.cv, x + OX, y, w, h, k)
+        parts.shade(self.cv, x + self.dx, y + self.dy, w, h, k)
 
     def speckle(self, x, y, w, h, amount, rnd, density=0.12):
-        self.cv.speckle(x + OX, y, w, h, amount, rnd, density)
+        self.cv.speckle(x + self.dx, y + self.dy, w, h, amount, rnd, density)
+
+
+def place(g, key, drawn_at):
+    """Canvas for drawing interactive object `key`, recording its silhouette.
+
+    The objects below were drawn before OBJECTS existed and still carry the
+    absolute coordinates they were first drawn at; `drawn_at` is that top-left
+    corner, and the canvas shifts everything to wherever OBJECTS puts the object
+    now. An object drawn from scratch is written relative to its own corner and
+    passes drawn_at=(0, 0).
+    """
+    ax, ay = OBJECTS[key]['at']
+    return g.at(ax - drawn_at[0], ay - drawn_at[1], key)
 
 
 def lerp(a, b, t):
@@ -192,28 +345,29 @@ def shell(g, rnd):
 # ------------------------------------------------------------------ Luggage rack
 def rack(g, rnd):
     g.shadow(-120, 96, 720, 12, 0.5)
-    # route map
-    g.shadow(172, 86, 136, 6, 0.6)
-    g.rect(173, 67, 134, 20, (60, 66, 100))
-    g.rect(173, 67, 134, 1, (120, 130, 170))
-    g.rect(173, 86, 134, 1, (30, 32, 54))
-    g.rect(176, 70, 128, 14, (16, 18, 36))
-    g.lrect(186, 76, 108, 1, (150, 162, 214), 0.55)
+    # route map (the journey object)
+    o = place(g, 'journey', (173, 67))
+    o.shadow(172, 86, 136, 6, 0.6)
+    o.rect(173, 67, 134, 20, (60, 66, 100))
+    o.rect(173, 67, 134, 1, (120, 130, 170))
+    o.rect(173, 86, 134, 1, (30, 32, 54))
+    o.rect(176, 70, 128, 14, (16, 18, 36))
+    o.lrect(186, 76, 108, 1, (150, 162, 214), 0.55)
     for i in range(7):
         x = 186 + i * 18
         if i == 2:
-            g.lrect(x - 2, 74, 5, 5, (255, 70, 80), 1.0, body=(255, 150, 150))
-            g.lpx(x, 76, (255, 230, 230), 1.0)
+            o.lrect(x - 2, 74, 5, 5, (255, 70, 80), 1.0, body=(255, 150, 150))
+            o.lpx(x, 76, (255, 230, 230), 1.0)
         else:
             c = (220, 226, 255) if i < 2 else (120, 130, 180)
-            g.lrect(x - 1, 75, 3, 3, c, 0.9 if i < 2 else 0.5)
-        g.lrect(x - 2, 81, 5, 1, (96, 104, 150), 0.3)
-    g.lpx(298, 76, (150, 162, 214), 0.6)
-    g.lpx(297, 75, (150, 162, 214), 0.6)
-    g.lpx(297, 77, (150, 162, 214), 0.6)
+            o.lrect(x - 1, 75, 3, 3, c, 0.9 if i < 2 else 0.5)
+        o.lrect(x - 2, 81, 5, 1, (96, 104, 150), 0.3)
+    o.lpx(298, 76, (150, 162, 214), 0.6)
+    o.lpx(297, 75, (150, 162, 214), 0.6)
+    o.lpx(297, 77, (150, 162, 214), 0.6)
     for x in (175, 304):
-        g.px(x, 69, (150, 158, 190))
-        g.px(x, 84, (150, 158, 190))
+        o.px(x, 69, (150, 158, 190))
+        o.px(x, 84, (150, 158, 190))
     # brackets
     for x in (-100, -30, 70, 164, 346, 440, 510, 580):
         g.rect(x, 60, 3, 37, (84, 94, 130))
@@ -252,36 +406,37 @@ def rack(g, rnd):
     g.rect(146, 78, 5, 9, (236, 226, 200))
     g.rect(147, 80, 3, 1, (150, 60, 60))
     g.px(148, 77, (40, 40, 56))
-    # briefcase (focus outline: 318-386 x 55-92)
+    # briefcase (the stack object)
+    o = place(g, 'stack', (318, 55))
     lb = (150, 96, 62)
-    g.rect(318, 58, 68, 34, lb)
-    g.rect(318, 58, 68, 3, mul(lb, 1.3))
-    g.rect(318, 61, 68, 6, mul(lb, 1.14))
-    g.rect(318, 84, 68, 8, mul(lb, 0.74))
-    g.rect(318, 58, 1, 34, mul(lb, 0.6))
-    g.rect(385, 58, 1, 34, mul(lb, 0.55))
-    g.rect(318, 91, 68, 1, mul(lb, 0.5))
-    g.speckle(318, 58, 68, 34, 0.1, rnd, 0.3)
+    o.rect(318, 58, 68, 34, lb)
+    o.rect(318, 58, 68, 3, mul(lb, 1.3))
+    o.rect(318, 61, 68, 6, mul(lb, 1.14))
+    o.rect(318, 84, 68, 8, mul(lb, 0.74))
+    o.rect(318, 58, 1, 34, mul(lb, 0.6))
+    o.rect(385, 58, 1, 34, mul(lb, 0.55))
+    o.rect(318, 91, 68, 1, mul(lb, 0.5))
+    o.speckle(318, 58, 68, 34, 0.1, rnd, 0.3)
     for x in range(321, 384, 3):
-        g.px(x, 63, mul(lb, 1.45))
-        g.px(x, 88, mul(lb, 1.2))
+        o.px(x, 63, mul(lb, 1.45))
+        o.px(x, 88, mul(lb, 1.2))
     for x in (331, 368):
-        g.rect(x, 58, 6, 34, mul(lb, 0.58))
-        g.rect(x, 58, 1, 34, mul(lb, 0.8))
-        g.rect(x, 70, 6, 5, BRASS)
-        g.rect(x + 1, 71, 4, 3, mul(BRASS, 0.6))
-        g.px(x + 1, 70, (255, 236, 170))
-    g.rect(346, 55, 12, 3, (70, 42, 34))
-    g.rect(347, 55, 10, 1, (120, 78, 56))
-    g.rect(349, 61, 6, 5, BRASS)
-    g.px(351, 63, (90, 60, 30))
-    g.px(349, 61, (255, 236, 170))
+        o.rect(x, 58, 6, 34, mul(lb, 0.58))
+        o.rect(x, 58, 1, 34, mul(lb, 0.8))
+        o.rect(x, 70, 6, 5, BRASS)
+        o.rect(x + 1, 71, 4, 3, mul(BRASS, 0.6))
+        o.px(x + 1, 70, (255, 236, 170))
+    o.rect(346, 55, 12, 3, (70, 42, 34))
+    o.rect(347, 55, 10, 1, (120, 78, 56))
+    o.rect(349, 61, 6, 5, BRASS)
+    o.px(351, 63, (90, 60, 30))
+    o.px(349, 61, (255, 236, 170))
     for x, y in ((318, 58), (384, 58), (318, 90), (384, 90)):
-        g.rect(x, y, 2, 2, BRASS)
-    g.ellipse(340, 74, 9, 9, (70, 170, 160))
-    g.rect(343, 77, 3, 3, (236, 240, 240))
-    g.rect(354, 78, 10, 7, (214, 70, 70))
-    g.rect(354, 80, 10, 2, (240, 232, 220))
+        o.rect(x, y, 2, 2, BRASS)
+    o.ellipse(340, 74, 9, 9, (70, 170, 160))
+    o.rect(343, 77, 3, 3, (236, 240, 240))
+    o.rect(354, 78, 10, 7, (214, 70, 70))
+    o.rect(354, 80, 10, 2, (240, 232, 220))
     # umbrella
     g.rect(398, 88, 42, 4, (44, 50, 84))
     g.rect(398, 88, 42, 1, (84, 92, 136))
@@ -299,6 +454,8 @@ def rack(g, rnd):
 
 # ------------------------------------------------------------------ Window and curtains
 def window(g, rnd):
+    # Drawn around an opening at (150, 124); shifted to wherever WINDOW is
+    g = g.at(WINDOW[0] - 150, WINDOW[1] - 124)
     # brass rail
     g.shadow(118, 104, 244, 5, 0.6)
     for x in (128, 240, 352):
@@ -592,14 +749,15 @@ def table(g, rnd):
     g.rect(118, 382, 245, 1, mul(WOOD, 0.36))
     for x in range(124, 360, 12):
         g.px(x, 378, mul(WOOD, 0.9))
-    # ---- laptop (outline: the projects entry in hotspots.ts)
-    g.shadow(152, 350, 96, 20, 0.5)
+    # ---- laptop (the projects object)
+    o = place(g, 'projects', (148, 288))
+    o.shadow(152, 350, 96, 20, 0.5)
     S = [(148, 292), (214, 288), (218, 343), (151, 348)]
-    g.poly(S, (44, 48, 76))
-    g.line([S[0], S[1]], (120, 128, 166))
-    g.line([S[0], S[3]], (84, 92, 130))
+    o.poly(S, (44, 48, 76))
+    o.line([S[0], S[1]], (120, 128, 166))
+    o.line([S[0], S[3]], (84, 92, 130))
     D = [(151, 295), (212, 291), (215, 340), (154, 345)]
-    g.lpoly(D, (40, 70, 160), 0.42, body=(22, 30, 62))
+    o.lpoly(D, (40, 70, 160), 0.42, body=(22, 30, 62))
     colors = [MAG, CYA, (255, 206, 110), (150, 255, 170), (226, 232, 255), (176, 130, 255)]
     tilt = (D[0][1] - D[1][1]) / (D[1][0] - D[0][0])  # follow the slope of the screen top edge
     for r in range(10):
@@ -618,30 +776,30 @@ def table(g, rnd):
             # perspective. Sloping within a run would add a hard step and read as a
             # bent line instead.
             yc = y0 - ((x + x1) / 2 - 157) * tilt
-            g.fline([(x, yc), (x1, yc)], c, 0.95)
+            o.fline([(x, yc), (x1, yc)], c, 0.95)
             x += ln + 2
             if x > 204:
                 break
     for r in range(10):
-        g.lpx(154, int(round(299 + r * 4.4)), (90, 110, 170), 0.5)
-    g.px(181, 290, (20, 22, 40))
+        o.lpx(154, int(round(299 + r * 4.4)), (90, 110, 170), 0.5)
+    o.px(181, 290, (20, 22, 40))
     # body
     Bq = [(151, 348), (218, 343), (241, 357), (170, 366)]
-    g.poly(Bq, (160, 168, 198))
-    g.line([Bq[0], Bq[1]], (40, 44, 70))
-    g.poly([(170, 366), (241, 357), (241, 359), (170, 368)], (92, 98, 132))
+    o.poly(Bq, (160, 168, 198))
+    o.line([Bq[0], Bq[1]], (40, 44, 70))
+    o.poly([(170, 366), (241, 357), (241, 359), (170, 368)], (92, 98, 132))
     for t in (0.14, 0.32, 0.5, 0.68):
         a, b = lerp(Bq[0], Bq[3], t), lerp(Bq[1], Bq[2], t)
         n = 13
         for i in range(n):
             p = lerp(a, b, (i + 0.5) / n)
             x, y = ri(p)
-            g.rect(x - 1, y, 3, 2, (104, 112, 148))
-            g.px(x - 1, y, (128, 136, 172))
+            o.rect(x - 1, y, 3, 2, (104, 112, 148))
+            o.px(x - 1, y, (128, 136, 172))
     tp = lerp(lerp(Bq[0], Bq[3], 0.86), lerp(Bq[1], Bq[2], 0.86), 0.5)
-    g.rect(int(tp[0]) - 7, int(tp[1]) - 1, 14, 3, (182, 190, 216))
-    g.light(150, 336, 100, 40, (90, 150, 255), 0.5)
-    g.light(146, 286, 76, 60, (80, 120, 255), 0.25)
+    o.rect(int(tp[0]) - 7, int(tp[1]) - 1, 14, 3, (182, 190, 216))
+    o.light(150, 336, 100, 40, (90, 150, 255), 0.5)
+    o.light(146, 286, 76, 60, (80, 120, 255), 0.25)
     # ---- coffee
     g.shadow(256, 354, 62, 14, 0.5, ell=True)
     g.ellipse(258, 351, 58, 13, (232, 230, 244))
@@ -674,20 +832,21 @@ def table(g, rnd):
     g.ellipse(279, 331, 13, 3, (196, 130, 84))
     g.px(284, 331, (236, 190, 140))
     g.px(293, 333, (150, 96, 70))
-    # ---- ticket (outline: the about entry in hotspots.ts)
-    g.shadow(318, 349, 32, 15, 0.6)
+    # ---- ticket (the about object)
+    o = place(g, 'about', (316, 344))
+    o.shadow(318, 349, 32, 15, 0.6)
     T = [(316, 346), (344, 344), (348, 358), (320, 361)]
-    g.poly(T, (240, 228, 198))
-    g.line([T[0], T[1]], (255, 250, 232))
-    g.line([T[3], T[2]], (170, 156, 130))
-    g.fline([(319, 349.2), (336, 349.2)], (206, 60, 66), width=2)
-    g.fline([(321, 352.8), (333, 352.8)], (96, 90, 104))
-    g.fline([(322, 355.6), (330, 355.6)], (150, 140, 140))
+    o.poly(T, (240, 228, 198))
+    o.line([T[0], T[1]], (255, 250, 232))
+    o.line([T[3], T[2]], (170, 156, 130))
+    o.fline([(319, 349.2), (336, 349.2)], (206, 60, 66), width=2)
+    o.fline([(321, 352.8), (333, 352.8)], (96, 90, 104))
+    o.fline([(322, 355.6), (330, 355.6)], (150, 140, 140))
     for y in range(346, 359, 2):
-        g.px(338 + (y - 346) // 4, y, (170, 156, 130))
-    g.rect(341, 349, 4, 4, (60, 56, 76))
-    g.px(342, 350, (240, 228, 198))
-    g.px(344, 352, (240, 228, 198))
+        o.px(338 + (y - 346) // 4, y, (170, 156, 130))
+    o.rect(341, 349, 4, 4, (60, 56, 76))
+    o.px(342, 350, (240, 228, 198))
+    o.px(344, 352, (240, 228, 198))
     # ---- pen
     g.line([(254, 366), (267, 363)], (40, 60, 120))
     g.line([(254, 367), (267, 364)], (24, 36, 80))
@@ -765,6 +924,8 @@ def extensions(g, rnd):
 
 
 def build_room(seed=21):
+    """The carriage as one RGBA image at output resolution, and the silhouette
+    mask of every interactive object at 1x, keyed by object id."""
     rnd = random.Random(seed)
     cv = Cv(W, H)
     g = Off(cv)
@@ -778,7 +939,8 @@ def build_room(seed=21):
     table(g, rnd)
     # Overall lighting: the ceiling strip washing the walls, cold light from outside
     g.light(-120, 40, 720, 50, (255, 214, 160), 0.26)
-    g.light(150, 125, 180, 138, (120, 150, 255), 0.55)
+    wx, wy, ww, wh = WINDOW
+    g.light(wx, wy + 1, ww, wh - 2, (120, 150, 255), 0.55)
     g.light(110, 300, 260, 80, (120, 150, 255), 0.22)
     # the strip washing downward, warm lamp light landing on the table, floor
     # lights along the aisle
@@ -811,11 +973,11 @@ def build_room(seed=21):
     fall = np.repeat(0.4 + 0.6 * edge[0, :, 0] ** 0.7, k).reshape(1, W * k, 1)
     a[..., :3] = (a[..., :3] * fall).astype(np.uint8)
     a[..., 3] = 255
-    # Punch out the window opening, reusing the original hole mask so it lines up with .win
-    hole = np.asarray(Image.open('hole.png').convert('L'))[..., None]
+    # Punch out the window opening
+    hole = hole_mask()[..., None]
     n = 1
     while n < k:
         hole = px.epx(hole, wrap=False)
         n *= 2
     a[:, OX * k : (OX + 480) * k, 3] = np.where(hole[..., 0] > 127, 0, 255)
-    return Image.fromarray(a, 'RGBA')
+    return Image.fromarray(a, 'RGBA'), g.masks

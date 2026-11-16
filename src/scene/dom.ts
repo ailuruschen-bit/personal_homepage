@@ -1,5 +1,5 @@
 import { site } from '../content/site';
-import { hotspots, popStyle } from './hotspots';
+import { hotspots } from './hotspots';
 import { pct } from './units';
 
 export interface SceneEls {
@@ -26,14 +26,11 @@ export function buildScene(root: HTMLElement): SceneEls {
   ).join('');
 
   const pops = hotspots
-    .filter((h) => h.shape)
+    .filter((h) => h.box && h.sprite)
     .map((h, i) => {
-      const s = popStyle(h.shape!);
-      const box = `left:${s.left};top:${s.top};width:${s.width};height:${s.height};animation-delay:${i}s`;
-      const cut =
-        `background-size:${s.backgroundSize};background-position:${s.backgroundPosition};` +
-        `clip-path:${s.clipPath}`;
-      return `<div class="pop" data-pop="${h.target}" style="${box}"><i style="${cut}"></i></div>`;
+      const b = h.box!;
+      const box = `left:${pct(b.x)};top:${pct(b.y)};width:${pct(b.w)};height:${pct(b.h)};animation-delay:${i}s`;
+      return `<div class="pop" data-pop="${h.target}" style="${box}"><i style="background-image:url(${h.sprite})"></i></div>`;
     })
     .join('');
 

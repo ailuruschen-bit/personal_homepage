@@ -1,3 +1,4 @@
+import './geometry.gen.css';
 import './scene.css';
 import { sectionById } from '../content/sections';
 import { buildScene } from './dom';
@@ -19,6 +20,10 @@ export interface SceneOptions {
 /** Mount the carriage scene: opening -> idle -> hub */
 export function mountScene(root: HTMLElement, { onEnter, skipOpening }: SceneOptions): SceneHandle {
   const els = buildScene(root);
+  // ?debug=geometry overlays the generated geometry; loaded only when asked for
+  if (new URLSearchParams(location.search).get('debug') === 'geometry') {
+    void import('./debug').then((m) => m.drawGeometry(root));
+  }
   const opening = new Opening(els);
   const focus = new FocusEngine(
     els,
