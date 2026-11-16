@@ -12,10 +12,11 @@ Read in order on a first pass. After that, each page stands on its own.
 | [02 Scene coordinates](02-scene-coordinates.md)                 | The 480x480 grid, the camera model, the conversions in `units.ts`               |
 | [03 Phases and the opening](03-phases-and-opening.md)           | The phase machine, the opening timeline, how CSS and TypeScript divide the work |
 | [04 Focus system](04-focus-system.md)                           | Snapping, the pull on the light, the spotlight pool, parallax, input handling   |
-| [05 Rendering and compositing](05-rendering-and-compositing.md) | Layer order, what is promoted and when, the open Chrome bug                     |
+| [05 Rendering and compositing](05-rendering-and-compositing.md) | Layer order, what is promoted and when, which rules exist for Chrome            |
 | [06 Art pipeline](06-art-pipeline.md)                           | `tools/art/`: the canvas model, lighting, EPX, each layer, regenerating         |
 | [07 Content and routing](07-content-and-routing.md)             | The hash router, the section registry, the page shell                           |
 | [08 Maintenance recipes](08-maintenance-recipes.md)             | Step-by-step for the changes you are most likely to make                        |
+| [09 Fix log](09-fix-log.md)                                     | Bugs whose fix left rules in the code that look arbitrary without the story     |
 
 ## Conventions used in these pages
 

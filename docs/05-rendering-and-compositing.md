@@ -5,8 +5,10 @@ GPU-composited layers on top of each other, and browsers are not equally good
 at keeping them in order. Most of the non-obvious CSS in `scene.css` exists
 because of that.
 
-**There is an open bug here.** See [Known issue](#known-issue-chrome) at the
-bottom before changing anything on this page.
+**Several rules on this page exist only to keep Chrome's compositor stable.**
+They are marked below. The bug that produced them is written up in
+[09 Fix log](09-fix-log.md#f-001-chrome-the-city-drawn-over-the-carriage); read
+that before removing one.
 
 ## Paint order
 
@@ -129,58 +131,22 @@ cannot scroll.
 filters create and destroy layers at exactly the moments when the layer set is
 already churning.
 
-## Known issue: Chrome
+## Rules that exist for Chrome
 
-**Status: open. Reproduces in Chrome only; Safari and the Chromium-based
-in-app browser are unaffected.**
+Chrome drew the city over the carriage and flickered after the opening, until
+the fix recorded in
+[09 Fix log](09-fix-log.md#f-001-chrome-the-city-drawn-over-the-carriage).
+Four rules on this page were kept from that investigation. None of them fixed
+the fault alone, all of them are correct regardless, and none has been retested
+against Chrome since:
 
-Symptoms, as observed:
+| Rule                                          | Section above                                         |
+| --------------------------------------------- | ----------------------------------------------------- |
+| Explicit `z-index` on every child of `.stage` | [Paint order](#paint-order)                           |
+| No `mix-blend-mode` on the grain overlay      | [Deliberate omissions](#deliberate-omissions)         |
+| City layers at `150vw` rather than `300vw`    | [Sizes](#sizes)                                       |
+| Maximum zoom capped at 6.5x, down from 80x    | [03 Phases and the opening](03-phases-and-opening.md) |
 
-- After the camera returns from the city to the carriage, the city outside is
-  drawn over the carriage and flickers.
-- Worst when the opening is skipped while the camera is mid-flight.
-- Milder after a full opening followed by a click to return.
-- Moving the pointer, or changing which object has focus, makes it worse — one
-  or two frames of tearing each time.
-- An earlier variant of the same failure showed the window's interior (blinds,
-  glass, rain) simply not drawn.
-
-What has been tried, and did not resolve it:
-
-1. Forcing a re-raster by toggling `will-change` on the wrapper layers.
-2. Rebuilding the carriage's compositing layers (`display: none` and back) on
-   landing. This fixed the rendering but introduced a visible twitch; moving it
-   to the idle phase removed the twitch and brought the rendering fault back.
-3. Lowering the maximum zoom from 80x to 6.5x.
-4. Pinning `z-index` on every child of `.stage` (kept — correct regardless).
-5. Removing `mix-blend-mode` from the grain (kept).
-6. Keeping the composited layer set constant across focus changes (reverted;
-   permanent `will-change` on `.pop` made it worse).
-7. Shrinking the city layers from `300vw` to `150vw` (kept).
-
-Current working hypothesis: the carriage's layer has its raster scale driven up
-by the opening zoom and is not correctly re-rasterised afterwards, so its tiles
-are missing and the city behind it shows through. This is consistent with the
-in-app browser being unaffected — its viewport is roughly a third of the area,
-so the same zoom produces a much smaller surface.
-
-The obstacle to confirming it has been reproduction: a Chrome window that is
-fully occluded by another window is marked hidden by macOS, at which point
-Chrome freezes `requestAnimationFrame` and the animation timeline entirely.
-Forced screenshots either return a stale frame or jump the timeline to the
-present, so a transient compositing artefact cannot be captured that way. The
-window has to be genuinely visible — side by side with whatever else is on
-screen — for any live diagnosis.
-
-If you pick this up, the things worth trying next:
-
-- Record a trace in Chrome DevTools' Performance panel with "Layers" enabled
-  across the return animation, and look at the raster scale of `.look` and
-  `.sway` before and after.
-- Try eliminating the hole entirely: give `.win` an opaque backdrop and move a
-  second copy of the city inside it, so the carriage never depends on painting
-  above a sibling. This is a larger change and would need the inner copy to be
-  counter-scaled against the camera.
-- Try lowering the zoom factor further than 6.5 and fading the carriage out
-  earlier, which reduces the peak raster scale at the cost of a less dramatic
-  fly-through.
+`will-change` on a focusable object is applied only while that object is
+animating, never for the whole session — see
+[What is promoted, and when](#what-is-promoted-and-when).
