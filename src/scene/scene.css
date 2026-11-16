@@ -303,24 +303,28 @@
     ellipse var(--rx) var(--ry) at var(--sx) var(--sy),
     rgba(5, 4, 14, 0) 0 70%,
     rgba(5, 4, 14, 0.2) 120%,
-    rgba(5, 4, 14, 0.4) 320%
+    rgba(5, 4, 14, 0.4) 220%
   );
 }
-/* The same dimming over each side extension, as two more elements of exactly
-   the kind .spot is, each only as large as the extension it covers. The dimming
-   must reach the extensions or they stand out while an object is focused, but
-   not by widening .spot or by painting gradients inside .ext: both flickered in
-   Chrome (docs/09, F-002). focus.ts gives them the ellipse in their own box. */
-.spot.side {
-  inset: auto;
+/* The dimming over each side extension: a flat colour whose opacity focus.ts
+   keeps equal to .spot's. It is flat on purpose. .spot reaches its full 0.4 by
+   220% of the light's radius, which is before the scene's left and right edges
+   for every object, so a flat 0.4 beside it continues it with no step. Painting
+   .spot's gradient here instead, or widening .spot, flickered in Chrome
+   (docs/09, F-002): these two never repaint, only their opacity changes. */
+.dimside {
+  position: absolute;
   top: 0;
   bottom: 0;
   width: 25%;
+  pointer-events: none;
+  opacity: 0;
+  background: rgba(5, 4, 14, 0.4);
 }
-.spot.side.l {
+.dimside.l {
   right: 100%;
 }
-.spot.side.r {
+.dimside.r {
   left: 100%;
 }
 .beam {

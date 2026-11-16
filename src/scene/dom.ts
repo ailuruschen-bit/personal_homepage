@@ -75,7 +75,7 @@ export function buildScene(root: HTMLElement): SceneEls {
     <div class="steam"></div><div class="steam s2"></div><div class="steam s3"></div>
     <div class="cur"></div>
     <div class="vig"></div>
-    <div class="spot" id="spot"></div><div class="spot side l"></div><div class="spot side r"></div><div class="beam" id="beam"></div>
+    <div class="spot" id="spot"></div><div class="dimside l"></div><div class="dimside r"></div><div class="beam" id="beam"></div>
     <!-- Light sources again above the dimming layer, so the neon and the lamp
          are not dimmed along with everything else while an object is focused -->
     <div class="glow g-lamp"></div><div class="glow g-neon"></div><div class="glow g-out"></div>
@@ -112,6 +112,6 @@ export function buildScene(root: HTMLElement): SceneEls {
     ml: $('ml'),
     hint: $('hint'),
     pops: Array.from(root.querySelectorAll<HTMLElement>('.pop')),
-    sideSpots: Array.from(root.querySelectorAll<HTMLElement>('.spot.side')),
+    sideSpots: Array.from(root.querySelectorAll<HTMLElement>('.dimside')),
   };
 }

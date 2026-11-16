@@ -2,7 +2,7 @@ import type { SceneEls } from './dom';
 import type { Phase } from './opening';
 import { hotspotByTarget, hotspots, nearestHotspot, zoneDistance } from './hotspots';
 import { toScene, toScreen, unitSize, type Camera, type ScenePoint } from './units';
-import { CAMERA, SIDE } from './geometry.gen';
+import { CAMERA } from './geometry.gen';
 
 /** How many scene units beyond its region an object still snaps from */
 const SNAP_RANGE = 22;
@@ -305,15 +305,6 @@ export class FocusEngine {
       el.style.setProperty('--rx', `${(p.rx / 4.8).toFixed(2)}%`);
       el.style.setProperty('--ry', `${(p.ry / 4.8).toFixed(2)}%`);
     }
-    // The side extensions' dimming continues the same ellipse, expressed in
-    // their own boxes: SIDE wide, starting at -SIDE and at 480
-    this.els.sideSpots.forEach((el, i) => {
-      const x0 = i === 0 ? -SIDE : 480;
-      el.style.setProperty('--sx', `${(((p.x - x0) / SIDE) * 100).toFixed(2)}%`);
-      el.style.setProperty('--sy', `${(p.y / 4.8).toFixed(2)}%`);
-      el.style.setProperty('--rx', `${((p.rx / SIDE) * 100).toFixed(2)}%`);
-      el.style.setProperty('--ry', `${(p.ry / 4.8).toFixed(2)}%`);
-    });
   }
 }
 
