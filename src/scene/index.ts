@@ -20,10 +20,11 @@ export interface SceneOptions {
 /** Mount the carriage scene: opening -> idle -> hub */
 export function mountScene(root: HTMLElement, { onEnter, skipOpening }: SceneOptions): SceneHandle {
   const els = buildScene(root);
-  // ?debug=geometry overlays the generated geometry; loaded only when asked for
-  if (new URLSearchParams(location.search).get('debug') === 'geometry') {
-    void import('./debug').then((m) => m.drawGeometry(root));
-  }
+  // ?debug=geometry overlays the generated geometry, ?debug=layers adds switches
+  // that remove one layer at a time; both are loaded only when asked for
+  const debug = new URLSearchParams(location.search).get('debug');
+  if (debug === 'geometry') void import('./debug').then((m) => m.drawGeometry(root));
+  if (debug === 'layers') void import('./debug').then((m) => m.layerSwitches(root));
   const opening = new Opening(els);
   const focus = new FocusEngine(
     els,
