@@ -22,7 +22,7 @@ contradict an earlier page, the earlier page is still what the code does.
 | [08 Maintenance recipes](08-maintenance-recipes.md)             | Step-by-step for the changes you are most likely to make                           |
 | [09 Fix log](09-fix-log.md)                                     | Bugs whose fix left rules in the code that look arbitrary without the story        |
 | [10 Scroll narrative](10-scroll-narrative.md)                   | _Proposed._ Scroll as the only clock: chapters, apertures, carry and dolly         |
-| [11 Premise and voice](11-premise-and-voice.md)                 | _Proposed._ The reader as a detective; the recording frame; what the fiction costs |
+| [11 Premise and voice](11-premise-and-voice.md)                 | _Proposed._ The detective, the client, the feed; a plausibility audit; the objects |
 | [12 Script](12-script.md)                                       | _Proposed._ The setting, the cast and the lines, scene by scene                    |
 
 ## Conventions used in these pages

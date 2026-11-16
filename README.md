@@ -5,15 +5,16 @@ blinds open, flies out through the window, and settles on the city outside.
 Click once and it flies back in — and the carriage itself is the menu. Whatever
 object the light settles on is the section you enter.
 
-The reader is cast as a detective who has let themselves in while the occupant
-is away. Nothing in the carriage introduces itself: the ticket, the route map,
-the briefcase and what is still open on the laptop are evidence, and the site is
-what you make of them. The detective talks to himself while he works, and the
-last thing that happens is that the occupant comes back and catches him.
+A private detective has let himself into the compartment while its occupant
+is away. Nothing in the carriage introduces itself: the ticket, a rolled-up
+map, the briefcase and what is still open on the laptop are evidence. The
+detective mutters to himself while he works, and the last thing that happens is
+that the occupant comes back and catches him.
 
-None of it is happening now: what you are watching is the recording, which is
-why you can scroll back through it, and the chat at the end is the moment
-playback catches up with the present.
+You are the client. What you are watching is the feed from the detective's
+camera, which is why you can scroll back through it — and when the occupant
+finds the camera still running, he picks it up and offers to answer your
+questions himself. That is the chat.
 
 The current version is **structure and interaction only**. Every piece of copy
 is a placeholder; search for `TODO` to find what still needs writing.

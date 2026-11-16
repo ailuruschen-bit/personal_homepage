@@ -2,462 +2,326 @@
 
 **Status: proposed. Nothing in this page is implemented.** It settles what the
 content _is_; [10 Scroll narrative](10-scroll-narrative.md) settles how the
-camera moves through it. Read them together — several decisions here only make
-sense alongside that one.
+camera moves through it, and [12 Script](12-script.md) writes it out scene by
+scene.
 
 ## The premise
 
-The reader is not browsing a profile. They are a detective who has let
-themselves into a sleeper carriage while its occupant is away, and they have
-until he comes back to work out who he is.
+A private detective has been hired to find out what kind of person the occupant
+of a sleeper compartment is. The occupant has stepped out to take a phone call.
+The detective walks down the corridor from the next carriage, lets himself in,
+and goes through the man's things — wearing a camera, because the client wants
+to see for themselves.
 
-He comes in through the connecting door from the next carriage, because that is
-the only way into a compartment on a moving train. Nobody climbs through a
-window at speed.
+**The reader is the client.** They watch the feed through the detective's eyes
+and hear him mutter as he works. They never chose to be a detective; they
+wanted to know about this person, which is the real reason anyone opens a
+personal site. The fiction does not ask the reader to pretend anything. It
+describes what they are already doing.
 
-Everything in the carriage is evidence. The ticket on the table, the route map
-on the wall, what is open on the laptop, what is in the briefcase. Nothing
-introduces itself. The reader picks things up and draws conclusions.
-
-And none of it is happening now. What the reader is watching is the recording
-of it, which is the part that makes the rest hold together — see
-[The recording](#the-recording).
+Who the client is, is never said. A recruiter will recognise themselves and
+smile; everyone else is simply curious, which is also a kind of client.
 
 ## What this fixes
 
-The premise is not decoration. It resolves three things that were unanswered.
-
-**Why the carriage is empty.** It was an aesthetic choice with no reason behind
-it. Now the absence is the whole setup: he has just stepped out, the coffee is
-still warm, the laptop is still open. The scene gains a clock without needing
+**Why the carriage is empty.** He has just stepped out. The coffee is still
+steaming and the laptop is still on. The scene gains a clock without putting
 one on screen.
 
-**Why scrolling opens things.** [10](10-scroll-narrative.md) defines two
-transitions — carry and dolly — and justifies them physically: an object you
-could pick up gets carried, one that is bolted down gets approached. Under the
-premise those stop being transitions and become actions. Carry is _you pick it
-up_. Dolly is _you lean in_. The interaction grammar now means something in the
-world, which is the difference between a motion design and a scene.
+**Why scrolling opens things.** [10](10-scroll-narrative.md) defines carry and
+dolly as transitions. Here they are actions: carry is _he picks it up_, dolly
+is _he leans in_. The interaction grammar means something in the world.
 
-**Why the site opens by going out of a window.** The existing opening tilts the
-blinds, flies out to the city, and comes back in. That animation was written
-before the premise, does not need to change, and acquires a meaning it did not
-have: he has just let himself in, and the first thing he does is look out to
-see where the train is. The transit is a glance, not an entrance. Treating it
-as an entrance was the earlier reading, and it was wrong — on a moving train
-there is no way in but the door.
+**Why the opening goes out of the window.** The existing animation tilts the
+blinds, flies out to the city and comes back. It does not change. He has just
+come in, and the first thing he does is look out. The window is a glance, never
+a way in or out — on a moving train the only way in is the door.
+
+**Why the reader can scroll back.** It is a feed with a buffer. See
+[The recording](#the-recording).
+
+**Why the chat exists.** Because he gets caught, and the occupant would rather
+answer questions than be investigated. See
+[The confrontation](#the-confrontation).
+
+## Plausibility audit
+
+Every hole found in the earlier drafts, and what closes it. A fiction that
+wants the reader to smile cannot afford one detail that makes them frown.
+
+| Hole                                                                  | Fix                                                                                                           |
+| --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| Nobody climbs into a moving train through a window                    | He comes down the corridor and through the compartment door                                                   |
+| The detective had no reason to be there                               | He is on a job. The client wants to know who this man is                                                      |
+| The reader was told to be a detective, but wants what a client wants  | The reader is the client, watching through his camera                                                         |
+| A break-in cannot be rewound                                          | It is a feed with a buffer; scrolling back is reviewing footage                                               |
+| A reader can take an hour; he has a minute                            | The timecode is a function of scroll, not of the clock. The tape is under ten minutes however long it is read |
+| A passenger does not scribble on the railway's wall map               | The wall map stays as a decoy he dismisses. The journey is a rolled map of his own                            |
+| A ticket does not say who someone is                                  | His business card is tucked behind it. The ticket says where he is going; the card says who he is             |
+| "Tools of the trade" in a briefcase was a metaphor with nothing in it | It holds books. Worn spines are what he uses, the bookmarked one is what he is learning                       |
+| An engineer who leaves a laptop unlocked looks careless               | Everything open on it is a public repository. Nothing leaks, and the detective is the one who looks foolish   |
+| Why is the coffee steaming if he went for coffee                      | He went to take a call in the vestibule, which is where calls are taken on a train                            |
+| The reader's real questions are a client's, not a burglar's           | At the door the occupant takes the camera and addresses the client directly                                   |
+| A camera on the detective cannot fly out of the window at the end     | The occupant turns it to face the window. The last shot is his, and so is the last line                       |
 
 ## What it costs
 
-Stated plainly, because these are the ways this goes wrong.
-
-**A recruiter has thirty seconds.** This is a personal site with a job to do.
-A conceit that makes facts oblique works against that job, and charm does not
-survive a reader who could not find out what you do. The rule that follows is
-absolute:
+**A recruiter has thirty seconds.** A conceit that makes facts oblique works
+against the job this site has. The rule is absolute:
 
 > **The fiction is never the only path to a fact.**
 
-Every hard fact — name, role, stack, where you are, how to reach you — is
-readable in the artifact layer below without parsing any fiction, is present in
-the flat no-JavaScript document, and is reachable by deep link. The detective
-voice is the second layer, never the carrier.
+Every hard fact — name, role, stack, where he is, how to reach him — is
+readable in the artifact layer without parsing any fiction, is present in the
+flat no-JavaScript document, and is reachable by deep link.
 
-**It doubles the writing, and bad writing is worse than none.** A profile that
-is merely plain is fine. A detective story that is merely competent is
-embarrassing. If the annotation layer cannot be written well, the artifact layer
-alone still stands up as a site — so build it in that order and let the voice
-arrive when it is good.
+**It multiplies the writing, and bad writing is worse than none.** A plain
+profile is fine. A merely competent detective story is embarrassing. Build the
+artifact layer first; it stands up alone.
 
-**UI chrome stays out of the fiction.** Buttons say what they do. Navigation,
-labels, the skip control, error states and form fields are literal. The fiction
-lives in content, artwork and copy. The failure mode this avoids is the clever
-portfolio nobody can navigate.
+**UI chrome stays out of the fiction** unless it is doing double duty. Buttons
+say what they do. The timecode is allowed because it is also the progress
+indicator.
 
-**Tone: invited, not voyeuristic.** The door was left unlocked. The register is
-a character study with a wry narrator, not surveillance. If a line would read as
-intrusive about a real person, it is the wrong line.
+**Tone: invited, not voyeuristic.** The detective judges the room the way a
+guest would, and concedes more than he sneers.
 
-**Three languages.** Internationalisation is already on the roadmap, and a voice
-is the hardest thing to carry across languages. A pastiche that lands in Chinese
-may be flat in English and stilted in Japanese. Either the voice gets written
-natively in each language or the annotation layer ships in one and the artifact
-layer in all three.
+**Three languages.** A voice is the hardest thing to translate. Write the
+spoken and annotation layers natively in one language first and ship the facts
+in all three.
 
 ## The recording
 
-The reader can scroll back. That is not a concession to usability, it is a fact
-about the medium that the fiction has to account for, because a break-in does
-not have an undo. The answer is that **the intrusion is not happening now. It
-is footage, and the reader is reviewing it.**
+### A feed with a buffer
 
-### Recording rather than memory
+The detective's camera transmits to the client. Like any recorder with a
+buffer, the feed can be scrubbed back and played forward, and it can be paused.
+Scrolling is scrubbing. Stopping is pausing. Nothing about the interaction has
+to be excused; it is what the device does.
 
-Both would rationalise rewinding. Footage wins on everything else.
+Footage rather than memory, because a tape's signifiers are concrete and a
+memory's are vague, and because the film grain already in the artwork stops
+being a style and becomes a property of the picture.
 
-It is literal: scrubbing back and forth is what footage is for, and pausing is
-something you do to a tape. It gives the site a set of diegetic interface
-elements that are cheap, always visible, and would otherwise have had to be
-invented as ordinary chrome. And it retroactively justifies a decision already
-taken — the film grain added to the artwork stops being a style and becomes the
-reason you can see it.
+### Three layers, two time frames
 
-Memory would excuse a selective, moving, subjective camera more gracefully, and
-that is a real argument. But its signifiers are vague — vignettes, desaturation,
-soft edges — where a tape's are concrete and legible at a glance.
+| Layer      | When        | Voice                                      |
+| ---------- | ----------- | ------------------------------------------ |
+| artifact   | on the tape | none — it is a document                    |
+| spoken     | on the tape | what he muttered while working: short, dry |
+| annotation | afterwards  | the written report to the client, composed |
 
-### Who is watching
-
-The detective, afterwards, writing it up.
-
-This is what sorts the three layers into two time frames, and it is the reason
-the voices do not collide:
-
-| Layer      | When       | Voice                                    |
-| ---------- | ---------- | ---------------------------------------- |
-| artifact   | then       | none — it is a document                  |
-| spoken     | then       | in the moment, present tense, short      |
-| annotation | now, after | the report, reflective, knows the ending |
-
-So the spoken lines can be unsure and the annotation can be certain, without
-either being out of character. That is a free gift from the framing and worth
-more than the atmosphere.
+The spoken lines can be unsure and the report can be certain without either
+being out of character.
 
 ### What carries it
 
-| Element    | Doing double duty as                        |
-| ---------- | ------------------------------------------- |
-| timecode   | the scroll progress indicator               |
-| play state | a reminder that this already happened       |
-| grain      | already in the artwork; now it has a reason |
-| subtitle   | a transcript rather than a caption          |
+| Element    | Doing double duty as                                |
+| ---------- | --------------------------------------------------- |
+| timecode   | the scroll progress indicator                       |
+| 回放 badge | the reminder that this has already happened         |
+| ▶▶         | what a click-to-jump looks like: it is fast-forward |
+| grain      | already in the artwork; now it has a reason         |
+| subtitle   | his muttering, transcribed                          |
 
-The timecode is the one worth building first. A progress bar would have been
-needed anyway for a document this tall, and a timecode is the same information
-wearing the premise. Map `s` onto elapsed minutes and it reads as a tape
-position.
+The timecode maps scroll offset onto elapsed time, not the reader's clock. The
+whole intrusion runs a little under ten minutes however long it is read. That
+makes a joke with no words in it: his "one minute" is on screen the whole time,
+and by the door it reads `00:09:47`.
 
-**Rejected: deliberate glitches.** Dropped frames, tearing and scanline judder
-at the seams are the obvious additions and they are a bad idea here. This
-project spent seven attempts removing an accidental compositing artefact in
-Chrome — see
-[09](09-fix-log.md#f-001-chrome-the-city-drawn-over-the-carriage) — and
-deliberately adding artefacts that look like it would make every future bug
-report ambiguous. Grain and a timecode carry the idea. Nothing else should
-pretend to be broken.
+**Rejected: deliberate glitches.** Dropped frames and tearing look exactly like
+the compositing fault this project spent seven attempts removing — see
+[09](09-fix-log.md#f-001-chrome-the-city-drawn-over-the-carriage). Nothing
+should pretend to be broken.
 
 ### Where playback ends
 
-At the confrontation. He opens the door, and the tape chrome goes: the timecode
-stops, the indicator goes out, the subtitle sheds its transcript styling.
-Playback has caught up with the present and the conversation is live.
-
-It costs a few elements fading out and it is the strongest beat in the site.
-Everything the reader has seen so far was over before they arrived; this is the
-one thing that is not.
+At the door. The badge changes from 回放 to LIVE: the buffer has caught up with
+the present. It is one word changing in a corner, and it is the strongest beat
+in the site, because everything before it was already over.
 
 ## Two layers
 
 Every chapter has the same structure, and it maps onto the read beat in
-[10](10-scroll-narrative.md#reading). A third layer, the spoken one, sits over
-both and runs across the whole site rather than per chapter; it has
-[its own section](#the-spoken-layer) below.
+[10](10-scroll-narrative.md#reading). The spoken layer sits over both and has
+[its own section](#the-spoken-layer).
 
 **The artifact layer** is what is actually printed on the thing. Short, dense,
-scannable, factual. It fills the frame when the aperture opens and it stays
-there for the whole chapter — the object never leaves the screen.
+factual. It fills the frame when the aperture opens and stays for the whole
+chapter.
 
-**The annotation layer** is what the detective makes of it. This is the
-long-form, and it is what scrolls during the read beat, moving past the artifact
-rather than replacing it.
-
-```
-   ┌─────────────────────────┐
-   │   artifact — fixed      │   the ticket, the screen, the map
-   │                         │
-   │   ┌─────────────────┐   │
-   │   │ annotation      │ ▲ │   scrolls during the read beat
-   │   │ — scrolls       │ │ │
-   │   └─────────────────┘   │
-   └─────────────────────────┘
-```
-
-Keeping the artifact fixed while the notes move is what stops a chapter from
-feeling like a page that has been navigated to. The reader is still standing in
-the carriage holding the thing.
+**The annotation layer** is the report. It is the long-form, and it scrolls
+past the artifact rather than replacing it, so the reader is still looking at
+the thing in his hands.
 
 ### Voice
 
-The artifact layer has no voice. It is a document; it reads like one. A ticket
-has a name, an origin, a destination and a date, set in whatever face a ticket
-is set in.
+The artifact has no voice. A ticket reads like a ticket.
 
-The annotation layer is the detective's notebook: bare observation, short
-sentences, no adjectives doing work that a detail could do. It states what is
-in front of it and lets the reader draw the conclusion. It never explains the
-joke.
+The detective is not a bystander with a good eye. He has done this many times
+and finds it routine, and the comedy is the gap between how dramatic breaking
+into a stranger's compartment is and how unimpressed he is by it. He is never
+excited and never afraid. He is mildly put out, mostly by other people's
+carelessness, occasionally by his own.
 
-He is not a bystander with a good eye. He is someone who has done this many
-times and finds it routine, and that is where the comedy comes from: the gap
-between how dramatic breaking into a stranger's compartment is and how
-unimpressed he is by it. He is never excited and never afraid. He is mildly put
-out, mostly by other people's carelessness, occasionally by his own.
+- **The turn.** A flat observation, then a short sentence that undercuts it.
+- **Specificity is the joke.** The line should contain no funny words.
+- **Judge the room, not the reader.** The snark lands as a compliment about as
+  often as a complaint. By the last chapter he rather likes the man.
+- **Mostly straight.** If every line is a quip, none of them is.
+- **One sincere line** in the whole site. [12](12-script.md) spends it on the
+  laptop.
 
-Four things make the voice rather than the jokes:
-
-- **The turn.** An observation, then a short sentence that undercuts it. Most
-  of the humour is this one shape, and it only works if the first half is
-  flat.
-- **Specificity is the joke.** "He left in a hurry" is a caption. "The coffee
-  is still steaming — he thought he would be back in a minute" is a character
-  noticing something and forming an opinion, and it is funnier for containing
-  no funny words.
-- **Judge the room, not the reader.** The snark points at the occupant, and
-  lands as a compliment about as often as it lands as a complaint. A detective
-  who sneers at everything is tiresome by the third object.
-- **Mostly straight.** If every line is a quip, none of them is. The sharp ones
-  land because the ones around them were plain.
-
-One sincere line is allowed in the whole site, and the dryness everywhere else
-is what buys it. [12](12-script.md) spends it on the laptop and says why.
-
-Illustrative only — not copy, and inventing no facts:
-
-> A boarding pass, folded twice. [ORIGIN] to [DESTINATION]. The date is four
-> years old and he has kept it where he can see it.
-
-Compare the same fact in first person — "I moved from [ORIGIN] to [DESTINATION]
-four years ago and it mattered to me" — and the reason for the device becomes
-clear. The premise buys a way to say things about yourself that are unsayable
-in your own voice. That is the actual payoff, more than the atmosphere.
+The device earns its keep in one way above all: it says things about the
+occupant that he could not say about himself without sounding as if he wanted
+credit.
 
 ## The spoken layer
 
-Over the top of both content layers, the detective talks.
+The cover does not greet anyone; the occupant is not there to do it. The first
+words on the site are the detective's, and the second of them is the scroll
+affordance. Keep a quiet scroll indicator anyway.
 
-The cover does not greet anyone. A greeting assumes the occupant is there to
-give it, and he is not. What stands in its place is the first line of the
-character the reader is playing, spoken on the city before going in:
-
-> 景色不错，但是该干正事了。
-
-That line does three jobs at once. It establishes the voice, it casts the
-reader, and it is the scroll affordance — it says _get to work_, which is the
-instruction. Keep an unobtrusive scroll indicator anyway; a line of dialogue is
-not an accessible affordance on its own.
-
-It also takes the cover's old job away, so the identity has to live somewhere
-else: the document's `h1` is the occupant's name and role, visually hidden
-behind the scene but present for assistive technology, for search, and in the
-flat document. What is _drawn_ is the detective's line. What is _read_ by
-anything that does not render the scene is still a name.
+The occupant's name and role live in a visually hidden `h1` and the metadata,
+so anything that does not render the scene still reads a name.
 
 ### Anchored and reactive
 
-Principle 1 in [10](10-scroll-narrative.md#principles) says scroll is a
-position and not an event, which looks like it forbids a line that fires. It
-does not. It sorts lines into two kinds and keeps them on separate channels.
+**Anchored lines** hang on a scroll range and fade as a function of `s`, like
+everything else in [10](10-scroll-narrative.md#principles). They cannot vanish
+while being read: stop, and they stay. They replay on a second pass, which is
+what footage does.
 
-**Anchored lines** are tied to a scroll range, and their opacity is a function
-of `s` like everything else: in over a short range, held over a long one, out
-again. Scroll back and the line is there again, because it never happened — it
-is simply true at that offset.
-
-This is better than the timed version, not a compromise. **A line on a timer
-can vanish while you are still reading it.** An anchored line cannot: stop, and
-it stays as long as you like. In a design whose whole point is that you may
-stop anywhere, a timed subtitle would be the single element that refuses to.
-
-**Reactive lines** answer something that is not scroll: pointing at an object
-at the hub, returning to one already examined, going idle. These are genuinely
-events, and they are allowed — because they live on the pointer channel, which
-is event-driven today, and never on the scroll channel. The rule that holds the
-architecture together: **nothing on the scroll axis is ever an event, and the
-spoken layer gets no exception.**
-
-The cost of anchored lines is that they replay on a second pass. That is
-accepted. The alternative is remembering what has been seen, which is state,
-and state is what makes a scroll position stop being enough to draw a frame.
+**Reactive lines** answer the pointer or idling. They live on the pointer
+channel, which is event-driven already. Nothing on the scroll axis is ever an
+event.
 
 ### One slot
 
-All of it renders in a single fixed subtitle at the bottom of the frame. One
-voice, one place, never moving.
-
-Speech bubbles pinned to objects were considered and are wrong here. They pull
-the eye away from the thing the camera has just framed, in a design whose whole
-premise is that the camera decides what you look at. A subtitle is also the
-convention of the two games the art is modelled on.
-
-The focus caption that exists today — the object name under the section name —
-is the same slot. Two text layers competing for the bottom of the frame is one
-too many.
+One fixed subtitle at the bottom of the frame, shared with today's focus
+caption. No speech bubbles: they pull the eye off what the camera framed.
 
 ### Budget
 
-Restraint is the whole difference between a character and a chat box. But
-counting lines is the wrong measure, which an earlier flat budget of twelve to
-fifteen got wrong: what wears a reader down is **repetition and frequency**,
-not the total.
+What wears a reader down is repetition and frequency, not the total.
 
-Count the two kinds separately:
+- **Anchored lines are cheap.** One as a chapter opens, one as it closes, at
+  most one or two inside it. Around twenty-five across the site.
+- **Reactive lines are expensive**, because the hub is where a reader lingers.
+  Six is the ceiling, and none plays twice for the same trigger in a session.
 
-- **Anchored lines are cheap.** At most two to a chapter, one as it opens and
-  one as it closes, and they never repeat within a pass. Around twenty across
-  the site is comfortable.
-- **Reactive lines are expensive.** The hub is where a reader lingers, which
-  means the same trigger can fire again and again. Six is the ceiling, and a
-  reactive line should not play twice for the same trigger in a session — they
-  live on the pointer channel, where keeping that much state is allowed.
-
-A quip on everything every time is noise, and noise is what teaches people to
-scroll past text. The next line added should replace one rather than join it.
-
-Write in this order, because each is useless without the one before it:
-`facts`, the artifact layer, anchored lines, annotation, reactive lines, the
-confrontation.
+The next line added should replace one rather than join it. Write in this
+order: `facts`, artifacts, anchored lines, annotation, reactive lines, the
+occupant's persona.
 
 ## The evidence map
 
-Chapter order is the order a detective would find things in, which is also the
-order [10](10-scroll-narrative.md#open-questions) proposes on interaction
-grounds. The two agree, which is a good sign.
+Each object has to pass three tests: a passenger would plausibly have it, it
+has a surface the text can live on, and handling it does something a scroll
+can drive.
 
-| Chapter    | Object             | As evidence                                    |
-| ---------- | ------------------ | ---------------------------------------------- |
-| `about`    | 车票 on the table  | ticket or pass: who he is, where he came from  |
-| `journey`  | 线路图 on the wall | the line with stops marked: where he has been  |
-| `stack`    | 公文包 on the rack | what he carries: the tools of the trade        |
-| `projects` | 电脑 on the table  | what is still open on the screen: current work |
-| `notes`    | _no art yet_       | loose papers, a notebook                       |
-| `hobby`    | _no art yet_       | something personal left out, not work          |
-| `chat`     | 门 — _no art yet_  | the doorway, and the man in it — see below     |
+| Chapter    | Object                      | Why he would have it          | What scrolling does   |
+| ---------- | --------------------------- | ----------------------------- | --------------------- |
+| `about`    | 车票, with a 名片 behind it | everyone has a ticket         | turns it over         |
+| `journey`  | 卷起来的线路图, his own     | he drew it; it is his to mark | unrolls it            |
+| `stack`    | 公文包, full of books       | it is what is in a briefcase  | draws the books out   |
+| `projects` | 电脑                        | he was working                | runs the progress bar |
+| `notes`    | _no art yet_ — a notebook   |                               | turns pages           |
+| `hobby`    | _no art yet_                |                               |                       |
+| `chat`     | 门                          |                               | —                     |
 
-`about` is first because it is the thing in front of you when you sit down.
-`journey` is a route map, which is already a timeline on a wall, so it carries a
-career with no translation needed. The last three cannot become chapters until
-they have artwork and therefore an aperture.
+**The scroll is a scroll.** Unrolling the map is the one interaction in the
+site where the gesture and the object are the same word — 卷轴 — and the
+journey appears station by station as it opens.
+
+**The briefcase reads like a shelf.** Worn spines are what he uses daily. One
+still has a bookmark in it: that is what he is learning. Proficiency is shown
+by wear instead of by a bar chart.
+
+**The laptop is open and it does not matter.** Every tab is a public
+repository. The progress bar of whatever he left running is the chapter's own
+reading progress.
+
+**Decoys.** The railway's route map on the wall and the coffee on the table can
+be pointed at and open nothing. He dismisses each with a line. A room where
+everything is a button is a menu; two things that are not are what make it a
+room.
 
 ### The confrontation
 
-`chat` is the only chapter where the reader is not alone.
+`chat` is the only chapter where the detective is not alone, and it is where
+the reader stops being a spectator.
 
-He comes back. He was not supposed to, and the detective is standing in the
-middle of his carriage holding his things. The conversation that follows is the
-chat section — not a widget bolted to the end of a story, but the scene the
-story has been walking towards.
+The door opens. He is a silhouette against the corridor and is never drawn
+further than that. He looks at the detective, then at the camera, and he
+understands the situation faster than the detective would like. He picks up the
+camera and speaks into it:
 
-The aperture is the doorway: a lit rectangle with him in it. It needs no new
-primitive, and it is the one aperture that opens onto a person rather than a
-surface.
+> 还录着呢。那正好——不管是谁在看，想知道什么，直接问我。
 
-What the frame buys:
+That is the chat section. The occupant is talking to the client, who is the
+reader, about the thing the reader came to find out. Nobody is asked to
+roleplay. The questions a visitor actually has — what he has built, what he
+works with, whether he is available — are exactly the questions the scene calls
+for.
 
-- **The bot has a reason and a persona.** Not "ask me about my CV" — him,
-  wanting to know who you are and what you have been reading, and answering
-  what you ask back. A personal-site chatbot is roleplaying its owner anyway;
-  this makes that honest instead of a gimmick.
-- **He never has to be drawn.** A silhouette, backlit from the corridor. This
-  answers the question the premise had left open — a scene that has only ever
-  drawn a man's possessions should not suddenly draw the man — and a backlit
-  figure in a doorway is exactly the register of the art it is modelled on.
-- **The exit stays open.** He fills one doorway; a carriage has two, and the
-  far end is open the whole time. The reader can leave at any point in the
-  conversation. That is what makes staying a choice instead of a toll. (The
-  window is not the exit and never was — see
-  [the premise](#the-premise).)
+Rules, all downstream of facts-never-behind-fiction:
 
-Two voices now share the subtitle, so it needs a speaker label. It stays one
-slot.
-
-Rules it must obey, all of them downstream of facts-never-behind-fiction:
-
-- **Asked a straight question, it answers straight.** "What has he done with
-  X" gets a real answer — in character, but informative. A character who
-  deflects is a site that does not work.
-- **It gates nothing.** Every fact is already readable before this chapter. If
-  the bot is unavailable, the visitor loses a scene, not information.
-- **Staying in character is soft.** Anyone who wants the plain version gets it
-  without a fight.
+- **Asked a straight question, it answers straight.**
+- **It gates nothing.** If the bot is unavailable the visitor loses a scene,
+  not information.
+- **Staying in character is soft.**
 
 ## The ending
 
-The site currently has no ending; the scroll just stops. The premise supplies
-one, and it costs almost nothing to build because it reuses the opening in
-reverse.
+When the conversation is over, the occupant puts the camera down facing the
+window. The last shot is the city the tape opened on, and the last line is the
+detective's first one, taken from him:
 
-The confrontation is the last chapter. However it goes, it ends the same way:
-the camera pulls back through the window to the city, which is the frame the
-tape opened on. The same locked segment, run outward.
+> 景色不错吧。
 
-Two things fall out of that:
+The window transit runs outward, as built. The footer lives out there — links,
+colophon, source — as a place rather than a strip.
 
-- **The footer is diegetic.** It is the view from outside after you have left:
-  links, colophon, source. A place, not a strip at the bottom of a page.
-- **The document is a ring.** The city is at both ends, because a tape ends on
-  the frame it began with. Scrolling back up re-enters the carriage rather than
-  rewinding a page, which is what [10](10-scroll-narrative.md)'s axis does
-  anyway — and under the recording it is simply rewinding.
-
-**Rejected: a timer.** The obvious move is to make his return a deadline. It is
-wrong. A reader who is being hurried cannot read, and punishing someone for
-reading slowly on a page whose purpose is to be read is self-defeating. His
-return is positional, not temporal: it happens because the reader reached the
-last chapter, not because they were slow. The pressure stays atmospheric and
-has no mechanics — an announcement over the tannoy, a shadow in the corridor,
-the door. Nothing counts down, and nothing is ever lost by stopping.
+**Rejected: a timer.** His return is positional: it happens because the reader
+reached the last chapter, not because they were slow. Nothing counts down, and
+nothing is lost by stopping.
 
 ## What this changes in the content model
-
-`content/sections.ts` currently has `lede` and `blocks`, which assumed one voice
-and one column. It needs to carry both layers:
 
 | Field      | Layer      | Shape                                                   |
 | ---------- | ---------- | ------------------------------------------------------- |
 | `artifact` | artifact   | typed fields printed on the object, not prose           |
-| `notes`    | annotation | the long-form blocks that scroll past it                |
-| `facts`    | neither    | the machine-readable truth: role, stack, links, contact |
+| `notes`    | annotation | the report: long-form blocks that scroll past it        |
+| `lines`    | spoken     | anchored and reactive lines, each with its anchor       |
+| `facts`    | none       | the machine-readable truth: role, stack, links, contact |
 
-`content/site.ts` changes with it. `heroTitle` and `heroLede` assumed a
-greeting; the cover now carries the detective's opening line, and the
-occupant's name and role move to the hidden `h1` and the metadata.
+`facts` is the hedge. Delete the other three and it is still a working personal
+site. `content/site.ts` loses its greeting; the cover carries the detective's
+opening line.
 
-`facts` is the hedge against the premise. It is what the flat document renders,
-what structured data is generated from, and what someone in a hurry sees. If the
-artifact and annotation layers were deleted tomorrow, `facts` alone would still
-be a working personal site.
-
-See [07 Content and routing](07-content-and-routing.md).
+Decoys need a hotspot with a line and no target, which `hotspots.ts` does not
+have today.
 
 ## Open questions
 
-1. **How far into fiction?** Proposed: the hybrid above — artifact carries the
-   facts, annotation carries the voice. The two ends of the scale are pure
-   artifact (atmospheric, too oblique to be useful) and pure monologue (first
-   person in a hat).
-2. **Who is the narrator?** The annotation is written by the site's owner about
-   a stranger examining him. That doubling is deliberate and is where the device
-   earns its keep, but it needs to be consistent: the detective never addresses
-   the owner and the owner never breaks in.
-3. **How much of him is drawn?** Settled by the confrontation: a silhouette in
-   the lit doorway and nothing more. If that ever stops being enough, the thing
-   to add is light and the corridor behind him, not a face.
-4. **Does the cover state the premise?** A detective who is told they are a
-   detective is being handed the answer. Proposed: one line at most, or nothing,
-   and let the empty carriage and the timecode do it.
-5. **How hard does the tape press?** The timecode and the grain are the floor.
-   Above that sit a scrub bar, a play indicator, a transcript-styled subtitle
-   and a tape-stock colour cast, in roughly that order of how much they commit.
-   Proposed: build the floor, live with it a while, and add upward only if the
-   framing is not landing.
-6. **Language of first release.** Proposed: write the annotation layer in one
-   language, properly, and ship `facts` in all three rather than translating a
-   voice badly.
+1. **The reader as client rather than detective.** This departs from the
+   original brief, which cast the reader as the detective. The reader still
+   sees everything through his eyes; what changes is who the tape is for. It is
+   the fix for the chat making sense, and it is the largest single decision on
+   this page.
+2. **Is the client ever named?** Proposed: no.
+3. **Does the detective get a last word in the chat?** There is a line for it
+   in [12](12-script.md). It is the cheapest laugh in the script and the first
+   to cut.
+4. **What is the hobby object?** It should be the one thing in the room that
+   has nothing to do with work.
+5. **Language of first release.**
 
 ## Keep in sync
 
-- The evidence map here and the chapter order in
-  [10](10-scroll-narrative.md#open-questions) and `content/sections.ts`.
-- The three-field content model here and the `SectionDef` interface.
-- The ending described here and the final segment of
-  [10](10-scroll-narrative.md#the-axis).
+- The evidence map here, the aperture table in
+  [10](10-scroll-narrative.md#the-aperture), `hotspots.ts`, and what
+  `tools/art/room.py` draws. Three of the four objects need new artwork.
+- The content model here and `SectionDef`.
+- The lines quoted here and the line sheet in [12](12-script.md).

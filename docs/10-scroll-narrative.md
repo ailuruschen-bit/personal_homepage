@@ -153,16 +153,19 @@ same function run backwards.
 ```
 Hotspot                aperture (scene units)       becomes
 ─────────────────────────────────────────────────────────────────
-车票  on the table      the face of the card         the About panel
-线路图 on the wall       the printed area             the Journey panel
+车票  on the table      the ticket, and the card     the About panel
+                       behind it
+线路图 rolled, in the    the sheet as it unrolls      the Journey panel
+      rack
 公文包 on the rack       the open lid's interior      the Stack panel
 电脑  on the table      the screen                   the Projects panel
+门                     the lit doorway              the chat
 ```
 
 Two things follow from this that are worth stating plainly:
 
-- The object does not "turn into a page". Its own surface is the page. The card
-  face, the laptop screen and the route map are already rectangles the camera
+- The object does not "turn into a page". Its own surface is the page. The
+  ticket, the laptop screen and the unrolled map are already rectangles the camera
   can be square-on to, so the morph is a rect-to-rect interpolation plus a
   cross-fade of what is printed on it. Nothing needs to be modelled in 3D.
 - Because the aperture is declared per object rather than per section, an object
@@ -174,19 +177,36 @@ Two things follow from this that are worth stating plainly:
 The two ways an object presents itself.
 
 **Carry** — the object leaves its resting place and comes to the middle of the
-frame. For anything a seated passenger could pick up: the ticket, the briefcase.
+frame. For anything a passenger could pick up: the ticket, the rolled map, the
+briefcase.
 The camera barely moves (a slight push, `fz` 1 → ~1.08, for depth); the object's
 own transform interpolates from its resting rect to a centred rect, and the
 carriage behind it blurs and dims.
 
 **Dolly** — the object stays exactly where it is and the camera goes to it. For
-anything bolted down: the laptop, the route map on the wall. The object's
+anything that stays put: the laptop, the door. The object's
 transform is identity throughout; the camera's framing interpolates to fit the
 aperture.
 
 The test is physical plausibility first, and rectangles second: if the object
 could be picked up, carry it; if carrying it would look absurd, dolly. Do not
 mix the two on one object.
+
+### What the read beat drives
+
+Three chapters in a row are carries, so what keeps them apart is what the
+scroll does once the object is open. Each has one motion of its own, and each
+is a function of read progress like everything else:
+
+| Object | Read progress drives                       |
+| ------ | ------------------------------------------ |
+| 车票   | turning it over, at the halfway point      |
+| 线路图 | unrolling it, station by station           |
+| 公文包 | drawing the books out, one spine at a time |
+| 电脑   | the progress bar of the job left running   |
+
+See [11](11-premise-and-voice.md#the-evidence-map) for why each object is what
+it is.
 
 ### Framing maths
 
@@ -260,6 +280,9 @@ there are exactly three locked segments in the whole site:
 During a locked segment the scroll listener is muted and the camera runs on its
 own clock. **Any scroll input cancels it** and hands control back at the current
 state, which keeps principle 1 intact: the user can always stop the picture.
+
+On screen a transport is fast-forward, which is what it is on a tape — see
+[11](11-premise-and-voice.md#what-carries-it).
 
 Transport is why clicking chapter 4 from the hub does not flip through chapters
 1 to 3. It is one camera move across the carriage, not a fast-forward.
@@ -355,7 +378,8 @@ A survey, not an implementation plan. No code has been changed.
 | `scene/scroll.ts`    | new: the segment map, `s`, and the locked-segment arbiter                 |
 | `scene/chapter.ts`   | new: per-chapter beat interpolation, carry and dolly                      |
 | `scene/focus.ts`     | add `--fx`; narrow pointer focus to the hub; expose `presence`            |
-| `scene/hotspots.ts`  | add `aperture` and `transit` per object; chapter order                    |
+| `scene/hotspots.ts`  | add `aperture` and `transit` per object; chapter order; decoys            |
+| `tools/art/room.py`  | draw the rolled map, the card behind the ticket, the books, the door      |
 | `scene/opening.ts`   | phases reduce to the locked segments; transport joins the machine         |
 | `scene/scene.css`    | remove transitions from anything scroll drives; `.cam` consumes `--fx`    |
 | `router.ts`          | routes resolve to offsets; manual scroll restoration                      |
@@ -367,10 +391,10 @@ A survey, not an implementation plan. No code has been changed.
    end? Recommendation: no. It contradicts principle 1, and the content fade
    above is the cheaper fix for the thing auto-settling would be protecting
    against.
-2. **Chapter order.** Proposed: about (ticket) → journey (route map) → stack
-   (briefcase) → projects (laptop) → chat. It alternates carry and dolly, which
-   keeps consecutive transitions from feeling identical, and it is also the
-   order the evidence would be found in — see
+2. **Chapter order.** Proposed: about (ticket) → journey (rolled map) → stack
+   (briefcase) → projects (laptop) → chat. The first three are carries, kept
+   distinct by what the read beat drives, and it is the order the evidence
+   would be found in — see
    [11](11-premise-and-voice.md#the-evidence-map). `chat` is last by
    construction: it is the confrontation, and the only chapter whose aperture
    opens onto a person.
