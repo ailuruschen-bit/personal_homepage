@@ -1,4 +1,4 @@
-import { CAMERA, OBJECTS, WINDOW } from './geometry.gen';
+import { CAMERA, OBJECTS, PERSPECTIVE, WINDOW } from './geometry.gen';
 import { SCENE } from './units';
 
 /**
@@ -44,6 +44,24 @@ export function drawGeometry(root: HTMLElement) {
       },
       text,
     );
+
+  // Perspective guides: the horizon, the vanishing point, the window wall, and
+  // the room's receding edges from its corners out past the edge of the scene
+  const { vx, vy, wall } = PERSPECTIVE;
+  const [wx0, wy0, wx1, wy1] = wall;
+  const guide = { ...line, stroke: '#ff9a3b', opacity: 0.85 };
+  add('path', { ...guide, d: `M-240 ${vy}H720`, 'stroke-dasharray': '2 3' });
+  add('rect', { ...guide, x: wx0, y: wy0, width: wx1 - wx0, height: wy1 - wy0 });
+  for (const [cx, cy] of [
+    [wx0, wy0],
+    [wx1, wy0],
+    [wx0, wy1],
+    [wx1, wy1],
+  ] as const) {
+    add('path', { ...guide, d: `M${vx} ${vy}L${vx + (cx - vx) * 6} ${vy + (cy - vy) * 6}` });
+  }
+  add('circle', { ...guide, cx: vx, cy: vy, r: 3 });
+  label(wx0 + 2, wy1 - 2, 'window wall', '#ff9a3b');
 
   // the window and the camera's zoom origin
   add('rect', {
@@ -106,6 +124,7 @@ export function drawGeometry(root: HTMLElement) {
     ['#3bd6ff', 'sprite box'],
     ['#39ff88', 'window'],
     ['#ff3b3b', 'camera origin'],
+    ['#ff9a3b', 'perspective'],
   ]
     .map(([c, t]) => `<div style="color:${c}">■ ${t}</div>`)
     .join('');

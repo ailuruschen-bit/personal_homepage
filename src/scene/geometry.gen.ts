@@ -15,6 +15,9 @@ export interface ObjectGeometry {
 /** The window opening and its corner radius, in scene units */
 export const WINDOW = { x: 150, y: 124, w: 180, h: 140, r: 10 };
 
+/** One-point perspective: the vanishing point, and the window wall as drawn face-on */
+export const PERSPECTIVE: { vx: number; vy: number; wall: [number, number, number, number] } = { vx: 240, vy: 209.808, wall: [24, 26, 456, 440] };
+
 /** Where .cam zooms about, in scene units: the gap the camera flies through */
 export const CAMERA = { x: 240, y: 209.808 };
 

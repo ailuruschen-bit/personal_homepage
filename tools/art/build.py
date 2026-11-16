@@ -67,7 +67,8 @@ def build_grain(size=192, seed=7):
 
 def num(v):
     """A coordinate as TypeScript source: integers without a trailing .0."""
-    return str(int(v)) if float(v).is_integer() else repr(round(float(v), 4))
+    v = round(float(v), 4)
+    return str(int(v)) if v.is_integer() else repr(v)
 
 
 def write_geometry(geo, path):
@@ -91,6 +92,11 @@ def write_geometry(geo, path):
         '',
         '/** The window opening and its corner radius, in scene units */',
         f"export const WINDOW = {{ x: {num(w['x'])}, y: {num(w['y'])}, w: {num(w['w'])}, h: {num(w['h'])}, r: {num(w['r'])} }};",
+        '',
+        '/** One-point perspective: the vanishing point, and the window wall as drawn face-on */',
+        'export const PERSPECTIVE: { vx: number; vy: number; wall: [number, number, number, number] } = '
+        f"{{ vx: {num(geo['perspective']['vx'])}, vy: {num(geo['perspective']['vy'])}, "
+        f"wall: [{', '.join(num(v) for v in geo['perspective']['wall'])}] }};",
         '',
         '/** Where .cam zooms about, in scene units: the gap the camera flies through */',
         f"export const CAMERA = {{ x: {num(geo['camera']['x'])}, y: {num(geo['camera']['y'])} }};",

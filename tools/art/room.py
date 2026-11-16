@@ -54,6 +54,40 @@ WINDOW_RADIUS = 10
 # scene.css), so this moves with the window.
 CAM_GAP = (90, 85.808)
 
+# ------------------------------------------------------------------ Perspective
+# The compartment as a box in metres, seen in one-point perspective. The camera
+# stands just inside the door looking straight at the window wall, which is
+# therefore drawn face-on; everything that runs toward the camera (side walls,
+# floor, ceiling, seats, the rack's underside) converges on the vanishing point.
+#
+# The vanishing point is the camera's zoom origin: the opening flies into the
+# point the room converges on. The scale and the eye height are read off the
+# window wall as it was already drawn: the window is 1.0 m wide (180 units) and
+# the floor meets the wall at y = 440. That puts the camera at chest height,
+# which is where the detective wears it. See docs/13, stage 1.
+WALL_SCALE = 180  # scene units per metre on the window wall
+WALL_DIST = 2.0  # metres from the camera to the window wall
+FOCAL = WALL_SCALE * WALL_DIST
+ROOM_HALF_WIDTH = 1.2  # the window wall runs 2.4 m between the side walls
+ROOM_CEILING = 2.30
+
+
+def vanishing_point():
+    """Where everything receding meets: the camera's zoom origin."""
+    return (WINDOW[0] + CAM_GAP[0], WINDOW[1] + CAM_GAP[1])
+
+
+EYE = (440 - vanishing_point()[1]) / WALL_SCALE  # camera height, about 1.28 m
+
+
+def P(X, Y, Z):
+    """A point in the compartment (metres: X right of centre, Y up from the
+    floor, Z away from the camera) projected into scene units."""
+    vx, vy = vanishing_point()
+    k = FOCAL / Z
+    return (vx + X * k, vy - (Y - EYE) * k)
+
+
 # The page's animated glows (.g-*), each x y w h. Two sit over light sources on
 # the walls, one over the laptop and one over the window; those two are relative
 # to the object they belong to.
@@ -93,7 +127,10 @@ def geometry(masks):
             ax, ay = (wx, wy) if gl[0] == 'window' else OBJECTS[gl[0]]['at']
             gl = (ax + gl[1], ay + gl[2], gl[3], gl[4])
         glows[key] = gl
+    (bx0, by0), (bx1, by1) = P(-ROOM_HALF_WIDTH, ROOM_CEILING, WALL_DIST), P(ROOM_HALF_WIDTH, 0, WALL_DIST)
+    vx, vy = vanishing_point()
     return dict(
+        perspective=dict(vx=vx, vy=vy, wall=(bx0, by0, bx1, by1)),
         window=dict(x=wx, y=wy, w=ww, h=wh, r=WINDOW_RADIUS),
         camera=dict(x=wx + CAM_GAP[0], y=wy + CAM_GAP[1]),
         glows=glows,

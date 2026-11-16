@@ -60,6 +60,7 @@ def geometry():
     src = open(os.path.join(ROOT, 'src', 'scene', 'geometry.gen.ts')).read()
     nums = lambda s: [float(v) for v in re.findall(r'-?[\d.]+', s)]
     win = nums(re.search(r'WINDOW = \{([^}]*)\}', src).group(1))
+    persp = nums(re.search(r'PERSPECTIVE: [^=]*= \{(.*)\};', src).group(1))
     cam = nums(re.search(r'CAMERA = \{([^}]*)\}', src).group(1))
     objects = {}
     for m in re.finditer(r'^ {2}(\w+): \{ (.*) \},$', src, re.M):
@@ -73,16 +74,23 @@ def geometry():
         if sprite:
             o['sprite'] = sprite.group(1)
         objects[m.group(1)] = o
-    return win, cam, objects
+    return win, cam, objects, persp
 
 
 def overlay(im, geo):
     """The geometry drawn over a composite, in the overlay's colours."""
-    win, cam, objects = geo
+    win, cam, objects, persp = geo
     out = im.copy()
     d = ImageDraw.Draw(out)
     S = lambda v: (v + SIDE) * K  # scene x to composite pixels
     Y = lambda v: v * K
+    vx, vy, wx0, wy0, wx1, wy1 = persp
+    orange = (255, 154, 59)
+    d.line([0, Y(vy), out.width, Y(vy)], fill=orange, width=1)
+    d.rectangle([S(wx0), Y(wy0), S(wx1), Y(wy1)], outline=orange, width=2)
+    for cx, cy in ((wx0, wy0), (wx1, wy0), (wx0, wy1), (wx1, wy1)):
+        d.line([S(vx), Y(vy), S(vx + (cx - vx) * 6), Y(vy + (cy - vy) * 6)], fill=orange, width=2)
+    d.ellipse([S(vx) - 6, Y(vy) - 6, S(vx) + 6, Y(vy) + 6], outline=orange, width=2)
     x, y, w, h, r = win
     d.rounded_rectangle([S(x), Y(y), S(x + w), Y(y + h)], r * K, outline=(57, 255, 136), width=2)
     d.line([S(cam[0] - 6), Y(cam[1]), S(cam[0] + 6), Y(cam[1])], fill=(255, 59, 59), width=2)
