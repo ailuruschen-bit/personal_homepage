@@ -5,8 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc --noEmit && vite build",
+    "build": "node tools/art/check.mjs && tsc --noEmit && vite build",
     "preview": "vite preview",
+    "art": "python3 tools/art/build.py && node tools/art/check.mjs",
+    "art:check": "node tools/art/check.mjs",
     "format": "prettier --write ."
   },
   "devDependencies": {

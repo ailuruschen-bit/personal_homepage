@@ -458,11 +458,16 @@ cleaner at the edges, and the Layers count has not changed.
 
 ### 0.4 Check
 
-`tools/art/check.py`, run as `npm run art:check` and as the first step of
-`npm run build`: every manifest id has exactly one hotspot and every hotspot an
-id; every sprite exists; every asset has the size the CSS expects; the window
-rectangle sits inside the room. A mismatch fails the build with a message that
-names the file to fix.
+`tools/art/check.mjs`, run as `npm run art:check`, at the end of `npm run art`,
+and as the first step of `npm run build`: every manifest id has exactly one
+hotspot and every hotspot an id; every sprite exists and covers its box; the
+room, side and city assets have the sizes `scene.css` lays them out at, `--tile`
+included; the window sits inside the scene. A mismatch fails with a message
+that names the file to fix.
+
+It is written for Node with no dependencies rather than in Python, because
+`npm run build` has to work on any machine that builds the site, and those are
+not guaranteed to have Python and Pillow.
 
 ### 0.5 Debug overlay
 
@@ -593,7 +598,7 @@ Updated in the same commit as each step.
 | 0     | 0.1  | done    |
 | 0     | 0.2  | done    |
 | 0     | 0.3  | done    |
-| 0     | 0.4  | pending |
+| 0     | 0.4  | done    |
 | 0     | 0.5  | pending |
 | 0     | 0.6  | pending |
 | 0     | 0.7  | pending |
