@@ -6,3 +6,4 @@ dist
 # art review scratch
 .review/
 __pycache__/
+public/_bisect/

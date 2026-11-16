@@ -970,6 +970,18 @@ def build_room(seed=21):
     )
     k = px.SCALE
     a = np.asarray(im).copy()
+    # The page lays a vignette over the 480 scene (scene.css .vig) and must not
+    # be made to cover the side extensions as well: overlays wider than the
+    # scene, and gradients painted inside the extensions, both flickered in
+    # Chrome (docs/09, F-002). So the extensions get the same vignette baked in
+    # here. It is .vig's gradient exactly: an ellipse about (240, 201.6) reaching
+    # the scene's farthest corner, clear to 38% and rgba(5, 4, 14, 0.5) by 82%.
+    ys, xs = np.mgrid[0 : H * k, 0 : W * k].astype(np.float32)
+    sx, sy = (xs + 0.5) / k - OX, (ys + 0.5) / k
+    t = np.sqrt(((sx - 240) / (240 * 2**0.5)) ** 2 + ((sy - 201.6) / (278.4 * 2**0.5)) ** 2)
+    va = (0.5 * np.clip((t - 0.38) / (0.82 - 0.38), 0, 1))[..., None]
+    va = np.where((sx < 0) | (sx >= 480), 1, 0)[..., None] * va
+    a[..., :3] = (a[..., :3] * (1 - va) + np.array([5, 4, 14], np.float32) * va).astype(np.uint8)
     a[..., 3] = 255
     # Punch out the window opening
     hole = hole_mask()[..., None]

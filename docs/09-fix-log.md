@@ -19,6 +19,54 @@ anything that is now load-bearing because of it.
 
 ---
 
+## F-002 Chrome: flicker after shading the side panels
+
+**Fixed by going back; the exact trigger was not isolated.** Chrome only.
+
+### Symptoms
+
+Patches of the picture's top colour flickered at the start of the opening, at
+the end of the return to the carriage, and when focus moved between objects.
+Unlike F-001 it was not the city showing through.
+
+### Cause
+
+Introduced while removing a step in tone between the room and its side
+extensions. Two attempts both flickered:
+
+1. Widening `.vig`, `.spot` and `.beam` to cover the extensions — three layers
+   half as large again as the scene, one of them blended.
+2. Putting them back and painting the same gradients inside the extensions
+   with `::before` and `::after`, centred far outside their own boxes.
+
+Both also rewrote `.vig`'s gradient with an explicit ellipse size, and that
+size was wrong. Snapshots of four commits served side by side settled which
+range was at fault; which of these changes was the trigger was not pursued.
+
+### Fix
+
+Page code for the overlays is back to what it was. The step in tone is removed
+without touching them:
+
+- the vignette over the side extensions is **baked into the artwork** by
+  `room.py`, using `.vig`'s gradient exactly;
+- the focus dimming over them is two more elements of exactly the kind `.spot`
+  already is (`.spot.side`), each only as large as the extension it covers.
+
+### Load-bearing afterwards
+
+- No overlay inside `.scene` larger than the scene.
+- No gradients painted in pseudo-elements of `.ext`.
+- `.vig` keeps `ellipse at 50% 42%` with no explicit size.
+
+### How it was found
+
+Guessing failed twice. What worked was building the site at several commits and
+serving the builds side by side under `public/_bisect/` for the browser that
+showed the fault. Do that first next time.
+
+---
+
 ## F-001 Chrome: the city drawn over the carriage
 
 **Fixed.** Reproduced in Chrome only; Safari and the Chromium-based in-app
