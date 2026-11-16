@@ -17,17 +17,16 @@ because they are content rather than documentation.
 ```
 [A]  anchored   a function of scroll offset; replays on a second pass
 [R]  reactive   answers the pointer or idling; plays once per trigger
-[L]  live       after the badge reads LIVE
+[L]  live       after the tape stops; off the record
 [  ] placeholder — needs a real fact and is not mine to invent
 ```
 
 ## Cast
 
-| Who    | What they are                                                         |
-| ------ | --------------------------------------------------------------------- |
-| 侦探   | hired, experienced, unimpressed. Heard, never seen. Wears the camera. |
-| 他     | the occupant. A silhouette in a doorway, then a voice.                |
-| 委托人 | the reader. Never named, never addressed until the door.              |
+| Who  | What they are                                                   |
+| ---- | --------------------------------------------------------------- |
+| 侦探 | the reader. Hired, experienced, unimpressed. Heard, never seen. |
+| 他   | the occupant. A silhouette in a doorway, then a voice.          |
 
 ## The setting
 
@@ -36,9 +35,9 @@ compartment with the light left on, a cup still steaming, a laptop still open.
 Its occupant is in the vestibule taking a phone call, because that is where
 calls are taken on a train.
 
-The detective comes down the corridor from the next carriage. He is wearing a
-camera; the client asked to see for themselves. What the reader watches is that
-feed, with a buffer, which is why it rewinds.
+The detective comes down the corridor from the next carriage. He records his
+jobs; what the reader is doing is going back through the tape, which is why it
+rewinds.
 
 The timecode is a function of scroll. The whole visit runs under ten minutes
 however long it is read.
@@ -48,7 +47,7 @@ however long it is read.
 ## Scene 0 — In
 
 **Segment:** the opening, locked. **Camera:** as built — the blinds tilt, the
-camera goes out through the window to the city. **Chrome:** 回放,
+camera goes out through the window to the city. **Chrome:** REC,
 `00:00:00`.
 
 ```
@@ -67,11 +66,10 @@ contradicts in silence for the rest of the site.
 
 ```
 [A] 景色不错。
-[A] 可惜委托人不是花钱请我看风景的。
+[A] 可惜没人花钱请我看风景。
 ```
 
-The second line is the scroll affordance, and the only time the client is
-mentioned before the door.
+The second line is the scroll affordance.
 
 ## Scene 2 — The compartment
 
@@ -81,7 +79,7 @@ mentioned before the door.
 [A] 一个人的铺位。东西摆得像随时准备跑路。
 [A] 这种人我见得多了。要么赶时间，要么心里有鬼。
 
-[R] 车窗        看风景的时间，委托人不报销。
+[R] 车窗        看风景不算工时。
 [R] 墙上线路图  铁路公司的线路图。公家的东西，问不出什么。
 [R] 咖啡        还烫。别碰——杯子挪了位置，比指纹还难解释。
 [R] 电脑        屏幕还亮着。现在的人连锁屏都懒得按。
@@ -172,23 +170,26 @@ timecode reads `00:09:47`.
 [A] ……我还是回头了。
 ```
 
-The third beat turns the camera. The badge changes from 回放 to LIVE.
+The third beat turns the camera.
 
 ```
-[L] 他    ……你坐错车厢了吧？
-[L] 他    还录着呢。那正好——不管是谁在看，想知道什么，直接问我。
-[L] 侦探  ……那我的尾款还结吗？
+[A] 录像我关了。这段不能留。
+```
+
+The badge goes out and the timecode freezes. The rest is off the record.
+
+```
+[L] 他  ……你坐错车厢了吧？
+[L] 他  想知道什么，直接问我。翻东西多累。
 ```
 
 The first is an understatement from a man who keeps his ticket to the
-millimetre. The second is him taking the camera, and it is the chat section's
-opening prompt: the reader is now being spoken to, about the thing they came
-for. The third is optional and the first to cut.
+millimetre. The second is the chat section's opening prompt: the reader has
+been finding things out the hard way, and is offered the easy way.
 
 ## Scene 9 — The last frame
 
-**Camera:** the window transit outward, as built. He has put the camera down
-facing the window.
+**Camera:** the window transit outward, as built.
 
 ```
 [A] 侦探  下一趟车我买票。
@@ -208,10 +209,10 @@ out here.
 | 2   | A   | 侦探 | opening 0.55     | 人在连廊接电话。守规矩的乘客，对我这行最友好。             |
 | 3   | A   | 侦探 | opening 0.80     | 咖啡还冒着气。他以为自己一分钟就回来。                     |
 | 4   | A   | 侦探 | cover 0.15       | 景色不错。                                                 |
-| 5   | A   | 侦探 | cover 0.60       | 可惜委托人不是花钱请我看风景的。                           |
+| 5   | A   | 侦探 | cover 0.60       | 可惜没人花钱请我看风景。                                   |
 | 6   | A   | 侦探 | hub 0.25         | 一个人的铺位。东西摆得像随时准备跑路。                     |
 | 7   | A   | 侦探 | hub 0.55         | 这种人我见得多了。要么赶时间，要么心里有鬼。               |
-| 8   | R   | 侦探 | focus 车窗       | 看风景的时间，委托人不报销。                               |
+| 8   | R   | 侦探 | focus 车窗       | 看风景不算工时。                                           |
 | 9   | R   | 侦探 | focus 墙上线路图 | 铁路公司的线路图。公家的东西，问不出什么。                 |
 | 10  | R   | 侦探 | focus 咖啡       | 还烫。别碰——杯子挪了位置，比指纹还难解释。                 |
 | 11  | R   | 侦探 | focus 电脑       | 屏幕还亮着。现在的人连锁屏都懒得按。                       |
@@ -233,13 +234,13 @@ out here.
 | 27  | A   | 侦探 | door 0.20        | 门响了。                                                   |
 | 28  | A   | 侦探 | door 0.50        | 干这行学会的第一件事：门响的时候，别回头。                 |
 | 29  | A   | 侦探 | door 0.80        | ……我还是回头了。                                           |
-| 30  | L   | 他   | live             | ……你坐错车厢了吧？                                         |
-| 31  | L   | 他   | live             | 还录着呢。那正好——不管是谁在看，想知道什么，直接问我。     |
-| 32  | L   | 侦探 | live, optional   | ……那我的尾款还结吗？                                       |
+| 30  | A   | 侦探 | door 0.95        | 录像我关了。这段不能留。                                   |
+| 31  | L   | 他   | live             | ……你坐错车厢了吧？                                         |
+| 32  | L   | 他   | live             | 想知道什么，直接问我。翻东西多累。                         |
 | 33  | A   | 侦探 | departure 0.30   | 下一趟车我买票。                                           |
 | 34  | A   | 他   | departure 0.70   | 景色不错吧。                                               |
 
-Twenty-five anchored, six reactive, three live — on the budget in
+Twenty-six anchored, six reactive, two live — on the budget in
 [11](11-premise-and-voice.md#budget).
 
 ### Devices in use
@@ -259,7 +260,7 @@ Twenty-five anchored, six reactive, three live — on the budget in
 Everything in brackets needs a real fact. The annotation layer — the report —
 is not drafted here at all: it is the longest writing in the project and has to
 sound like one person. The occupant's persona for the chat is also undrafted;
-its only fixed points are lines 30 and 31.
+its only fixed points are lines 31 and 32.
 
 ## Keep in sync
 

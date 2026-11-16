@@ -11,15 +11,9 @@ map, the briefcase and what is still open on the laptop are evidence. The
 detective mutters to himself while he works, and the last thing that happens is
 that the occupant comes back and catches him.
 
-You are the client. What you are watching is the feed from the detective's
-camera, which is why you can scroll back through it — and when the occupant
-finds the camera still running, he picks it up and offers to answer your
-questions himself. That is the chat.
-
-The current version is **structure and interaction only**. Every piece of copy
-is a placeholder; search for `TODO` to find what still needs writing.
-
-Stack: Vite + TypeScript, no runtime dependencies.
+You are the detective, going back through the tape of the job — which is why
+you can scroll back through it. He stops recording when the door opens, and the
+chat at the end is the part that is off the record.
 
 ## Development
 

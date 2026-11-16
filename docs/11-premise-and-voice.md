@@ -7,20 +7,15 @@ scene.
 
 ## The premise
 
-A private detective has been hired to find out what kind of person the occupant
-of a sleeper compartment is. The occupant has stepped out to take a phone call.
-The detective walks down the corridor from the next carriage, lets himself in,
-and goes through the man's things — wearing a camera, because the client wants
-to see for themselves.
+**The reader is the detective.** He has been hired to find out what kind of
+person the occupant of a sleeper compartment is — by whom is never said and
+does not matter. The occupant has stepped out to take a phone call. The
+detective walks down the corridor from the next carriage, lets himself in, and
+goes through the man's things.
 
-**The reader is the client.** They watch the feed through the detective's eyes
-and hear him mutter as he works. They never chose to be a detective; they
-wanted to know about this person, which is the real reason anyone opens a
-personal site. The fiction does not ask the reader to pretend anything. It
-describes what they are already doing.
-
-Who the client is, is never said. A recruiter will recognise themselves and
-smile; everyone else is simply curious, which is also a kind of client.
+He records the job, as he records every job, and what the reader is doing is
+going back through that recording to write it up. That is the whole structure:
+one person, one room, one tape.
 
 ## What this fixes
 
@@ -37,11 +32,11 @@ blinds, flies out to the city and comes back. It does not change. He has just
 come in, and the first thing he does is look out. The window is a glance, never
 a way in or out — on a moving train the only way in is the door.
 
-**Why the reader can scroll back.** It is a feed with a buffer. See
+**Why the reader can scroll back.** It is a tape, and he is reviewing it. See
 [The recording](#the-recording).
 
 **Why the chat exists.** Because he gets caught, and the occupant would rather
-answer questions than be investigated. See
+answer questions than have his things gone through. See
 [The confrontation](#the-confrontation).
 
 ## Plausibility audit
@@ -49,20 +44,19 @@ answer questions than be investigated. See
 Every hole found in the earlier drafts, and what closes it. A fiction that
 wants the reader to smile cannot afford one detail that makes them frown.
 
-| Hole                                                                  | Fix                                                                                                           |
-| --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| Nobody climbs into a moving train through a window                    | He comes down the corridor and through the compartment door                                                   |
-| The detective had no reason to be there                               | He is on a job. The client wants to know who this man is                                                      |
-| The reader was told to be a detective, but wants what a client wants  | The reader is the client, watching through his camera                                                         |
-| A break-in cannot be rewound                                          | It is a feed with a buffer; scrolling back is reviewing footage                                               |
-| A reader can take an hour; he has a minute                            | The timecode is a function of scroll, not of the clock. The tape is under ten minutes however long it is read |
-| A passenger does not scribble on the railway's wall map               | The wall map stays as a decoy he dismisses. The journey is a rolled map of his own                            |
-| A ticket does not say who someone is                                  | His business card is tucked behind it. The ticket says where he is going; the card says who he is             |
-| "Tools of the trade" in a briefcase was a metaphor with nothing in it | It holds books. Worn spines are what he uses, the bookmarked one is what he is learning                       |
-| An engineer who leaves a laptop unlocked looks careless               | Everything open on it is a public repository. Nothing leaks, and the detective is the one who looks foolish   |
-| Why is the coffee steaming if he went for coffee                      | He went to take a call in the vestibule, which is where calls are taken on a train                            |
-| The reader's real questions are a client's, not a burglar's           | At the door the occupant takes the camera and addresses the client directly                                   |
-| A camera on the detective cannot fly out of the window at the end     | The occupant turns it to face the window. The last shot is his, and so is the last line                       |
+| Hole                                                    | Fix                                                                                               |
+| ------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| Nobody climbs into a moving train through a window      | He comes down the corridor and through the compartment door                                       |
+| The detective had no reason to be there                 | He is on a job. Who hired him is never said                                                       |
+| A break-in cannot be rewound                            | It is his own recording, and he is reviewing it                                                   |
+| A reader can take an hour; he has a minute              | The timecode is a function of scroll. The tape is under ten minutes however long it is read       |
+| A passenger does not scribble on the railway's wall map | The wall map stays as a decoy he dismisses. The journey is a rolled map of his own                |
+| A ticket does not say who someone is                    | His business card is tucked behind it. The ticket says where he is going; the card says who he is |
+| "Tools of the trade" in a case was an empty metaphor    | It holds books. Worn spines are what he uses, the bookmarked one is what he is learning           |
+| An engineer who leaves a laptop unlocked looks careless | Everything open on it is a public repository. The detective is the one who looks foolish          |
+| Why is the coffee steaming if he went for coffee        | He went to take a call in the vestibule, which is where calls are taken on a train                |
+| Why would a man who has been burgled chat               | Because answering is less trouble than being searched, and he says so                             |
+| The tape cannot contain the conversation                | It does not. He stops recording at the door; the chat is off the record                           |
 
 ## What it costs
 
@@ -92,12 +86,12 @@ in all three.
 
 ## The recording
 
-### A feed with a buffer
+### His own tape
 
-The detective's camera transmits to the client. Like any recorder with a
-buffer, the feed can be scrubbed back and played forward, and it can be paused.
-Scrolling is scrubbing. Stopping is pausing. Nothing about the interaction has
-to be excused; it is what the device does.
+The detective records his jobs and reviews the tape to write the report. A tape
+can be scrubbed back, played forward and paused. Scrolling is scrubbing.
+Stopping is pausing. Nothing about the interaction has to be excused; it is
+what one does with a recording.
 
 Footage rather than memory, because a tape's signifiers are concrete and a
 memory's are vague, and because the film grain already in the artwork stops
@@ -109,20 +103,20 @@ being a style and becomes a property of the picture.
 | ---------- | ----------- | ------------------------------------------ |
 | artifact   | on the tape | none — it is a document                    |
 | spoken     | on the tape | what he muttered while working: short, dry |
-| annotation | afterwards  | the written report to the client, composed |
+| annotation | afterwards  | the written report, composed               |
 
 The spoken lines can be unsure and the report can be certain without either
 being out of character.
 
 ### What carries it
 
-| Element    | Doing double duty as                                |
-| ---------- | --------------------------------------------------- |
-| timecode   | the scroll progress indicator                       |
-| 回放 badge | the reminder that this has already happened         |
-| ▶▶         | what a click-to-jump looks like: it is fast-forward |
-| grain      | already in the artwork; now it has a reason         |
-| subtitle   | his muttering, transcribed                          |
+| Element   | Doing double duty as                                           |
+| --------- | -------------------------------------------------------------- |
+| timecode  | the scroll progress indicator                                  |
+| REC badge | the reminder that this is a recording; it goes out at the door |
+| ▶▶        | what a click-to-jump looks like: it is fast-forward            |
+| grain     | already in the artwork; now it has a reason                    |
+| subtitle  | his muttering, transcribed                                     |
 
 The timecode maps scroll offset onto elapsed time, not the reader's clock. The
 whole intrusion runs a little under ten minutes however long it is read. That
@@ -134,11 +128,13 @@ the compositing fault this project spent seven attempts removing — see
 [09](09-fix-log.md#f-001-chrome-the-city-drawn-over-the-carriage). Nothing
 should pretend to be broken.
 
-### Where playback ends
+### Where the tape ends
 
-At the door. The badge changes from 回放 to LIVE: the buffer has caught up with
-the present. It is one word changing in a corner, and it is the strongest beat
-in the site, because everything before it was already over.
+At the door. A professional does not keep footage of himself being caught, so
+he switches it off: the badge goes out, the timecode freezes, the grain
+settles. Everything before that moment was already over. What follows is not
+on any tape, which is exactly what a conversation with a chatbot is — it is
+happening now, and it is off the record.
 
 ## Two layers
 
@@ -249,21 +245,18 @@ room.
 
 ### The confrontation
 
-`chat` is the only chapter where the detective is not alone, and it is where
-the reader stops being a spectator.
+`chat` is the only chapter where the detective is not alone.
 
 The door opens. He is a silhouette against the corridor and is never drawn
-further than that. He looks at the detective, then at the camera, and he
-understands the situation faster than the detective would like. He picks up the
-camera and speaks into it:
+further than that. He takes in the open briefcase and the unrolled map, and he
+is less angry than tired:
 
-> 还录着呢。那正好——不管是谁在看，想知道什么，直接问我。
+> 想知道什么，直接问我。翻东西多累。
 
-That is the chat section. The occupant is talking to the client, who is the
-reader, about the thing the reader came to find out. Nobody is asked to
-roleplay. The questions a visitor actually has — what he has built, what he
-works with, whether he is available — are exactly the questions the scene calls
-for.
+That is the chat section. The reader has spent the whole site finding things
+out the hard way; the occupant offers the easy way. The questions a visitor
+actually has — what he has built, what he works with, whether he is available —
+are what a detective on this job would ask.
 
 Rules, all downstream of facts-never-behind-fiction:
 
@@ -274,14 +267,15 @@ Rules, all downstream of facts-never-behind-fiction:
 
 ## The ending
 
-When the conversation is over, the occupant puts the camera down facing the
-window. The last shot is the city the tape opened on, and the last line is the
-detective's first one, taken from him:
+When the conversation is over the detective leaves by the door he came in by,
+and the occupant, who has every right to the last word, takes the detective's
+first line from him:
 
 > 景色不错吧。
 
-The window transit runs outward, as built. The footer lives out there — links,
-colophon, source — as a place rather than a strip.
+The window transit runs outward, as built, and ends on the city the site
+opened on. The footer lives out there — links, colophon, source — as a place
+rather than a strip.
 
 **Rejected: a timer.** His return is positional: it happens because the reader
 reached the last chapter, not because they were slow. Nothing counts down, and
@@ -305,18 +299,11 @@ have today.
 
 ## Open questions
 
-1. **The reader as client rather than detective.** This departs from the
-   original brief, which cast the reader as the detective. The reader still
-   sees everything through his eyes; what changes is who the tape is for. It is
-   the fix for the chat making sense, and it is the largest single decision on
-   this page.
-2. **Is the client ever named?** Proposed: no.
-3. **Does the detective get a last word in the chat?** There is a line for it
-   in [12](12-script.md). It is the cheapest laugh in the script and the first
-   to cut.
-4. **What is the hobby object?** It should be the one thing in the room that
+1. **What is the hobby object?** It should be the one thing in the room that
    has nothing to do with work.
-5. **Language of first release.**
+2. **How hard does the tape press?** The timecode and the grain are the floor.
+   Add upward only if the framing is not landing.
+3. **Language of first release.**
 
 ## Keep in sync
 
