@@ -891,9 +891,10 @@ def build_room(seed=21):
     amb = np.ones((H, W, 3), np.float32)
     yy = np.arange(H, dtype=np.float32).reshape(H, 1, 1)
     amb *= np.clip(1.05 - np.abs(yy - 250) / 760, 0.6, 1.05)
-    xx = np.arange(W, dtype=np.float32).reshape(1, W, 1) - OX
-    edge = np.clip(np.minimum(xx + 120, 600 - xx) / 150, 0, 1)
-    amb *= 0.42 + 0.58 * edge**0.8
+    # No darkening toward the left and right edges here. The extensions used to
+    # be a dark periphery and were faded out in the art; now they show the side
+    # walls and benches, which are part of the room, and the page's vignette
+    # (scene.css .vig) shades the whole width as one picture.
     im = render(
         cv,
         ambient=(0.36, 0.36, 0.56),
@@ -907,9 +908,6 @@ def build_room(seed=21):
     )
     k = px.SCALE
     a = np.asarray(im).copy()
-    # the extensions fall off toward the edges along with the light
-    fall = np.repeat(0.4 + 0.6 * edge[0, :, 0] ** 0.7, k).reshape(1, W * k, 1)
-    a[..., :3] = (a[..., :3] * fall).astype(np.uint8)
     a[..., 3] = 255
     # Punch out the window opening
     hole = hole_mask()[..., None]
