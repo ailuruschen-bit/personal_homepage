@@ -398,7 +398,7 @@ this workflow decode the images and compare pixels, never bytes.
 **Changes no pixel.** The point of this stage is that every later stage can
 move objects without anything else having to be updated by hand. It removes the
 root of the bug class described in
-[06](06-art-pipeline.md#keeping-the-outlines-in-sync): geometry written down
+[06](06-art-pipeline.md#this-used-to-be-a-source-of-bugs): geometry written down
 twice.
 
 ### 0.1 Geometry manifest

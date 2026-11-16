@@ -170,4 +170,5 @@ being driven up by the zoom. See [05](05-rendering-and-compositing.md).
 - The timeline table above and the `.intro .*` rules in `scene.css`.
 - The `6.5` factor appears in `@keyframes push`, in `.idle .cam`, and in
   [05](05-rendering-and-compositing.md).
-- `CAM_ORIGIN_Y` in `focus.ts` and `transform-origin` on `.cam`.
+- The camera origin is generated from `CAM_GAP` in `room.py`; see
+  [02](02-scene-coordinates.md#the-zoom-origin).

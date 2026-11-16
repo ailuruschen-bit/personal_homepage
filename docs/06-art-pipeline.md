@@ -157,9 +157,10 @@ lighting on the underside of each cloud, then quantised to 64 colours.
 Drawn on a 720x480 canvas covering scene x from -120 to 600, then cut into the
 central 480 (`room.webp`) and the two 120-wide extensions.
 
-The `Off` class wraps the canvas with a horizontal offset so every drawing call
-can be written in scene coordinates directly — the same numbers that appear in
-`hotspots.ts`.
+The `Off` class wraps the canvas with an offset so every drawing call can be
+written in scene coordinates directly. It can also carry a tag: while an
+interactive object is drawn through `place()`, every solid or lit shape it
+draws is recorded into that object's silhouette mask.
 
 Sections: `shell` (ceiling, walls, floor, heater grille), `rack` (luggage and
 the route map), `window` (frame, curtains, sill), `walls` (posters, neon tube,
@@ -170,27 +171,46 @@ Two things at the end are easy to miss:
 
 - The lighting is finished with a set of `light()` calls that place the warm
   lamp, the cold window light, the screen glow and the floor lights.
-- The window opening is punched out using `hole.png`, a mask kept in
-  `tools/art/`, upscaled with the same EPX so its edge matches the artwork.
+- The window opening is punched out from `WINDOW`, one unit inside it so the
+  frame overlaps `.win`, upscaled with the same EPX so its edge matches the
+  artwork.
 
-## Keeping the outlines in sync
+## Geometry comes from the art
 
-`src/scene/hotspots.ts` carries a `shape` polygon for each liftable object. It
-must hug what `room.py` actually draws, to the pixel: anything beyond the
-outline lifts the surrounding wall or table with the object.
+Everything the page needs to know about where things are is defined once, at
+the top of `room.py`, and generated from there by `build.py`:
 
-The scene grid and the art coordinates are the same numbers, which makes this
-checkable. For example `room.py` draws the briefcase as
-`g.rect(318, 58, 68, 34, ...)` with a handle at `g.rect(346, 55, 12, 3, ...)`,
-and `hotspots.ts` lists `[318,58] [346,58] [346,55] [358,55] [358,58] [386,58]
-[386,92] [318,92]` — the same box plus the handle.
+| In `room.py` | What it is                                                     | Generated into                         |
+| ------------ | -------------------------------------------------------------- | -------------------------------------- |
+| `OBJECTS`    | each focusable object's corner, snap zone and light (relative) | `geometry.gen.ts`                      |
+| silhouettes  | recorded while the object draws through `place()`              | its box, and `obj-<id>.webp`           |
+| `WINDOW`     | the opening and its corner radius                              | `.win` in `geometry.gen.css`, the hole |
+| `CAM_GAP`    | the gap in the blinds the camera flies through                 | `.cam`'s origin, `CAMERA`              |
+| `GLOWS`      | the animated glows, two relative to their objects              | `.g-*` in `geometry.gen.css`           |
 
-After moving an object in `room.py`, update the matching `shape`, `zone` and
-`light` entries.
+`hotspots.ts` keeps only what is not geometry: the target section and the
+object's name. A focused object lifts its own sprite, cut out along the
+silhouette it drew, so its edge is the drawing's edge and nothing around it can
+come with it.
+
+Moving an object is a change to its `at` in `OBJECTS`. Its zone, light, sprite
+and glow follow. The objects drawn before this existed keep their original
+coordinates and are shifted by `place()`; new objects are drawn relative to
+their own corner.
+
+`npm run art:check` fails the build when the generated geometry, the hotspots
+and the assets disagree, and `?debug=geometry` draws all of it over the scene.
+
+### This used to be a source of bugs
+
+Before stage 0 of [13](13-art-review.md), zones, lights and a polygon per
+object were copied by hand into `hotspots.ts`, the window into four places, and
+the glows into `scene.css`. An outline a pixel too generous lifted the wall
+with the object. That is why none of it may be written by hand again.
 
 ## Keep in sync
 
 - `px.SCALE` (set in `build.py`) and `.ly`'s `height` / `--tile` in
   `scene.css`: if a city layer changes pixel size, the CSS has to follow.
-- `room.py` object positions and `hotspots.ts` `shape` / `zone` / `light`.
-- `hole.png` and where `room.py` draws the window frame.
+- Nothing positional — see [Geometry comes from the art](#geometry-comes-from-the-art).
+  `npm run art:check` covers the city layers' sizes against `--tile` too.

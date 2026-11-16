@@ -65,7 +65,7 @@ and the split matters:
 
 ```css
 .cam {
-  transform-origin: 50% 43.71%;
+  /* transform-origin comes from geometry.gen.css: 50% 43.71% */
   transform: translateY(var(--fy, 0px)) scale(var(--fz, 1));
 }
 ```
@@ -97,10 +97,10 @@ vertically. `syncFrame` compensates:
 const shift = baseY + (240 - CAM_ORIGIN_Y) * u * (1 - zoom);
 ```
 
-`CAM_ORIGIN_Y = 480 * 0.4371` is the same origin expressed in scene units.
-**These two values must match.** If you move the origin in CSS, update
-`CAM_ORIGIN_Y`, or the hub framing will be vertically off by a few percent of
-the viewport.
+`CAM_ORIGIN_Y` is the same origin in scene units. Both come from one place:
+`CAM_GAP` in `tools/art/room.py`, relative to the window, written by the build
+into `geometry.gen.css` as `.cam`'s `transform-origin` and into
+`geometry.gen.ts` as `CAMERA`, which `focus.ts` reads. They cannot disagree.
 
 ## The hub framing
 
@@ -131,4 +131,5 @@ opening starts on the close-up the artwork was composed for.
 
 - `SCENE` in `units.ts`, `--u` in `scene.css`, and the 480 grid the art scripts
   draw on.
-- `CAM_ORIGIN_Y` in `focus.ts` and `transform-origin` on `.cam` in `scene.css`.
+- The blinds in `dom.ts` / `scene.css` and `CAM_GAP` in `room.py`: the gap
+  the camera flies through is between the 9th and 10th of 14 slats.
