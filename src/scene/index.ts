@@ -1,3 +1,4 @@
+import './geometry.gen.css';
 import './scene.css';
 import { sectionById } from '../content/sections';
 import { buildScene } from './dom';

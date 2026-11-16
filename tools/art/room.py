@@ -41,10 +41,28 @@ OBJECTS = {
     'journey': dict(at=(173, 67), zone=(-7, -7, 127, 27), light=(67, 10, 78, 18)),
 }
 
-# The window opening (x y w h) and its corner radius. The camera flies through it
-# in the opening and the city is seen through it, so the page needs it too.
+# The window opening (x y w h) and its corner radius. The page lays .win over it:
+# the city is seen through it and the camera flies through it in the opening.
+# The opening punched out of the carriage is one unit inside this on every side,
+# so the frame overlaps the edge of .win and no seam shows.
 WINDOW = (150, 124, 180, 140)
 WINDOW_RADIUS = 10
+
+# Where .cam zooms about, as an offset from the opening's top-left corner: the
+# middle of the gap between the 9th and 10th blind slats, the gap the camera
+# flies through. The blinds are laid out relative to the opening (dom.ts,
+# scene.css), so this moves with the window.
+CAM_GAP = (90, 85.808)
+
+# The page's animated glows (.g-*), each x y w h. Two sit over light sources on
+# the walls, one over the laptop and one over the window; those two are relative
+# to the object they belong to.
+GLOWS = {
+    'lamp': (294, 88, 180, 180),
+    'neon': (36, 90, 120, 200),
+    'lap': ('projects', -34, -26, 140, 120),
+    'out': ('window', -100, 26, 380, 260),
+}
 
 
 def geometry(masks):
@@ -68,7 +86,27 @@ def geometry(masks):
             light=(ax + li[0], ay + li[1], li[2], li[3]),
             box=(x0 - OX, y0, x1 - x0, y1 - y0),
         )
-    return dict(window=dict(x=wx, y=wy, w=ww, h=wh, r=WINDOW_RADIUS), objects=objects)
+    glows = {}
+    for key, gl in GLOWS.items():
+        if isinstance(gl[0], str):
+            ax, ay = (wx, wy) if gl[0] == 'window' else OBJECTS[gl[0]]['at']
+            gl = (ax + gl[1], ay + gl[2], gl[3], gl[4])
+        glows[key] = gl
+    return dict(
+        window=dict(x=wx, y=wy, w=ww, h=wh, r=WINDOW_RADIUS),
+        camera=dict(x=wx + CAM_GAP[0], y=wy + CAM_GAP[1]),
+        glows=glows,
+        objects=objects,
+    )
+
+
+def hole_mask():
+    """The window opening as a 1x mask over the 480 scene, white where the
+    carriage is cut away: one unit inside WINDOW, so the frame overlaps .win."""
+    x, y, w, h = WINDOW
+    m = Image.new('L', (480, 480), 0)
+    ImageDraw.Draw(m).rounded_rectangle([x + 1, y + 1, x + w - 1, y + h - 1], WINDOW_RADIUS - 1, fill=255)
+    return np.asarray(m)
 
 
 class Off:
@@ -415,6 +453,8 @@ def rack(g, rnd):
 
 # ------------------------------------------------------------------ Window and curtains
 def window(g, rnd):
+    # Drawn around an opening at (150, 124); shifted to wherever WINDOW is
+    g = g.at(WINDOW[0] - 150, WINDOW[1] - 124)
     # brass rail
     g.shadow(118, 104, 244, 5, 0.6)
     for x in (128, 240, 352):
@@ -898,7 +938,8 @@ def build_room(seed=21):
     table(g, rnd)
     # Overall lighting: the ceiling strip washing the walls, cold light from outside
     g.light(-120, 40, 720, 50, (255, 214, 160), 0.26)
-    g.light(150, 125, 180, 138, (120, 150, 255), 0.55)
+    wx, wy, ww, wh = WINDOW
+    g.light(wx, wy + 1, ww, wh - 2, (120, 150, 255), 0.55)
     g.light(110, 300, 260, 80, (120, 150, 255), 0.22)
     # the strip washing downward, warm lamp light landing on the table, floor
     # lights along the aisle
@@ -931,8 +972,8 @@ def build_room(seed=21):
     fall = np.repeat(0.4 + 0.6 * edge[0, :, 0] ** 0.7, k).reshape(1, W * k, 1)
     a[..., :3] = (a[..., :3] * fall).astype(np.uint8)
     a[..., 3] = 255
-    # Punch out the window opening, reusing the original hole mask so it lines up with .win
-    hole = np.asarray(Image.open('hole.png').convert('L'))[..., None]
+    # Punch out the window opening
+    hole = hole_mask()[..., None]
     n = 1
     while n < k:
         hole = px.epx(hole, wrap=False)

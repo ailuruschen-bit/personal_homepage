@@ -417,15 +417,22 @@ lines — and takes everything else from the manifest by id.
 **Done when** the rebuilt assets are pixel-identical to the baseline and the
 hub behaves exactly as before.
 
-### 0.2 Window and camera from the manifest
+### 0.2 Window, camera and glows from the manifest
 
-The window is written down four times: `hole.png`, the `.win` rectangle in
+The window was written down four times: `hole.png`, the `.win` rectangle in
 `scene.css` (150, 124, 180 × 140 in scene units), `transform-origin: 50%
-43.71%` on `.cam`, and `CAM_ORIGIN_Y` in `focus.ts`. Make `room.py` the owner:
-it draws the hole from a constant rectangle rather than reading `hole.png`, and
-the build writes `src/scene/geometry.gen.css` with custom properties for the
-window rectangle and the camera origin. `scene.css` and `focus.ts` read those.
-`hole.png` is deleted.
+43.71%` on `.cam`, and `CAM_ORIGIN_Y` in `focus.ts`. The four animated glows
+(`.g-lamp`, `.g-neon`, `.g-lap`, `.g-out`) were placed by hand over the
+artwork as well, and `.g-lap` would have stayed behind the moment the laptop
+moved.
+
+`room.py` now owns all of it: `WINDOW`, `CAM_GAP` (the gap in the blinds,
+relative to the window) and `GLOWS` (the laptop's and the window's relative to
+their objects). The hole is drawn from `WINDOW` — one unit inside it, which is
+exactly what `hole.png` held — and `hole.png` is gone. The build writes
+`src/scene/geometry.gen.css` with the position rules for `.win`, `.cam`'s
+origin and the glows, and `CAMERA` into the manifest for `focus.ts`.
+`scene.css` keeps only appearance.
 
 **Done when** the assets are pixel-identical to the baseline and the opening,
 the skip and the return look the same frame for frame.
@@ -584,7 +591,7 @@ Updated in the same commit as each step.
 | Stage | Step | Status  |
 | ----- | ---- | ------- |
 | 0     | 0.1  | done    |
-| 0     | 0.2  | pending |
+| 0     | 0.2  | done    |
 | 0     | 0.3  | pending |
 | 0     | 0.4  | pending |
 | 0     | 0.5  | pending |
