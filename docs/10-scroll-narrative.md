@@ -2,7 +2,9 @@
 
 **Status: proposed. Nothing in this page is implemented.** Pages 01-08 describe
 the site as it is; this one describes where it is going and is the reference for
-the refactor. Numbers given here are starting points to tune against the real
+the refactor. It settles how the camera moves;
+[11 Premise and voice](11-premise-and-voice.md) settles what it moves through,
+and the two should be read together. Numbers given here are starting points to tune against the real
 thing, not measurements.
 
 ## The idea
@@ -57,12 +59,15 @@ The whole site is one monotonic scalar. Call it `s`, measured in scroll pixels
 from the top of the document.
 
 ```
-s=0                                                              s=end
- │                                                                 │
- ├─ cover ─┤ porch ├═ window ═┤  hub  ├─ ch.1 ─┬─ ch.2 ─┬─ … ─┬────┤
- │         │       │  locked  │ index │        │        │     │    │
- 0        240     480        ---     900     ~3000    ~5100       end
+s=0                                                                      s=end
+ │                                                                         │
+ ├─ cover ─┤porch├═window═┤ hub ├─ ch.1 ─┬─ … ─┬─ ch.n ─┤porch├═window═┤ out ┤
+ │         │     │ locked │index│        │     │        │     │ locked │     │
+ 0        240   480      ---   900    ~3000           ~9000                end
 ```
+
+It is a ring: the city is at both ends, and the way out is the way in run
+backwards. See [the ending](11-premise-and-voice.md#the-ending).
 
 | Segment     | Span            | What the scroll does                                                 | Stoppable |
 | ----------- | --------------- | -------------------------------------------------------------------- | --------- |
@@ -71,9 +76,13 @@ s=0                                                              s=end
 | Window in   | locked, ~1100ms | the existing fixed animation; scroll input captured                  | no        |
 | Hub         | 480 → 900       | nothing moves; pointer parallax and pointer focus are live           | yes       |
 | Chapter _n_ | see below       | approach, open, read, close, handoff                                 | yes       |
+| Porch out   | 240             | camera retreats to the window after the last chapter                 | yes       |
+| Window out  | locked, ~1100ms | the same fixed animation, run outward                                | no        |
+| Departure   | 360             | the city again; links and colophon live here                         | yes       |
 
-Upward from the hub the same map runs in reverse: hub → porch → window transit
-out → cover.
+Upward from any point the same map runs in reverse. The two porches are the
+same zone and the two window transits are the same locked segment, which is why
+the ending costs almost nothing to build.
 
 ### Why a porch
 
@@ -203,8 +212,13 @@ for why that is a correctness constraint and not a taste one.
 
 ## Reading
 
-The read beat is part of the same axis. The content panel is **not** a nested
-scroll container; its inner element is translated:
+The read beat is part of the same axis, and it carries two layers: the artifact
+stays fixed in the frame for the whole chapter while the annotation scrolls past
+it. See [11 Premise and voice](11-premise-and-voice.md#two-layers) — only the
+annotation moves here.
+
+The content panel is **not** a nested scroll container; its inner element is
+translated:
 
 ```
 y = -clamp(readProgress, 0, 1) * max(0, contentHeight - viewportHeight)
@@ -343,8 +357,10 @@ A survey, not an implementation plan. No code has been changed.
    above is the cheaper fix for the thing auto-settling would be protecting
    against.
 2. **Chapter order.** Proposed: about (ticket) → journey (route map) → stack
-   (briefcase) → projects (laptop). It reads as a narrative and alternates carry
-   and dolly, which keeps consecutive transitions from feeling identical.
+   (briefcase) → projects (laptop) → chat. It alternates carry and dolly, which
+   keeps consecutive transitions from feeling identical, and it is also the
+   order the evidence would be found in — see
+   [11](11-premise-and-voice.md#the-evidence-map).
    `notes`, `hobby` and `chat` cannot become chapters until they have artwork
    and therefore an aperture.
 3. **Is the cover the top of the document?** Proposed yes: `s = 0` is outside,

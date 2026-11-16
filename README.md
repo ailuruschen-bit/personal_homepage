@@ -5,6 +5,11 @@ blinds open, flies out through the window, and settles on the city outside.
 Click once and it flies back in — and the carriage itself is the menu. Whatever
 object the light settles on is the section you enter.
 
+The reader is cast as a detective who has let themselves in while the occupant
+is away. Nothing in the carriage introduces itself: the ticket, the route map,
+the briefcase and what is still open on the laptop are evidence, and the site is
+what you make of them.
+
 The current version is **structure and interaction only**. Every piece of copy
 is a placeholder; search for `TODO` to find what still needs writing.
 
@@ -64,14 +69,22 @@ the carriage walks the camera through the objects in order and opens each one
 into its own reading; scrolling up goes back out of the window. Every transform
 becomes a function of scroll position rather than of elapsed time, so the
 picture stops wherever the reader stops. Clicking an object stays as a fast
-path along the same shot. The design is written up in
-[docs/10](docs/10-scroll-narrative.md); none of it is built yet.
+path along the same shot. Under the premise above those stop being transitions
+and become actions: you pick a thing up, or you lean in. Written up in
+[docs/10](docs/10-scroll-narrative.md) and
+[docs/11](docs/11-premise-and-voice.md); none of it is built yet.
+
+**Facts are never behind the fiction.** Who this is, what he works on, how to
+reach him: plain in the artifact itself, present in the no-JavaScript document,
+reachable by deep link. The voice is the second layer, never the carrier.
 
 ## Roadmap
 
 - [ ] **Scroll narrative** — the refactor described in
       [docs/10](docs/10-scroll-narrative.md): one document, one camera, chapters
       opened by scroll instead of pages opened by click
+- [ ] **Content model** — split sections into artifact, annotation and plain
+      facts, per [docs/11](docs/11-premise-and-voice.md)
 - [ ] Write the real copy: `content/site.ts`, `content/sections.ts`
 - [ ] notes / hobby / chat have no object yet — draw the artwork, then register
       them in `hotspots.ts`

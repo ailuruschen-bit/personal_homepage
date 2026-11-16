@@ -7,21 +7,22 @@ these pages explain how it works and why it is built this way.
 Read in order on a first pass. After that, each page stands on its own.
 
 Pages 01-08 describe the site as it is built. 09 records fixes worth
-remembering. 10 is a proposal and is not implemented; where it contradicts an
-earlier page, the earlier page is still what the code does.
+remembering. 10 and 11 are proposals and are not implemented; where they
+contradict an earlier page, the earlier page is still what the code does.
 
-| Page                                                            | What it covers                                                                  |
-| --------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| [01 Architecture](01-architecture.md)                           | Module map, boot sequence, where state lives, build and deploy                  |
-| [02 Scene coordinates](02-scene-coordinates.md)                 | The 480x480 grid, the camera model, the conversions in `units.ts`               |
-| [03 Phases and the opening](03-phases-and-opening.md)           | The phase machine, the opening timeline, how CSS and TypeScript divide the work |
-| [04 Focus system](04-focus-system.md)                           | Snapping, the pull on the light, the spotlight pool, parallax, input handling   |
-| [05 Rendering and compositing](05-rendering-and-compositing.md) | Layer order, what is promoted and when, which rules exist for Chrome            |
-| [06 Art pipeline](06-art-pipeline.md)                           | `tools/art/`: the canvas model, lighting, EPX, each layer, regenerating         |
-| [07 Content and routing](07-content-and-routing.md)             | The hash router, the section registry, the page shell                           |
-| [08 Maintenance recipes](08-maintenance-recipes.md)             | Step-by-step for the changes you are most likely to make                        |
-| [09 Fix log](09-fix-log.md)                                     | Bugs whose fix left rules in the code that look arbitrary without the story     |
-| [10 Scroll narrative](10-scroll-narrative.md)                   | _Proposed._ Scroll as the only clock: chapters, apertures, carry and dolly      |
+| Page                                                            | What it covers                                                                   |
+| --------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| [01 Architecture](01-architecture.md)                           | Module map, boot sequence, where state lives, build and deploy                   |
+| [02 Scene coordinates](02-scene-coordinates.md)                 | The 480x480 grid, the camera model, the conversions in `units.ts`                |
+| [03 Phases and the opening](03-phases-and-opening.md)           | The phase machine, the opening timeline, how CSS and TypeScript divide the work  |
+| [04 Focus system](04-focus-system.md)                           | Snapping, the pull on the light, the spotlight pool, parallax, input handling    |
+| [05 Rendering and compositing](05-rendering-and-compositing.md) | Layer order, what is promoted and when, which rules exist for Chrome             |
+| [06 Art pipeline](06-art-pipeline.md)                           | `tools/art/`: the canvas model, lighting, EPX, each layer, regenerating          |
+| [07 Content and routing](07-content-and-routing.md)             | The hash router, the section registry, the page shell                            |
+| [08 Maintenance recipes](08-maintenance-recipes.md)             | Step-by-step for the changes you are most likely to make                         |
+| [09 Fix log](09-fix-log.md)                                     | Bugs whose fix left rules in the code that look arbitrary without the story      |
+| [10 Scroll narrative](10-scroll-narrative.md)                   | _Proposed._ Scroll as the only clock: chapters, apertures, carry and dolly       |
+| [11 Premise and voice](11-premise-and-voice.md)                 | _Proposed._ The reader as a detective; the two content layers and what they cost |
 
 ## Conventions used in these pages
 

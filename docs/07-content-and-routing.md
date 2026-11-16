@@ -1,6 +1,6 @@
 # 07 Content and routing
 
-> **Planned change.** Routes resolve to scroll offsets in one document rather than to separate views, and this page's section shell becomes the no-JavaScript fallback. See [10 Scroll narrative](10-scroll-narrative.md).
+> **Planned change.** Routes resolve to scroll offsets in one document rather than to separate views, this page's section shell becomes the no-JavaScript fallback, and `SectionDef` splits into an artifact layer, an annotation layer and a plain `facts` layer — see also [11 Premise and voice](11-premise-and-voice.md). See [10 Scroll narrative](10-scroll-narrative.md).
 
 ## Routing
 
