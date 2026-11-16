@@ -137,9 +137,6 @@ def write_geometry_css(geo, path):
         ('.win', f"left: {pct(w['x'])}; top: {pct(w['y'])}; width: {pct(w['w'])}; height: {pct(w['h'])};\n"
                  f"  border-radius: calc(var(--u) * {num(w['r'])});"),
         ('.cam', f"transform-origin: {pct(cam['x'])} {pct(cam['y'])};"),
-        # Overlays that shade the room span the side extensions too; stopped at
-        # the edge of the 480 scene they leave a visible step in tone there
-        ('.vig,\n.spot,\n.beam', f"left: -{pct(geo['side'])}; right: -{pct(geo['side'])};"),
     ]
     for key, (x, y, gw, gh) in geo['glows'].items():
         rules.append((f'.g-{key}', f'left: {pct(x)}; top: {pct(y)}; width: {pct(gw)}; height: {pct(gh)};'))

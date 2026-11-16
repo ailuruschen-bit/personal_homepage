@@ -231,15 +231,12 @@
 .g-out {
   background: radial-gradient(ellipse, rgba(120, 150, 255, 0.14), transparent 68%);
 }
-/* The vignette, like .spot and .beam, spans the room and both side extensions
-   (left and right come from geometry.gen.css), so it shades them as one picture.
-   Its ellipse is the one `farthest-corner` gave over the 480 square before, in
-   scene units, so inside the room it is unchanged and outside it simply carries
-   on instead of stopping dead at the room's edge. */
+/* The vignette covers the 480 scene only. Its ellipse is written out in scene
+   units (it is what `farthest-corner` gives over the square) so that the side
+   extensions can continue exactly the same gradient: see .ext.l::before. */
 .vig {
   position: absolute;
-  top: 0;
-  bottom: 0;
+  inset: 0;
   pointer-events: none;
   background: radial-gradient(
     ellipse calc(var(--u) * 409.2) calc(var(--u) * 343.7) at 50% 42%,
@@ -300,8 +297,7 @@
 .spot,
 .beam {
   position: absolute;
-  top: 0;
-  bottom: 0;
+  inset: 0;
   pointer-events: none;
   opacity: 0;
   --sx: 50%;
@@ -912,11 +908,45 @@
   width: 25%;
   background: #05040c 0 0/100% 100% no-repeat;
 }
+/* The side extensions continue the room's vignette (::before) and its focus
+   dimming (::after) by painting the same gradients inside themselves, with the
+   centre expressed in their own box: the extensions are a quarter of the scene
+   wide, so the scene's 50% is 300% from the left one and -200% from the right.
+   The overlays themselves must not be widened to cover the extensions instead:
+   layers larger than the scene bring back the Chrome flicker (docs/09, F-001). */
+.ext.l::before,
+.ext.r::before,
+.ext.l::after,
+.ext.r::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+.ext.l::before,
+.ext.r::before {
+  background: radial-gradient(
+    ellipse calc(var(--u) * 409.2) calc(var(--u) * 343.7) at var(--cx) 42%,
+    transparent 38%,
+    rgba(5, 4, 14, 0.5) 82%
+  );
+}
+.ext.l::after,
+.ext.r::after {
+  opacity: var(--dim, 0);
+  background: radial-gradient(
+    ellipse var(--rx, 20%) var(--ry, 20%) at var(--sx, 50%) var(--sy, 50%),
+    rgba(5, 4, 14, 0) 0 70%,
+    rgba(5, 4, 14, 0.2) 120%,
+    rgba(5, 4, 14, 0.4) 320%
+  );
+}
 .ext.l {
+  --cx: 300%;
   right: 99.9%;
   background-image: url(/assets/room-l.webp);
 }
 .ext.r {
+  --cx: -200%;
   left: 99.9%;
   background-image: url(/assets/room-r.webp);
 }

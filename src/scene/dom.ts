@@ -14,6 +14,8 @@ export interface SceneEls {
   ml: HTMLElement;
   hint: HTMLElement;
   pops: HTMLElement[];
+  /** The left and right side extensions, in that order */
+  exts: HTMLElement[];
 }
 
 const BLIND_SLATS = 14;
@@ -110,5 +112,6 @@ export function buildScene(root: HTMLElement): SceneEls {
     ml: $('ml'),
     hint: $('hint'),
     pops: Array.from(root.querySelectorAll<HTMLElement>('.pop')),
+    exts: [root.querySelector<HTMLElement>('.ext.l')!, root.querySelector<HTMLElement>('.ext.r')!],
   };
 }

@@ -296,17 +296,27 @@ export class FocusEngine {
 
     this.els.beam.style.opacity = p.alpha.toFixed(3);
     this.els.spot.style.opacity = p.dim.toFixed(3);
-    if (p.alpha < 0.004 && p.dim < 0.004) return;
+    if (p.alpha < 0.004 && p.dim < 0.004) {
+      for (const el of this.els.exts) el.style.setProperty('--dim', '0');
+      return;
+    }
 
-    // .spot and .beam span the side extensions as well (SIDE either side of
-    // the 480 scene), so horizontal positions are a share of that wider box
-    const wide = 480 + 2 * SIDE;
     for (const el of [this.els.spot, this.els.beam]) {
-      el.style.setProperty('--sx', `${(((p.x + SIDE) / wide) * 100).toFixed(2)}%`);
+      el.style.setProperty('--sx', `${(p.x / 4.8).toFixed(2)}%`);
       el.style.setProperty('--sy', `${(p.y / 4.8).toFixed(2)}%`);
-      el.style.setProperty('--rx', `${((p.rx / wide) * 100).toFixed(2)}%`);
+      el.style.setProperty('--rx', `${(p.rx / 4.8).toFixed(2)}%`);
       el.style.setProperty('--ry', `${(p.ry / 4.8).toFixed(2)}%`);
     }
+    // The side extensions continue the same dimming inside their own boxes
+    // (scene.css .ext::after): SIDE wide, starting at -SIDE and at 480
+    this.els.exts.forEach((el, i) => {
+      const x0 = i === 0 ? -SIDE : 480;
+      el.style.setProperty('--dim', p.dim.toFixed(3));
+      el.style.setProperty('--sx', `${(((p.x - x0) / SIDE) * 100).toFixed(2)}%`);
+      el.style.setProperty('--sy', `${(p.y / 4.8).toFixed(2)}%`);
+      el.style.setProperty('--rx', `${((p.rx / SIDE) * 100).toFixed(2)}%`);
+      el.style.setProperty('--ry', `${(p.ry / 4.8).toFixed(2)}%`);
+    });
   }
 }
 
