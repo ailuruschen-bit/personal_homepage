@@ -192,10 +192,34 @@ The artifact layer has no voice. It is a document; it reads like one. A ticket
 has a name, an origin, a destination and a date, set in whatever face a ticket
 is set in.
 
-The annotation layer is the detective's notebook: second person or bare
-observation, present tense, short sentences, no adjectives doing work that a
-detail could do. It states what is in front of it and lets the reader draw the
-conclusion. It never explains the joke.
+The annotation layer is the detective's notebook: bare observation, short
+sentences, no adjectives doing work that a detail could do. It states what is
+in front of it and lets the reader draw the conclusion. It never explains the
+joke.
+
+He is not a bystander with a good eye. He is someone who has done this many
+times and finds it routine, and that is where the comedy comes from: the gap
+between how dramatic breaking into a stranger's compartment is and how
+unimpressed he is by it. He is never excited and never afraid. He is mildly put
+out, mostly by other people's carelessness, occasionally by his own.
+
+Four things make the voice rather than the jokes:
+
+- **The turn.** An observation, then a short sentence that undercuts it. Most
+  of the humour is this one shape, and it only works if the first half is
+  flat.
+- **Specificity is the joke.** "He left in a hurry" is a caption. "The coffee
+  is still steaming — he thought he would be back in a minute" is a character
+  noticing something and forming an opinion, and it is funnier for containing
+  no funny words.
+- **Judge the room, not the reader.** The snark points at the occupant, and
+  lands as a compliment about as often as it lands as a complaint. A detective
+  who sneers at everything is tiresome by the third object.
+- **Mostly straight.** If every line is a quip, none of them is. The sharp ones
+  land because the ones around them were plain.
+
+One sincere line is allowed in the whole site, and the dryness everywhere else
+is what buys it. [12](12-script.md) spends it on the laptop and says why.
 
 Illustrative only — not copy, and inventing no facts:
 
@@ -271,11 +295,23 @@ too many.
 
 ### Budget
 
-Restraint is the whole difference between a character and a chat box. One line
-as a chapter opens, sometimes one as it closes, and a handful of reactive lines
-at the hub: on the order of twelve to fifteen for a first pass, not fifty. A
-quip on everything every time is noise, and noise is what teaches people to
-scroll past text.
+Restraint is the whole difference between a character and a chat box. But
+counting lines is the wrong measure, which an earlier flat budget of twelve to
+fifteen got wrong: what wears a reader down is **repetition and frequency**,
+not the total.
+
+Count the two kinds separately:
+
+- **Anchored lines are cheap.** At most two to a chapter, one as it opens and
+  one as it closes, and they never repeat within a pass. Around twenty across
+  the site is comfortable.
+- **Reactive lines are expensive.** The hub is where a reader lingers, which
+  means the same trigger can fire again and again. Six is the ceiling, and a
+  reactive line should not play twice for the same trigger in a session — they
+  live on the pointer channel, where keeping that much state is allowed.
+
+A quip on everything every time is noise, and noise is what teaches people to
+scroll past text. The next line added should replace one rather than join it.
 
 Write in this order, because each is useless without the one before it:
 `facts`, the artifact layer, anchored lines, annotation, reactive lines, the
