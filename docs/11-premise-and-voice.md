@@ -76,7 +76,9 @@ layer in all three.
 ## Two layers
 
 Every chapter has the same structure, and it maps onto the read beat in
-[10](10-scroll-narrative.md#reading).
+[10](10-scroll-narrative.md#reading). A third layer, the spoken one, sits over
+both and runs across the whole site rather than per chapter; it has
+[its own section](#the-spoken-layer) below.
 
 **The artifact layer** is what is actually printed on the thing. Short, dense,
 scannable, factual. It fills the frame when the aperture opens and it stays
@@ -122,6 +124,80 @@ four years ago and it mattered to me" — and the reason for the device becomes
 clear. The premise buys a way to say things about yourself that are unsayable
 in your own voice. That is the actual payoff, more than the atmosphere.
 
+## The spoken layer
+
+Over the top of both content layers, the detective talks.
+
+The cover does not greet anyone. A greeting assumes the occupant is there to
+give it, and he is not. What stands in its place is the first line of the
+character the reader is playing, spoken on the city before going in:
+
+> 景色不错，但是该干正事了。
+
+That line does three jobs at once. It establishes the voice, it casts the
+reader, and it is the scroll affordance — it says _get to work_, which is the
+instruction. Keep an unobtrusive scroll indicator anyway; a line of dialogue is
+not an accessible affordance on its own.
+
+It also takes the cover's old job away, so the identity has to live somewhere
+else: the document's `h1` is the occupant's name and role, visually hidden
+behind the scene but present for assistive technology, for search, and in the
+flat document. What is _drawn_ is the detective's line. What is _read_ by
+anything that does not render the scene is still a name.
+
+### Anchored and reactive
+
+Principle 1 in [10](10-scroll-narrative.md#principles) says scroll is a
+position and not an event, which looks like it forbids a line that fires. It
+does not. It sorts lines into two kinds and keeps them on separate channels.
+
+**Anchored lines** are tied to a scroll range, and their opacity is a function
+of `s` like everything else: in over a short range, held over a long one, out
+again. Scroll back and the line is there again, because it never happened — it
+is simply true at that offset.
+
+This is better than the timed version, not a compromise. **A line on a timer
+can vanish while you are still reading it.** An anchored line cannot: stop, and
+it stays as long as you like. In a design whose whole point is that you may
+stop anywhere, a timed subtitle would be the single element that refuses to.
+
+**Reactive lines** answer something that is not scroll: pointing at an object
+at the hub, returning to one already examined, going idle. These are genuinely
+events, and they are allowed — because they live on the pointer channel, which
+is event-driven today, and never on the scroll channel. The rule that holds the
+architecture together: **nothing on the scroll axis is ever an event, and the
+spoken layer gets no exception.**
+
+The cost of anchored lines is that they replay on a second pass. That is
+accepted. The alternative is remembering what has been seen, which is state,
+and state is what makes a scroll position stop being enough to draw a frame.
+
+### One slot
+
+All of it renders in a single fixed subtitle at the bottom of the frame. One
+voice, one place, never moving.
+
+Speech bubbles pinned to objects were considered and are wrong here. They pull
+the eye away from the thing the camera has just framed, in a design whose whole
+premise is that the camera decides what you look at. A subtitle is also the
+convention of the two games the art is modelled on.
+
+The focus caption that exists today — the object name under the section name —
+is the same slot. Two text layers competing for the bottom of the frame is one
+too many.
+
+### Budget
+
+Restraint is the whole difference between a character and a chat box. One line
+as a chapter opens, sometimes one as it closes, and a handful of reactive lines
+at the hub: on the order of twelve to fifteen for a first pass, not fifty. A
+quip on everything every time is noise, and noise is what teaches people to
+scroll past text.
+
+Write in this order, because each is useless without the one before it:
+`facts`, the artifact layer, anchored lines, annotation, reactive lines, the
+confrontation.
+
 ## The evidence map
 
 Chapter order is the order a detective would find things in, which is also the
@@ -136,21 +212,52 @@ grounds. The two agree, which is a good sign.
 | `projects` | 电脑 on the table  | what is still open on the screen: current work |
 | `notes`    | _no art yet_       | loose papers, a notebook                       |
 | `hobby`    | _no art yet_       | something personal left out, not work          |
-| `chat`     | _no art yet_       | the one thing the reader acts on — see below   |
+| `chat`     | 门 — _no art yet_  | the doorway, and the man in it — see below     |
 
 `about` is first because it is the thing in front of you when you sit down.
 `journey` is a route map, which is already a timeline on a wall, so it carries a
 career with no translation needed. The last three cannot become chapters until
 they have artwork and therefore an aperture.
 
-### The one interaction
+### The confrontation
 
-`chat` is the only chapter where the detective does something rather than
-observes. They leave their card.
+`chat` is the only chapter where the reader is not alone.
 
-This gives the contact form a reason to exist in the world instead of being a
-form bolted to the end of a story, and it is the natural place for links and
-anything machine-readable. It is the last chapter.
+He comes back. He was not supposed to, and the detective is standing in the
+middle of his carriage holding his things. The conversation that follows is the
+chat section — not a widget bolted to the end of a story, but the scene the
+story has been walking towards.
+
+The aperture is the doorway: a lit rectangle with him in it. It needs no new
+primitive, and it is the one aperture that opens onto a person rather than a
+surface.
+
+What the frame buys:
+
+- **The bot has a reason and a persona.** Not "ask me about my CV" — him,
+  wanting to know who you are and what you have been reading, and answering
+  what you ask back. A personal-site chatbot is roleplaying its owner anyway;
+  this makes that honest instead of a gimmick.
+- **He never has to be drawn.** A silhouette, backlit from the corridor. This
+  answers the question the premise had left open — a scene that has only ever
+  drawn a man's possessions should not suddenly draw the man — and a backlit
+  figure in a doorway is exactly the register of the art it is modelled on.
+- **The exit stays open.** He is in the doorway; the window is behind you, the
+  way you came in. The reader can leave at any point in the conversation. That
+  is what makes staying a choice instead of a toll.
+
+Two voices now share the subtitle, so it needs a speaker label. It stays one
+slot.
+
+Rules it must obey, all of them downstream of facts-never-behind-fiction:
+
+- **Asked a straight question, it answers straight.** "What has he done with
+  X" gets a real answer — in character, but informative. A character who
+  deflects is a site that does not work.
+- **It gates nothing.** Every fact is already readable before this chapter. If
+  the bot is unavailable, the visitor loses a scene, not information.
+- **Staying in character is soft.** Anyone who wants the plain version gets it
+  without a fight.
 
 ## The ending
 
@@ -158,24 +265,27 @@ The site currently has no ending; the scroll just stops. The premise supplies
 one, and it costs almost nothing to build because it reuses the opening in
 reverse.
 
-After the last chapter, he is coming back. The camera retreats to the window and
-the window transit plays outward — the same locked segment as the way in, run
-the other way. The reader is left outside on the city, where they started.
+The confrontation is the last chapter. However it goes, it ends the same way:
+he is in the doorway, so the reader leaves the way they came. The camera
+retreats to the window and the window transit plays outward — the same locked
+segment as the way in, run the other way — and leaves them on the city where
+they started.
 
 Two things fall out of that:
 
 - **The footer is diegetic.** It is the view from outside after you have left:
-  links, colophon, source. It is a place, not a strip at the bottom of a page.
+  links, colophon, source. A place, not a strip at the bottom of a page.
 - **The document is a ring.** The city is at both ends. Scrolling back up
   re-enters the carriage rather than rewinding a page, which is what
   [10](10-scroll-narrative.md)'s axis does anyway.
 
 **Rejected: a timer.** The obvious move is to make his return a deadline. It is
 wrong. A reader who is being hurried cannot read, and punishing someone for
-reading slowly on a page whose purpose is to be read is self-defeating. The
-pressure stays atmospheric and has no mechanics: an announcement over the
-tannoy, a shadow in the corridor, the door. Nothing on screen ever counts down,
-and nothing is ever lost by stopping.
+reading slowly on a page whose purpose is to be read is self-defeating. His
+return is positional, not temporal: it happens because the reader reached the
+last chapter, not because they were slow. The pressure stays atmospheric and
+has no mechanics — an announcement over the tannoy, a shadow in the corridor,
+the door. Nothing counts down, and nothing is ever lost by stopping.
 
 ## What this changes in the content model
 
@@ -187,6 +297,10 @@ and one column. It needs to carry both layers:
 | `artifact` | artifact   | typed fields printed on the object, not prose           |
 | `notes`    | annotation | the long-form blocks that scroll past it                |
 | `facts`    | neither    | the machine-readable truth: role, stack, links, contact |
+
+`content/site.ts` changes with it. `heroTitle` and `heroLede` assumed a
+greeting; the cover now carries the detective's opening line, and the
+occupant's name and role move to the hidden `h1` and the metadata.
 
 `facts` is the hedge against the premise. It is what the flat document renders,
 what structured data is generated from, and what someone in a hurry sees. If the
@@ -205,9 +319,9 @@ See [07 Content and routing](07-content-and-routing.md).
    a stranger examining him. That doubling is deliberate and is where the device
    earns its keep, but it needs to be consistent: the detective never addresses
    the owner and the owner never breaks in.
-3. **Does he actually return at the end, on screen?** Proposed: no. A door
-   handle and a cut to the window is stronger than a sprite walking in, and
-   drawing a person breaks a scene that has so far only drawn his things.
+3. **How much of him is drawn?** Settled by the confrontation: a silhouette in
+   the lit doorway and nothing more. If that ever stops being enough, the thing
+   to add is light and the corridor behind him, not a face.
 4. **Does the cover state the premise?** A detective who is told they are a
    detective is being handed the answer. Proposed: one line at most, or nothing,
    and let the empty carriage do it.

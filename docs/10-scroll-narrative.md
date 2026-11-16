@@ -33,6 +33,12 @@ picture stops" fall out for free rather than needing to be engineered: a
 half-open card is not a paused animation, it is simply the value of the function
 at that offset.
 
+The spoken layer is the one thing that looks like an exception and is not.
+Lines anchored to the scene fade in and out as a function of `s` like
+everything else; lines that answer the pointer live on the pointer channel,
+which is event-driven already. Nothing on the scroll axis is ever an event. See
+[11](11-premise-and-voice.md#anchored-and-reactive).
+
 **2. One shot.** No cuts, ever. Any two reachable states are connected by a
 continuous camera path, including the ones reached by clicking.
 
@@ -69,16 +75,16 @@ s=0                                                                      s=end
 It is a ring: the city is at both ends, and the way out is the way in run
 backwards. See [the ending](11-premise-and-voice.md#the-ending).
 
-| Segment     | Span            | What the scroll does                                                 | Stoppable |
-| ----------- | --------------- | -------------------------------------------------------------------- | --------- |
-| Cover       | 0 → 240         | city parallax only; the camera is outside, where the opening left it | yes       |
-| Porch       | 240 → 480       | camera eases back toward the window, blinds brighten                 | yes       |
-| Window in   | locked, ~1100ms | the existing fixed animation; scroll input captured                  | no        |
-| Hub         | 480 → 900       | nothing moves; pointer parallax and pointer focus are live           | yes       |
-| Chapter _n_ | see below       | approach, open, read, close, handoff                                 | yes       |
-| Porch out   | 240             | camera retreats to the window after the last chapter                 | yes       |
-| Window out  | locked, ~1100ms | the same fixed animation, run outward                                | no        |
-| Departure   | 360             | the city again; links and colophon live here                         | yes       |
+| Segment     | Span            | What the scroll does                                             | Stoppable |
+| ----------- | --------------- | ---------------------------------------------------------------- | --------- |
+| Cover       | 0 → 240         | city parallax; the opening line is anchored here, not a greeting | yes       |
+| Porch       | 240 → 480       | camera eases back toward the window, blinds brighten             | yes       |
+| Window in   | locked, ~1100ms | the existing fixed animation; scroll input captured              | no        |
+| Hub         | 480 → 900       | nothing moves; pointer parallax and pointer focus are live       | yes       |
+| Chapter _n_ | see below       | approach, open, read, close, handoff                             | yes       |
+| Porch out   | 240             | camera retreats to the window after the confrontation            | yes       |
+| Window out  | locked, ~1100ms | the same fixed animation, run outward                            | no        |
+| Departure   | 360             | the city again; links and colophon live here                     | yes       |
 
 Upward from any point the same map runs in reverse. The two porches are the
 same zone and the two window transits are the same locked segment, which is why
@@ -360,7 +366,9 @@ A survey, not an implementation plan. No code has been changed.
    (briefcase) → projects (laptop) → chat. It alternates carry and dolly, which
    keeps consecutive transitions from feeling identical, and it is also the
    order the evidence would be found in — see
-   [11](11-premise-and-voice.md#the-evidence-map).
+   [11](11-premise-and-voice.md#the-evidence-map). `chat` is last by
+   construction: it is the confrontation, and the only chapter whose aperture
+   opens onto a person.
    `notes`, `hobby` and `chat` cannot become chapters until they have artwork
    and therefore an aperture.
 3. **Is the cover the top of the document?** Proposed yes: `s = 0` is outside,

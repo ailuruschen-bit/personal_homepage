@@ -8,7 +8,8 @@ object the light settles on is the section you enter.
 The reader is cast as a detective who has let themselves in while the occupant
 is away. Nothing in the carriage introduces itself: the ticket, the route map,
 the briefcase and what is still open on the laptop are evidence, and the site is
-what you make of them.
+what you make of them. The detective talks to himself while he works, and the
+last thing that happens is that the occupant comes back and catches him.
 
 The current version is **structure and interaction only**. Every piece of copy
 is a placeholder; search for `TODO` to find what still needs writing.
