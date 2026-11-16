@@ -38,11 +38,11 @@ regions and light pools are all expressed on that grid, independent of screen
 size; `units.ts` does the conversion. Moving an object means editing
 `hotspots.ts` and nothing else.
 
-**Focus, not zoom.** The camera holds one fixed wide framing and never pushes
-in with the pointer. What snaps is the light and the object: the light is
-pulled in as the pointer approaches, snaps on entering range, and lets go on
-leaving. The references are the iPadOS pointer and tvOS focus — lift and
-brighten the target rather than dimming everything else.
+**Focus, not zoom.** Pointing at the scene never moves the camera. What snaps
+is the light and the object: the light is pulled in as the pointer approaches,
+snaps on entering range, and lets go on leaving. The references are the iPadOS
+pointer and tvOS focus — lift and brighten the target rather than dimming
+everything else. (Scroll is a different matter — see below.)
 
 **Phases in CSS, switching in TS.** A class on `.stage` selects the phase and
 every duration lives in `scene.css`; TypeScript only swaps the class. To retune
@@ -58,8 +58,20 @@ reproducible and a change to the picture is a change to a script. See
 DOM and CSS driven by one per-frame loop. A framework would add a reconciler
 between the pointer and the paint without buying anything the scene needs.
 
+**Where it is going: scroll as the only clock.** The site should read like an
+ordinary long page and look like a single unbroken take. Scrolling down from
+the carriage walks the camera through the objects in order and opens each one
+into its own reading; scrolling up goes back out of the window. Every transform
+becomes a function of scroll position rather than of elapsed time, so the
+picture stops wherever the reader stops. Clicking an object stays as a fast
+path along the same shot. The design is written up in
+[docs/10](docs/10-scroll-narrative.md); none of it is built yet.
+
 ## Roadmap
 
+- [ ] **Scroll narrative** — the refactor described in
+      [docs/10](docs/10-scroll-narrative.md): one document, one camera, chapters
+      opened by scroll instead of pages opened by click
 - [ ] Write the real copy: `content/site.ts`, `content/sections.ts`
 - [ ] notes / hobby / chat have no object yet — draw the artwork, then register
       them in `hotspots.ts`

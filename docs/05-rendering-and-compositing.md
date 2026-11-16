@@ -150,3 +150,8 @@ against Chrome since:
 `will-change` on a focusable object is applied only while that object is
 animating, never for the whole session — see
 [What is promoted, and when](#what-is-promoted-and-when).
+
+> **Planned change.** The scroll narrative adds a camera dolly onto individual
+> objects, which drives raster scale up the same way the opening does. The zoom
+> ceiling it proposes (2.5-3x) exists for this reason. See
+> [10 Scroll narrative](10-scroll-narrative.md#performance).

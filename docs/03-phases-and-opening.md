@@ -1,5 +1,7 @@
 # 03 Phases and the opening
 
+> **Planned change.** The phase machine shrinks to tracking which locked segment is running; the opening and the window transit survive as the only time-based motion. See [10 Scroll narrative](10-scroll-narrative.md).
+
 ## The division of labour
 
 Every duration, delay and easing curve in the scene lives in `scene.css`.

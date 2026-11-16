@@ -1,5 +1,7 @@
 # 01 Architecture
 
+> **Planned change.** A scroll driver and a chapter module join the map, and the section shell stops being a separate view. See [10 Scroll narrative](10-scroll-narrative.md).
+
 ## The shape of the thing
 
 The site is a single static page. There is no framework, no runtime dependency

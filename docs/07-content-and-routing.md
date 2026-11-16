@@ -1,5 +1,7 @@
 # 07 Content and routing
 
+> **Planned change.** Routes resolve to scroll offsets in one document rather than to separate views, and this page's section shell becomes the no-JavaScript fallback. See [10 Scroll narrative](10-scroll-narrative.md).
+
 ## Routing
 
 `src/router.ts` is 25 lines and deliberately so.

@@ -1,5 +1,7 @@
 # 04 Focus system
 
+> **Planned change.** Pointer focus narrows to the hub, the snap becomes a continuous scroll-driven value inside a chapter, and the camera gains a horizontal axis (`--fx`). See [10 Scroll narrative](10-scroll-narrative.md).
+
 `src/scene/focus.ts` is the largest module in the project and the one with the
 most judgement baked into it. It runs one `requestAnimationFrame` loop and is
 responsible for four things: the framing, the parallax, which object has focus,
