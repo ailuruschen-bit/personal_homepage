@@ -1,7 +1,8 @@
 """The carriage interior.
 
 Drawn on a 720x480 canvas covering scene x in [-120, 600), then cut into the
-central 480 plus a 120-wide extension on each side.
+central 480 plus a 120-wide extension on each side. The window wall is drawn
+face-on; everything that recedes is built from the perspective model below.
 """
 import random
 
@@ -381,7 +382,6 @@ def shell(g, rnd):
 
 # ------------------------------------------------------------------ Luggage rack
 def rack(g, rnd):
-    g.shadow(-120, 96, 720, 12, 0.5)
     # route map (the journey object)
     o = place(g, 'journey', (173, 67))
     o.shadow(172, 86, 136, 6, 0.6)
@@ -405,12 +405,6 @@ def rack(g, rnd):
     for x in (175, 304):
         o.px(x, 69, (150, 158, 190))
         o.px(x, 84, (150, 158, 190))
-    # brackets
-    for x in (-100, -30, 70, 164, 346, 440, 510, 580):
-        g.rect(x, 60, 3, 37, (84, 94, 130))
-        g.rect(x, 60, 1, 37, (136, 146, 182))
-        g.rect(x - 2, 60, 7, 3, (64, 72, 106))
-        g.line([(x + 3, 84), (x + 9, 93)], (64, 72, 106))
     # luggage, sitting on y = 92
     # cardboard box
     g.rect(28, 72, 36, 20, (176, 138, 98))
@@ -480,13 +474,6 @@ def rack(g, rnd):
     g.rect(412, 88, 2, 4, (150, 60, 70))
     g.rect(394, 89, 4, 2, (160, 166, 190))
     g.line([(440, 89), (446, 89), (447, 86), (445, 84)], BRASS)
-    # the shelf itself: two rails
-    g.rect(-120, 92, 720, 2, STEEL)
-    g.rect(-120, 92, 720, 1, (170, 180, 210))
-    g.rect(-120, 96, 720, 1, (64, 72, 106))
-    for x in range(-120, 600, 4):
-        g.px(x, 94, (84, 94, 130))
-        g.px(x + 2, 95, (84, 94, 130))
 
 
 # ------------------------------------------------------------------ Window and curtains
@@ -602,7 +589,7 @@ def poster(g, x, y, w, h, kind):
 
 def walls(g, rnd):
     # ---- left wall
-    poster(g, 22, 118, 48, 70, 'sunset')
+    poster(g, 30, 118, 48, 70, 'sunset')
     # neon tube
     g.line([(97, 58), (97, 96)], (30, 30, 50))
     g.line([(97, 104), (97, 123)], (30, 30, 50))
@@ -678,78 +665,58 @@ def walls(g, rnd):
     g.rect(427, 210, 6, 1, (150, 50, 50))
 
 
-# ------------------------------------------------------------------ Seats
-def seat(g, rnd, mirror):
-    def X(x):
-        return 480 - x if mirror else x
+# ------------------------------------------------------------------ Structure
+# Everything that recedes, built from the perspective model rather than drawn by
+# eye. Heights in metres. The dado is where the light strip runs along the
+# window wall, and the rack meets the wall where the luggage already sits.
+DADO = EYE - (296 - vanishing_point()[1]) / WALL_SCALE
+RACK_Y = EYE + (vanishing_point()[1] - 89) / WALL_SCALE
+RACK_DEPTH = 0.34
+SEAT_H = 0.45  # cushion top
+SEAT_INNER = 0.60  # front edge of the cushion, from the centre line
+BACK_FACE = 1.05  # the backrest's face; the side wall is at ROOM_HALF_WIDTH
+BACK_TOP = 1.18
+Z_NEAR = 0.5  # far enough forward that everything runs off the scene
 
-    def P(pts):
-        return [(X(x), y) for x, y in pts]
 
-    def R(x, y, w, h, c):
-        g.rect(X(x + w - 1) if mirror else x, y, w, h, c)
+def quad(g, pts, c):
+    """A flat polygon given in compartment coordinates."""
+    g.poly([P(*p) for p in pts], c)
 
-    back = SEAT
-    # shadow the seat back casts on the wall
-    g.shadow(X(84) if mirror else 68, 236, 16, 120, 0.55)
-    g.shadow(X(146) if mirror else 10, 346, 136, 14, 0.6)
-    # base
-    R(10, 428, 124, 52, (56, 30, 50))
-    R(10, 428, 124, 2, (30, 16, 30))
-    R(14, 436, 116, 1, (84, 48, 70))
-    # front face of the cushion
-    R(10, 404, 124, 24, mul(back, 0.72))
-    R(10, 404, 124, 2, mul(back, 1.25))
-    R(10, 424, 124, 4, mul(back, 0.5))
-    for x in range(16, 130, 9):
-        g.px(X(x), 407, mul(back, 1.5))
-    # top face of the cushion
-    g.poly(P([(70, 352), (141, 352), (133, 404), (10, 404)]), mul(back, 1.12))
-    g.poly(P([(70, 352), (141, 352), (140, 358), (63, 358)]), mul(back, 0.8))
-    g.line(P([(52, 368), (138, 368)]), mul(back, 0.94))
-    g.line(P([(34, 384), (136, 384)]), mul(back, 0.94))
-    g.line(P([(14, 402), (132, 402)]), mul(back, 1.4))
-    for x, y in ((92, 364), (112, 376), (72, 378), (96, 392), (50, 394), (120, 396)):
-        g.px(X(x), y, mul(back, 0.6))
-        g.px(X(x), y + 1, mul(back, 1.5))
-    # front of the seat back
-    g.poly(P([(10, 249), (70, 238), (70, 352), (10, 404)]), back)
-    # diamond tufting
-    def ty(x):
-        return 286 - (x - 10) * 22 / 60
 
-    pts = {}
-    for j in range(5):
-        for i in range(5):
-            x = 16 + i * 13 + (6 if j % 2 else 0)
-            y = ty(x) + 10 + j * 17
-            pts[(i, j)] = (x, y)
-    for (i, j), (x, y) in pts.items():
-        for di in ((0, 1), (-1, 1)) if j % 2 == 0 else ((0, 1), (1, 1)):
-            q = pts.get((i + di[0], j + di[1]))
-            if q and q[0] < 70 and x < 70:
-                g.line([(X(x), int(y)), (X(q[0]), int(q[1]))], mul(back, 0.78))
-    for (i, j), (x, y) in pts.items():
-        if 12 < x < 68 and y < 392 - (70 - x) * 0.8:
-            g.rect(X(x) - (1 if mirror else 0), int(y), 2, 2, mul(back, 0.5))
-            g.px(X(x), int(y) - 1, mul(back, 1.5))
-    # outer face and top edge
-    g.poly(P([(0, 252), (10, 249), (10, 480), (0, 480)]), mul(back, 0.5))
-    g.poly(P([(0, 250), (10, 247), (70, 236), (70, 238), (10, 249), (0, 252)]), mul(back, 1.5))
-    # darken the side nearest the wall
-    g.poly(P([(66, 262), (70, 261), (70, 352), (66, 355)]), mul(back, 0.7))
-    # antimacassar
-    cloth = (196, 192, 212)
-    g.poly(P([(10, 249), (70, 238), (70, 264), (10, 286)]), cloth)
-    g.poly(P([(10, 249), (70, 238), (70, 242), (10, 253)]), (226, 224, 240))
-    for x in range(12, 70, 3):
-        y = 286 - (x - 10) * 22 / 60
-        g.px(X(x), int(y) - 1, (170, 164, 190))
-        g.px(X(x + 1), int(y), cloth)
-    for x in (24, 40, 56):
-        y = 249 - (x - 10) * 11 / 60
-        g.line(P([(x, int(y) + 5), (x - 1, int(y) + 24 - (x - 10) // 6)]), (198, 192, 214))
-    g.poly(P([(0, 252), (10, 249), (10, 286), (0, 290)]), (176, 170, 194))
+def receding(g, x0, y0, x1, y1, c, z0=None, z1=Z_NEAR):
+    """A surface running from the window wall toward the camera, between two
+    edges given as (X, Y) pairs: (x0, y0) to (x1, y1) across it."""
+    z0 = WALL_DIST if z0 is None else z0
+    quad(g, [(x0, y0, z0), (x1, y1, z0), (x1, y1, z1), (x0, y0, z1)], c)
+
+
+def structure(g):
+    """Block-in, docs/13 step 1.1: the ceiling, side walls, floor and the
+    luggage rack's rails, in flat colour."""
+    HW, C, D = ROOM_HALF_WIDTH, ROOM_CEILING, WALL_DIST
+    receding(g, -HW, C, HW, C, CEIL)
+    for s in (-1, 1):
+        receding(g, s * HW, DADO, s * HW, C, mul(WALL, 0.78))
+        receding(g, s * HW, 0, s * HW, DADO, mul(WALL_LO, 0.78))
+    receding(g, -HW, 0, HW, 0, (46, 48, 76))
+    # the rack, seen from below: rails across the compartment at four depths
+    # and its ends along the side walls
+    for i, z in enumerate((D - 0.01, D - RACK_DEPTH * 0.34, D - RACK_DEPTH * 0.67, D - RACK_DEPTH)):
+        g.line([ri(P(-HW, RACK_Y, z)), ri(P(HW, RACK_Y, z))], STEEL, width=3 if i == 3 else 1)
+    for s in (-1, 1):
+        g.line([ri(P(s * HW, RACK_Y, D)), ri(P(s * HW, RACK_Y, D - RACK_DEPTH))], STEEL, width=2)
+
+
+def bench(g, s):
+    """A bench along a side wall, s = -1 on the left and +1 on the right, from
+    the window wall to beyond the edge of the scene."""
+    HW = ROOM_HALF_WIDTH
+    receding(g, s * SEAT_INNER, 0, s * SEAT_INNER, SEAT_H, mul(SEAT, 0.55))  # front of the base
+    receding(g, s * BACK_FACE, SEAT_H, s * SEAT_INNER, SEAT_H, SEAT)  # cushion
+    receding(g, s * BACK_FACE, SEAT_H, s * BACK_FACE, BACK_TOP, mul(SEAT, 0.8))  # backrest
+    receding(g, s * BACK_FACE, BACK_TOP - 0.2, s * BACK_FACE, BACK_TOP, (196, 190, 214))  # headrest cover
+    receding(g, s * HW, BACK_TOP, s * BACK_FACE, BACK_TOP, mul(SEAT, 1.2))  # top of the backrest
 
 
 # ------------------------------------------------------------------ Table and what is on it
@@ -891,89 +858,22 @@ def table(g, rnd):
     g.px(258, 365, BRASS)
 
 
-# ------------------------------------------------------------------ Side extensions
-def extensions(g, rnd):
-    back = mul(SEAT, 0.82)
-    for mirror in (False, True):
-        def X(x):
-            return 480 - x if mirror else x
-
-        def R(x, y, w, h, c):
-            g.rect(X(x + w - 1) if mirror else x, y, w, h, c)
-
-        # the back-to-back seat next door: only the rear of its back is visible
-        R(-56, 252, 56, 228, back)
-        R(-56, 250, 56, 3, mul(back, 1.5))
-        R(-56, 252, 2, 228, mul(back, 0.6))
-        R(-2, 252, 2, 228, mul(back, 0.55))
-        R(-56, 428, 56, 52, (56, 30, 50))
-        # back of the antimacassar
-        R(-54, 253, 52, 26, (196, 190, 212))
-        R(-54, 278, 52, 1, (150, 144, 170))
-        # seat-back net with a newspaper
-        R(-48, 330, 40, 40, mul(back, 0.7))
-        R(-40, 322, 22, 30, (226, 220, 204))
-        R(-38, 326, 18, 2, (70, 66, 80))
-        for y in range(331, 348, 3):
-            R(-38, y, 16, 1, (150, 144, 140))
-        for y in range(334, 370, 4):
-            R(-48, y, 40, 1, (60, 30, 44))
-        for x in range(-48, -8, 4):
-            R(x, 334, 1, 36, (60, 30, 44))
-        R(-49, 329, 42, 2, (110, 100, 110))
-        # hanging grab handles
-        for x in (-86, -70):
-            R(x, 58, 1, 30, (190, 190, 206))
-            g.ellipse(X(x + 4) if mirror else x - 4, 88, 9, 10, (200, 200, 216))
-            g.ellipse(X(x + 2) if mirror else x - 2, 90, 5, 6, WALL)
-    # left: route poster and fire extinguisher
-    poster(g, -110, 130, 44, 60, 'map')
-    g.shadow(-101, 306, 16, 44, 0.6)
-    g.rect(-100, 304, 12, 40, (200, 56, 60))
-    g.rect(-100, 304, 3, 40, (255, 120, 110))
-    g.rect(-91, 304, 3, 40, (120, 30, 40))
-    g.rect(-98, 298, 8, 6, (60, 60, 80))
-    g.rect(-96, 294, 10, 3, (40, 40, 60))
-    g.rect(-98, 316, 8, 8, (240, 232, 226))
-    g.rect(-102, 310, 16, 2, (84, 94, 130))
-    g.rect(-102, 336, 16, 2, (84, 94, 130))
-    # right: a coat and a shoulder bag on the hooks
-    g.rect(536, 148, 56, 3, BRASS)
-    g.rect(536, 148, 56, 1, (255, 236, 170))
-    for x in (544, 564, 584):
-        g.rect(x, 151, 2, 5, BRASS)
-        g.px(x - 1, 155, BRASS)
-    g.shadow(538, 158, 34, 110, 0.6)
-    coat = (190, 150, 84)
-    g.poly([(548, 156), (562, 156), (572, 176), (574, 262), (538, 262), (538, 178)], coat)
-    g.poly([(555, 156), (552, 200), (558, 262), (538, 262), (538, 178), (548, 156)], mul(coat, 0.8))
-    g.line([(555, 160), (554, 262)], mul(coat, 0.56))
-    g.rect(548, 154, 14, 4, mul(coat, 1.2))
-    for y in (190, 210, 230):
-        g.rect(557, y, 2, 2, (90, 60, 40))
-    g.rect(540, 222, 12, 2, mul(coat, 0.6))
-    g.rect(562, 222, 10, 2, mul(coat, 0.6))
-    g.line([(585, 156), (580, 196)], (60, 44, 44))
-    g.line([(585, 156), (592, 196)], (60, 44, 44))
-    g.rrect(574, 196, 24, 22, 4, (96, 70, 110))
-    g.rect(574, 200, 24, 2, (130, 100, 150))
-    g.rect(584, 204, 4, 4, BRASS)
-
-
 def build_room(seed=21):
     """The carriage as one RGBA image at output resolution, and the silhouette
     mask of every interactive object at 1x, keyed by object id."""
-    rnd = random.Random(seed)
+    # One random stream per section, so that changing one part of the room does
+    # not reshuffle the texture of every part drawn after it
+    rng = lambda name: random.Random(f'{seed}:{name}')
     cv = Cv(W, H)
     g = Off(cv)
-    shell(g, rnd)
-    walls(g, rnd)
-    rack(g, rnd)
-    window(g, rnd)
-    extensions(g, rnd)
-    seat(g, rnd, False)
-    seat(g, rnd, True)
-    table(g, rnd)
+    shell(g, rng('shell'))
+    walls(g, rng('walls'))
+    rack(g, rng('rack'))
+    window(g, rng('window'))
+    structure(g)
+    bench(g, -1)
+    bench(g, 1)
+    table(g, rng('table'))
     # Overall lighting: the ceiling strip washing the walls, cold light from outside
     g.light(-120, 40, 720, 50, (255, 214, 160), 0.26)
     wx, wy, ww, wh = WINDOW

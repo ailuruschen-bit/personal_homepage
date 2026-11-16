@@ -613,7 +613,7 @@ Updated in the same commit as each step.
 | 0     | 0.6  | done    |
 | 0     | 0.7  | skipped |
 | 1     | 1.0  | done    |
-| 1     | 1.1  | pending |
+| 1     | 1.1  | review  |
 | 1     | 1.2  | pending |
 | 1     | 1.3  | pending |
 | 1     | 1.4  | pending |
