@@ -10,13 +10,13 @@ export interface SceneHandle {
 }
 
 export interface SceneOptions {
-  /** 选中某个物件后进入对应板块 */
+  /** Open the matching section once an object is chosen */
   onEnter: (sectionId: string) => void;
-  /** 跳过开幕，直接落在车厢（从板块页返回时使用） */
+  /** Skip the opening and land straight in the carriage (used when returning from a section) */
   skipOpening?: boolean;
 }
 
-/** 挂载车厢场景：开幕 → 待机 → 主菜单 */
+/** Mount the carriage scene: opening -> idle -> hub */
 export function mountScene(root: HTMLElement, { onEnter, skipOpening }: SceneOptions): SceneHandle {
   const els = buildScene(root);
   const opening = new Opening(els);
@@ -25,7 +25,7 @@ export function mountScene(root: HTMLElement, { onEnter, skipOpening }: SceneOpt
     () => opening.phase,
     (target) => (target === COVER ? '窗外' : (sectionById(target)?.title ?? target)),
   );
-  // 阶段一变就同步构图，赶在同一帧的样式计算之前
+  // Sync the framing the moment the phase changes, ahead of the style recalc in the same frame
   opening.onPhase = () => focus.syncFrame();
   if (skipOpening) opening.skip();
   focus.syncFrame();
@@ -60,13 +60,13 @@ export function mountScene(root: HTMLElement, { onEnter, skipOpening }: SceneOpt
     if (opening.phase !== 'hub') return opening.back();
 
     if (pointerType === 'touch') {
-      // 触摸：第一下聚焦，第二下进入
+      // Touch: the first tap focuses, the second one enters
       const target = focus.targetAt(e.clientX, e.clientY);
       if (target && target === focus.focused) enter(target);
       else focus.setFocus(target);
       return;
     }
-    // 键盘激活热区按钮时 detail 为 0，此时以按钮自身为准
+    // Keyboard activation of a hotspot button reports detail 0; trust the button itself there
     enter(e.detail === 0 ? (el.dataset.go ?? null) : focus.focused);
   };
 

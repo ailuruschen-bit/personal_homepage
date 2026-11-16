@@ -1,13 +1,13 @@
-/* 设计变量。改这里就能整体换色，不要在组件里写死颜色 */
+/* Design tokens. Recolour the whole site from here; never hard-code a colour in a component */
 :root {
-  /* 夜车 / 赛博夜景 */
+  /* Night train / neon cityscape */
   --night: #07060f;
   --night-2: #17153a;
   --cyan: #5ff2e6;
   --magenta: #ff6ad5;
   --amber: #ffd97a;
 
-  /* 内容页（浅色，负责阅读） */
+  /* Content pages (light, built for reading) */
   --paper: #fdfcff;
   --paper-2: #f3f0fb;
   --ink: #2b2540;
@@ -15,7 +15,7 @@
   --muted: #5d5674;
   --line: #ddd6f0;
   --accent: #6b52c8;
-  --leica: #e0283a; /* 徕卡红，全站只用在极小面积 */
+  --leica: #e0283a; /* Leica red, used only in very small doses */
 
   --font-sans: 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans', system-ui, sans-serif;
   --font-pixel: 'DotGothic16', 'Noto Sans SC', monospace;

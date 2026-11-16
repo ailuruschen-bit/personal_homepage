@@ -1,8 +1,9 @@
 /* ===========================================================================
-   车厢场景样式
-   坐标系：场景是一个 480×480 的正方形，所有静态元素的 left/top/width/height
-   都是该正方形内的百分比。运行时由 scene/units.ts 做场景坐标与屏幕坐标的换算。
-   阶段 class 挂在 .stage 上：intro / idle / back / settling / hub / peek
+   Carriage scene styles.
+   Coordinate system: the scene is a 480x480 square, and every static element's
+   left/top/width/height is a percentage inside that square. At runtime
+   scene/units.ts converts between scene and screen coordinates.
+   The phase class lives on .stage: intro / idle / back / settling / hub / peek
    =========================================================================== */
 
 .stage {
@@ -11,7 +12,8 @@
   --oy: calc(5vmax - 50vh);
   position: fixed;
   inset: 0;
-  /* clip 而非 hidden：hidden 的容器仍可被焦点、scrollIntoView 滚动，场景会整体偏移 */
+  /* clip rather than hidden: a hidden container can still be scrolled by focus or
+     scrollIntoView, which would shift the whole scene */
   overflow: clip;
   font-family: 'Noto Sans SC', 'PingFang SC', system-ui, sans-serif;
   color: #2b2540;
@@ -24,10 +26,12 @@
     --oy: calc(25vmax - 50vh);
   }
 }
-/* 明确的绘制顺序。
-   窗外的城市、车厢、颗粒都会被 Chrome 提升成各自的合成层，层数一多，
-   仅凭 DOM 顺序推断出的叠放次序会在动画切换时排错——窗外的景色会盖到车厢上面并闪烁。
-   写死 z-index 后次序就没有推断的余地了。 */
+/* Explicit paint order.
+   Chrome promotes the city outside, the carriage and the grain to compositing
+   layers of their own. Once there are enough of them, a stacking order inferred
+   from DOM order alone can come out wrong across a phase change, and the city
+   outside ends up drawn over the carriage and flickering. Pinning z-index
+   leaves nothing to infer. */
 .sky {
   position: absolute;
   inset: 0;
@@ -44,8 +48,10 @@
   position: absolute;
   left: -25vw;
   bottom: 0;
-  /* 素材高 640 像素，按 1:1 显示；--tile 是这一层素材的显示宽度，也是循环的位移。
-     宽度要够：缩到 --os 看窗外时盖住车窗，放到原大时盖住整个视口，再加一个 --tile 给循环走。 */
+  /* The artwork is 640px tall and shown 1:1. --tile is this layer's displayed
+     width, which is also the distance the loop travels.
+     The element has to be wide enough to cover the window once scaled down to
+     --os, to cover the whole viewport at full size, plus one --tile for the loop. */
   height: 640px;
   width: calc(150vw + var(--tile));
   background-repeat: repeat-x;
@@ -99,13 +105,15 @@
   width: 100vmax;
   height: 100vmax;
   margin: -50vmax 0 0 -50vmax;
-  /* 缩放原点落在两片百叶之间，镜头从这道缝穿出去。改它要同步 focus.ts 的 CAM_ORIGIN_Y */
+  /* The zoom origin sits between two blind slats, the gap the camera flies through.
+     Changing it means updating CAM_ORIGIN_Y in focus.ts as well */
   transform-origin: 50% 43.71%;
-  /* --fz / --fy 是主菜单的构图（缩放与位移），由 focus.ts 写在 .stage 上；开幕阶段为 1 / 0 */
+  /* --fz / --fy carry the hub framing (zoom and offset). focus.ts writes them onto
+     .stage; during the opening they are 1 / 0 */
   transform: translateY(var(--fy, 0px)) scale(var(--fz, 1));
 }
 .hub .cam {
-  /* 窗口尺寸变化时，构图平滑过渡 */
+  /* Ease the framing when the viewport is resized */
   transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .sway,
@@ -116,8 +124,9 @@
 .sway {
   animation: sway 1.3s steps(1) infinite;
 }
-/* 窗外待机、正常回程和跳过回位期间暂停车厢内部循环动画。
-   回位完成后再随 hub 恢复，避免镜头缩放与内部滤镜动画同时切换。 */
+/* Pause the carriage's looping animations while idle outside, during the normal
+   return and while a skip settles. They resume with the hub once the camera has
+   come to rest, so a zoom and a filter animation never switch over together. */
 .idle .cam *,
 .back .cam *,
 .settling .cam * {
@@ -403,7 +412,7 @@
   inset: 0;
   opacity: 0;
   pointer-events: none;
-  /* 标题压在楼群上：左上角垫一层暗色，保证可读 */
+  /* The headline sits over the buildings, so darken the top-left corner to keep it readable */
   background: linear-gradient(
     115deg,
     rgba(8, 7, 24, 0.62) 0%,
@@ -424,7 +433,7 @@
   font-size: clamp(44px, 6.4vw, 88px);
   line-height: 1;
   color: #f3f0fb;
-  /* 青/品红错位描边：霓虹灯牌的色散感 */
+  /* Offset cyan/magenta outlines, for the colour fringing of a neon sign */
   text-shadow:
     -2px 0 0 rgba(64, 226, 255, 0.55),
     2px 0 0 rgba(255, 64, 178, 0.55),
@@ -531,7 +540,7 @@
 .hub .re {
   display: block;
 }
-/* 全画面的暗角与胶片颗粒：压在场景之上、按钮和文字提示之下 */
+/* Full-frame vignette and film grain: above the scene, below the buttons and captions */
 .lens {
   position: absolute;
   z-index: 6;
@@ -545,11 +554,13 @@
   inset: -192px;
   pointer-events: none;
   background: url(/assets/grain.png) 0 0/192px 192px;
-  /* 不用 mix-blend-mode：那会逼着 Chrome 每帧把下面所有层先合成成一张底图再混合，
-     正是动画最密集的时候，层的排序和光栅最容易出问题。黑白点直接叠加也够看。 */
+  /* No mix-blend-mode: it would force Chrome to flatten every layer below into a
+     single backdrop before blending, every frame, exactly when the animation load
+     is highest and layer ordering and rasterisation are most fragile. Plain alpha
+     over black and white dots reads well enough. */
   opacity: 0.5;
   will-change: transform;
-  /* 每 80ms 换一个位置，颗粒看起来在跳动 */
+  /* Jump to a new offset every 80ms so the grain appears to crawl */
   animation: grain 0.64s steps(1) infinite;
 }
 @keyframes grain {
@@ -594,7 +605,8 @@
   display: block;
 }
 /* phases
-   开幕时间线：0.7s 叶片翻开 → 1.4s 镜头推进（1.4s）→ 2.85s 标题浮现 → 3.45s 待机 */
+   Opening timeline: 0.7s blinds tilt open -> 1.4s camera push (1.4s) ->
+   2.85s headline fades in -> 3.45s idle */
 .intro .blinds i {
   animation: tilt 0.55s steps(6) 0.7s both;
 }
@@ -664,7 +676,7 @@
 }
 .hub .rain2,
 .settling .rain2 {
-  /* 主菜单里它完全透明，动画只是白费重绘 */
+  /* Fully transparent in the hub, so the animation would only cost repaints */
   animation: none;
 }
 .back .rain2 {
@@ -934,19 +946,21 @@
   position: absolute;
   pointer-events: none;
   transform-origin: 50% 85%;
-  /* 不常驻 will-change：Chrome 中经过开场缩放后，常驻提升会导致聚焦进出时闪烁。
-     由浏览器按需管理物品动画与滤镜的合成层。 */
+  /* No permanent will-change: in Chrome, after the opening zoom, keeping these
+     promoted makes focus enter and leave flicker. Let the browser decide when the
+     objects' animations and filters need a compositing layer. */
   transition:
     transform 0.2s cubic-bezier(0.3, 1.9, 0.5, 1),
     filter 0.1s;
 }
-/* 轮廓裁在内层：外层的投影才能落在物件之外，而不是被裁掉 */
+/* The outline is clipped on the inner element so the outer element's shadow can
+   fall outside the object instead of being clipped away with it */
 .pop > i {
   position: absolute;
   inset: 0;
   background-image: url(/assets/room.webp);
 }
-/* 周期闪光；聚焦时由下方规则接管滤镜。 */
+/* Periodic glint. While focused, the rule below takes over the filter. */
 .hub .pop {
   animation: glint 5s ease-in-out infinite;
 }
@@ -969,10 +983,13 @@
 .hub.snap {
   cursor: pointer;
 }
-/* 镜头穿过车窗。缩放按对数均匀变化（看起来才是匀速推进），整体套一条正弦缓入缓出；
-   起点是主菜单的构图（--fz / --fy），最大放到它的 6.5 倍：这时车厢早已出画，
-   叶片随镜头一起淡出，不再靠放大 80 倍把它们甩出去。
-   回程是同一段动画倒放。outgo 用同一条曲线，窗外与镜头始终同步。 */
+/* The camera flying through the window. The zoom is even on a logarithmic scale,
+   which is what reads as a constant push, with a sine ease in and out over the
+   whole move. It starts from the hub framing (--fz / --fy) and reaches 6.5x that,
+   by which point the carriage is long out of frame and the blinds have faded with
+   it, instead of relying on an 80x zoom to throw them off screen.
+   The return plays this same animation in reverse. outgo follows the identical
+   curve, so the city outside and the camera stay in step. */
 @keyframes push {
   0% {
     transform: translateY(var(--fy, 0px)) scale(var(--fz, 1));

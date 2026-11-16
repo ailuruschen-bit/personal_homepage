@@ -1,24 +1,25 @@
 /**
- * 场景坐标系。
+ * Scene coordinate system.
  *
- * 车厢是一张 480×480 的画，场景里所有位置都用这个尺度描述（下称「场景单位」）。
- * 屏幕上它被缩放成 100vmax 的正方形，再由相机做平移与缩放。
+ * The carriage is a 480x480 drawing, and every position in the scene is
+ * expressed on that grid (referred to below as "scene units"). On screen it is
+ * scaled to a 100vmax square, which the camera then pans and zooms.
  */
 
 export const SCENE = 480;
 
-/** 1 场景单位等于多少 CSS 像素（未计相机缩放） */
+/** How many CSS pixels one scene unit spans, before the camera zoom */
 export const unitSize = () => Math.max(window.innerWidth, window.innerHeight) / SCENE;
 
-/** 场景单位 -> 百分比字符串，用于写入 style */
+/** Scene unit -> percentage string, for writing into inline styles */
 export const pct = (v: number) => `${((v / SCENE) * 100).toFixed(3)}%`;
 
 export interface Camera {
-  /** 缩放 */
+  /** Zoom */
   z: number;
-  /** 垂直基准位移（构图用） */
+  /** Vertical offset that sets the framing */
   by: number;
-  /** 跟随指针的轻微视差 */
+  /** Slight parallax that follows the pointer */
   px: number;
   py: number;
 }
@@ -28,7 +29,7 @@ export interface ScenePoint {
   Y: number;
 }
 
-/** 屏幕坐标 -> 场景坐标 */
+/** Screen coordinates -> scene coordinates */
 export function toScene(px: number, py: number, c: Camera): ScenePoint {
   const u = unitSize();
   return {
@@ -37,7 +38,7 @@ export function toScene(px: number, py: number, c: Camera): ScenePoint {
   };
 }
 
-/** 场景坐标 -> 屏幕坐标 */
+/** Scene coordinates -> screen coordinates */
 export function toScreen(X: number, Y: number, c: Camera): { x: number; y: number } {
   const u = unitSize();
   return {

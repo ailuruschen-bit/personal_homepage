@@ -1,4 +1,4 @@
-"""远景天际线、近景轨旁设施、天空。"""
+"""The distant skyline, the trackside gear in the foreground, and the sky."""
 import random
 
 import numpy as np
@@ -33,7 +33,7 @@ def _tower(cv, rnd, x, top, w, c, kind, lit_p, bottom=H):
         cv.rect(x - 2, top - 3, w + 4, 3, mul(c, 1.2))
         for xx in range(x + 2, x + w - 2, 6):
             cv.rect(xx, top - 9, 1, 6, c)
-    # 窗：远景只画成小光点，成组出现
+    # Windows. At this distance they are only specks of light, appearing in clusters
     cols = [(255, 196, 120), (255, 214, 160), (150, 220, 255), (255, 130, 200), (200, 170, 255)]
     gx = rnd.choice([3, 4, 5])
     gy = rnd.choice([4, 5, 6])
@@ -46,7 +46,7 @@ def _tower(cv, rnd, x, top, w, c, kind, lit_p, bottom=H):
 
 def build_c1(seed=5):
     rnd = random.Random(seed)
-    # ---- 最远一层：被霓虹染成品红的巨楼剪影
+    # ---- Furthest layer: silhouettes of huge towers, stained magenta by the neon below
     far = Cv(W1, H)
     x = -10
     while x < W1:
@@ -54,7 +54,7 @@ def build_c1(seed=5):
         top = rnd.randrange(24, 150)
         _tower(far, rnd, x, top, w, (52, 32, 98), rnd.choice(['step', 'spire', 'slant', 'flat', 'crown', 'flat']), 0.07)
         x += w + rnd.randrange(-6, 14)
-    # 两座通体发光的霓虹塔
+    # two towers lit from top to bottom
     for tx, col in ((150, MAG), (520, (120, 110, 255))):
         tw = 30
         far.lrect(tx, 30, tw, H - 30, col, 0.34, body=mul(col, 0.6))
@@ -64,7 +64,7 @@ def build_c1(seed=5):
             far.rect(xx, 30, 1, H - 30, mul(col, 0.34))
         far.poly([(tx, 30), (tx + tw // 2, 4), (tx + tw - 1, 30)], mul(col, 0.5))
         far.rect(tx + tw // 2, 0, 1, 6, mul(col, 0.6))
-    # 吊桥
+    # suspension bridge
     bx0, bx1, by = 280, 470, 196
     for px_ in (bx0 + 30, bx1 - 30):
         far.rect(px_, by - 62, 4, 110, (56, 32, 104))
@@ -91,7 +91,7 @@ def build_c1(seed=5):
     fog = np.clip(np.linspace(0.0, 0.66, H) ** 1.5, 0, 1).astype(np.float32)
     im_far = render(far, ambient=(0.8, 0.78, 0.9), spill=(0.6, 4.0), spill2=(0.5, 14.0), bloom=(0.6, 1.4), haze=(0.5, 12.0), fog=((214, 70, 170), fog))
 
-    # ---- 稍近一层：更暗、更大的楼，带窗格与全息广告
+    # ---- A nearer layer: darker, larger buildings with window grids and holographic ads
     mid = Cv(W1, H)
     x = -20
     while x < W1:
@@ -101,7 +101,7 @@ def build_c1(seed=5):
         _tower(mid, rnd, x, top, w, c, rnd.choice(['step', 'flat', 'crown', 'slant', 'flat']), 0.16)
         r = rnd.random()
         if r < 0.45 and w > 50:
-            # 楼身上的全息广告屏
+            # holographic billboard on the facade
             col = rnd.choice([MAG, CYA, VIO, ORG, GRN])
             bw, bh = rnd.randrange(22, 34), rnd.randrange(30, 54)
             bx, byy = x + rnd.randrange(4, w - bw - 4), top + rnd.randrange(8, 30)
@@ -121,7 +121,7 @@ def build_c1(seed=5):
     fog2 = np.clip(np.linspace(0.02, 0.5, H) ** 1.4, 0, 1).astype(np.float32)
     im_mid = render(mid, ambient=(1, 1, 1), spill=(0.8, 4.0), spill2=(0.6, 14.0), bloom=(0.6, 1.5), haze=(0.4, 10.0), fog=((150, 60, 170), fog2))
     out = Image.alpha_composite(im_far, im_mid)
-    # 探照灯光柱
+    # searchlight beams
     a = np.asarray(out).astype(np.float32) / 255
     k = px.SCALE
     yy, xx = np.mgrid[0 : H * k, 0 : W1 * k] / k
@@ -135,12 +135,13 @@ def build_c1(seed=5):
 
 
 def build_c3(seed=9):
-    """近景：接触网立柱、电线、信号灯、高架护栏。很暗，只在边缘吃一点城市的光。"""
+    """Foreground: catenary masts, wires, signals and the viaduct parapet. Very dark,
+    catching only a rim of the city's light."""
     rnd = random.Random(seed)
     cv = Cv(W1, H)
     steel = (40, 42, 66)
     rim = (150, 110, 190)
-    # 护栏
+    # parapet
     py = H - 22
     cv.rect(0, py, W1, 22, (26, 26, 46))
     cv.rect(0, py, W1, 2, (70, 72, 104))
@@ -151,7 +152,7 @@ def build_c3(seed=9):
     for xx in range(12, W1, 48):
         cv.lrect(xx, py + 6, 3, 1, (95, 242, 230), 0.9)
     cv.rect(0, py + 14, W1, 1, (48, 50, 78))
-    # 立柱与悬臂
+    # masts and cantilevers
     for i, px_ in enumerate(range(60, W1, 240)):
         top = 40
         cv.rect(px_, top, 5, py - top, steel)
@@ -162,7 +163,7 @@ def build_c3(seed=9):
             cv.line([(px_ + 3, yy + 7), (px_ + 1, yy + 14)], (24, 24, 42))
         cv.rect(px_ - 3, py - 8, 11, 8, (30, 30, 52))
         cv.rect(px_ - 3, py - 8, 11, 1, (70, 72, 104))
-        # 悬臂
+        # cantilever
         cv.rect(px_ - 34, top + 6, 74, 2, steel)
         cv.rect(px_ - 34, top + 6, 74, 1, mul(rim, 0.7))
         cv.line([(px_ + 2, top), (px_ - 30, top + 6)], steel)
@@ -172,7 +173,7 @@ def build_c3(seed=9):
             cv.rect(ix, top + 9, 2, 1, (60, 62, 90))
             cv.rect(ix, top + 11, 2, 1, (60, 62, 90))
         if i == 1:
-            # 信号机
+            # signal head
             cv.rect(px_ + 8, 150, 9, 22, (16, 16, 30))
             cv.rect(px_ + 5, 158, 3, 2, steel)
             cv.lellipse(px_ + 10, 153, 5, 5, (80, 255, 150), 1.0, body=(190, 255, 220))
@@ -182,7 +183,7 @@ def build_c3(seed=9):
             cv.rect(px_ - 12, 120, 9, 12, (20, 20, 36))
             cv.lrect(px_ - 10, 122, 5, 3, (255, 190, 90), 0.9)
             cv.rect(px_ - 3, 124, 3, 2, steel)
-    # 电线：两根承力索 + 接触线，带吊弦
+    # Wires: two catenary cables plus the contact wire, with droppers between them
     for off, sag in ((53, 9), (58, 6)):
         pts = []
         for x in range(0, W1 + 1, 6):
@@ -199,7 +200,7 @@ def build_c3(seed=9):
 
 
 def build_sky(seed=4):
-    """夜空：分层的云带，底部被城市的霓虹染成紫红。"""
+    """Night sky: banded cloud, stained purple-red near the horizon by the city's neon."""
     w, h = 480 * px.SCALE, 270 * px.SCALE
     rs = np.random.RandomState(seed)
 
@@ -217,7 +218,7 @@ def build_sky(seed=4):
     n = fbm(3, 5)
     n2 = fbm(5, 9)
     yy = np.linspace(0, 1, h).reshape(h, 1)
-    # 云量：中下部更多
+    # cloud cover, heaviest in the lower middle
     dens = n * 0.7 + n2 * 0.3 + (yy - 0.55) * 0.35
     ramp = [
         (0.00, (8, 7, 24)),
@@ -237,16 +238,16 @@ def build_sky(seed=4):
         return out
 
     base = grad(np.clip(yy ** 1.15 + (n2 - 0.5) * 0.05, 0, 1) * np.ones((1, w), np.float32))
-    # 云：三档明度，硬边
+    # cloud in three hard-edged brightness steps
     cloud = np.zeros((h, w), np.float32)
     for th, v in ((0.50, 0.33), (0.56, 0.66), (0.62, 1.0)):
         cloud = np.where(dens > th, v, cloud)
     lit = grad(np.clip(yy * 0.9 + 0.22, 0, 1) * np.ones((1, w), np.float32))
     img = base * (1 - cloud[..., None] * 0.7) + lit * cloud[..., None] * 0.7
-    # 云底的品红勾边：云的下缘更亮
+    # magenta rim lighting along the underside of each cloud
     edge = np.clip(cloud - np.roll(cloud, -2 * px.SCALE, axis=0), 0, 1)
     img += edge[..., None] * np.array([70, 24, 60], np.float32) * yy[..., None]
-    # 星
+    # stars
     for _ in range(90 * px.SCALE):
         sx, sy = rs.randint(0, w), int(rs.rand() ** 1.8 * h * 0.6)
         if cloud[sy, sx] < 0.3:

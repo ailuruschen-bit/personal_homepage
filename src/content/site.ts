@@ -1,18 +1,19 @@
 /**
- * 站点级文案。目前全部是占位，接入正式内容时只改这个文件。
+ * Site-wide copy. Everything here is still a placeholder; wiring up the real
+ * content means editing this file and nothing else.
  */
 export const site = {
-  /** 封面主标题，换行用 \n */
-  // TODO: 替换为正式标题
+  /** Cover headline; use \n for the line break */
+  // TODO: replace with the real headline
   heroTitle: "Hi, I'm\n[NAME]",
 
-  /** 封面副标题，一句话说明你是谁 */
-  // TODO: 替换为正式的一句话自我介绍
+  /** Cover sub-headline: who you are, in one line */
+  // TODO: replace with the real one-line introduction
   heroLede: '[一句话自我介绍]',
 
-  /** 外部链接，在档案页与页脚使用 */
+  /** External links, used on the about page and in the footer */
   links: {
-    // TODO: 补齐后启用
+    // TODO: fill in and enable
     github: '',
     email: '',
   },

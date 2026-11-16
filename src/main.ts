@@ -6,7 +6,7 @@ import { go, onChange, parse, type Route } from './router';
 
 const app = document.querySelector<HTMLElement>('#app')!;
 let scene: SceneHandle | null = null;
-/** 本次访问是否已经看过开幕；从板块页返回时不再重播 */
+/** Whether the opening has already played this visit; coming back from a section skips it */
 let openingSeen = false;
 
 function render(route: Route) {
@@ -25,7 +25,7 @@ function render(route: Route) {
 
   const section = sectionById(route.id);
   if (!section) {
-    // TODO: 404 页面
+    // TODO: 404 page
     go({ name: 'scene' });
     return;
   }

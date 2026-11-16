@@ -1,9 +1,11 @@
-"""街景零件：墙面材质、窗、招牌、灯笼、空调外机等。坐标单位都是美术像素。"""
+"""Street-scene parts: wall materials, windows, signs, lanterns, air-conditioning
+units and so on. All coordinates are in art pixels.
+"""
 from PIL import Image
 
 from px import C, F8, F8B, F16, Cv, bitmap_mask, mix, mul, text_mask
 
-# 霓虹色
+# Neon palette
 MAG = (255, 64, 178)
 CYA = (64, 226, 255)
 YEL = (255, 206, 84)
@@ -19,7 +21,7 @@ IRON = (44, 46, 64)
 WARM = (255, 206, 128)
 
 
-# ------------------------------------------------------------------ 墙面
+# ------------------------------------------------------------------ Walls
 def brick(cv, x, y, w, h, base, rnd, var=0.22):
     cv.rect(x, y, w, h, mul(base, 0.7))
     for r, by in enumerate(range(y, y + h, 3)):
@@ -42,7 +44,7 @@ def plaster(cv, x, y, w, h, base, rnd, stains=True):
             for i in range(ln):
                 if sy + i < y + h:
                     shade(cv, sx, sy + i, rnd.choice([1, 1, 2]), 1, 0.86 + 0.12 * i / ln)
-        # 剥落的墙皮
+        # flaking render
         for _ in range(w // 30):
             px_, py_ = x + rnd.randrange(w), y + rnd.randrange(h)
             for _ in range(rnd.randrange(3, 9)):
@@ -87,7 +89,7 @@ def shade(cv, x, y, w, h, k):
     cv.im.paste(Image.merge('RGBA', (r, g, b, a)), box)
 
 
-# ------------------------------------------------------------------ 窗
+# ------------------------------------------------------------------ Windows
 LIT = [
     (255, 214, 132),
     (255, 196, 112),
@@ -101,28 +103,29 @@ LIT = [
 
 
 def window(cv, rnd, x, y, w, h, frame, lit=None, arch=False, shutters=None, wall=None, sill=None):
-    """x,y 是玻璃左上角。lit 为颜色则亮灯，否则为暗窗。"""
+    """x, y is the top-left of the glass. Pass a colour as lit for a lit window,
+    anything falsy for a dark one."""
     cv.rect(x - 1, y - 1, w + 2, h + 2, frame)
     if lit:
         top = mix(lit, (255, 255, 255), 0.25)
         cv.lrect(x, y, w, h, lit, 0.62)
         cv.lrect(x, y, w, h // 3, top, 0.7)
         r = rnd.random()
-        if r < 0.3:  # 窗帘
+        if r < 0.3:  # curtains
             cw = rnd.randrange(2, max(3, w // 2))
             side = rnd.choice([0, 1])
             cx = x if side == 0 else x + w - cw
             cv.lrect(cx, y, cw, h, mul(lit, 0.62), 0.3)
             for yy in range(y, y + h, 3):
                 cv.lrect(cx + (cw - 1 if side == 0 else 0), yy, 1, 2, mul(lit, 0.5), 0.22)
-        elif r < 0.45:  # 百叶
+        elif r < 0.45:  # blinds
             for yy in range(y + 1, y + h, 2):
                 cv.lrect(x, yy, w, 1, mul(lit, 0.6), 0.3)
-        elif r < 0.6:  # 人影
+        elif r < 0.6:  # a silhouette
             px_ = x + rnd.randrange(1, max(2, w - 5))
             cv.rect(px_ + 1, y + h - 8, 3, 3, (30, 22, 40))
             cv.rect(px_, y + h - 5, 5, 5, (30, 22, 40))
-        elif r < 0.75:  # 盆栽
+        elif r < 0.75:  # a potted plant
             px_ = x + rnd.randrange(1, max(2, w - 4))
             cv.rect(px_, y + h - 2, 4, 2, (60, 36, 40))
             cv.rect(px_ + 1, y + h - 5, 2, 3, (30, 70, 50))
@@ -131,13 +134,13 @@ def window(cv, rnd, x, y, w, h, frame, lit=None, arch=False, shutters=None, wall
     else:
         cv.rect(x, y, w, h, (20, 24, 50))
         cv.rect(x, y, w, 2, (14, 16, 36))
-        # 玻璃反光
+        # reflection on the glass
         for i in range(min(w, h) - 2):
             if i % 2 == 0:
                 cv.px(x + 1 + i, y + h - 2 - i, (46, 58, 108))
-        if rnd.random() < 0.18:  # 电视的冷光
+        if rnd.random() < 0.18:  # the cold flicker of a television
             cv.lrect(x + 1, y + h - 5, w - 2, 4, (90, 130, 255), 0.3, body=(50, 70, 150))
-    # 窗棂
+    # window bars
     cv.rect(x + w // 2, y, 1, h, mul(frame, 0.8))
     cv.rect(x, y + h // 3, w, 1, mul(frame, 0.8))
     if arch and wall:
@@ -167,7 +170,7 @@ def ac_unit(cv, x, y):
     cv.rect(x + 8, y + 4, 2, 1, (92, 96, 114))
     cv.rect(x + 1, y + 8, 1, 2, IRON)
     cv.rect(x + 9, y + 8, 1, 2, IRON)
-    cv.rect(x + 5, y + 8, 1, 5, mul((146, 152, 168), 0.6))  # 冷凝水管
+    cv.rect(x + 5, y + 8, 1, 5, mul((146, 152, 168), 0.6))  # condensate pipe
 
 
 def pipe(cv, x, y0, y1, c=(84, 96, 112), w=2):
@@ -178,14 +181,14 @@ def pipe(cv, x, y0, y1, c=(84, 96, 112), w=2):
 
 
 def balcony(cv, rnd, x, y, w, trim):
-    """y 为阳台地板的顶边"""
+    """y is the top edge of the balcony floor."""
     cv.rect(x - 1, y, w + 2, 2, trim)
     cv.rect(x - 1, y + 2, w + 2, 1, mul(trim, 0.6))
     cv.rect(x, y - 9, w, 1, IRON)
     for xx in range(x, x + w, 2):
         cv.rect(xx, y - 8, 1, 8, IRON)
     cv.rect(x, y - 5, w, 1, mul(IRON, 0.8))
-    # 盆栽与晾晒的衣物
+    # plants and laundry hung out to dry
     for _ in range(rnd.randrange(0, 3)):
         px_ = x + rnd.randrange(1, max(2, w - 5))
         g = rnd.choice([(40, 96, 66), (56, 112, 60), (36, 84, 84)])
@@ -199,12 +202,12 @@ def balcony(cv, rnd, x, y, w, trim):
             cv.rect(x + 2 + i * 5, y - 8, 4, rnd.randrange(4, 7), c)
 
 
-# ------------------------------------------------------------------ 招牌
+# ------------------------------------------------------------------ Signs
 def vsign(cv, x, y, chars, col, border=True, board=(22, 18, 40), side='r'):
-    """竖招牌，x,y 为左上角；返回 (w,h)"""
+    """Vertical sign; x, y is the top-left corner. Returns (w, h)."""
     n = len(chars)
     w, h = 20, n * 17 + 5
-    # 支架
+    # bracket
     bx = x + w if side == 'l' else x - 3
     cv.rect(bx, y + 3, 3, 1, IRON)
     cv.rect(bx, y + h - 5, 3, 1, IRON)
@@ -365,7 +368,7 @@ def lantern(cv, x, y, c=(255, 76, 52)):
 
 
 def vending(cv, rnd, x, y, tint=(210, 234, 255)):
-    """12×18，y 为底边"""
+    """12x18, with y as the bottom edge."""
     y0 = y - 18
     cv.rect(x, y0, 12, 18, (60, 66, 88))
     cv.lrect(x + 1, y0 + 1, 10, 11, tint, 0.85)
@@ -387,7 +390,7 @@ def awning(cv, x, y, w, c1, c2, h=6):
 
 
 def street_lamp(cv, x, y, h=58, c=(255, 196, 110)):
-    """y 为地面"""
+    """y is the ground line."""
     cv.rect(x, y - h, 2, h, (40, 44, 62))
     cv.rect(x, y - h, 1, h, (64, 70, 92))
     cv.rect(x - 1, y - 4, 4, 4, (34, 36, 52))
@@ -399,7 +402,7 @@ def street_lamp(cv, x, y, h=58, c=(255, 196, 110)):
 
 
 def person(cv, rnd, x, y, umbrella=True):
-    """行人剪影，y 为脚底"""
+    """Silhouette of a passer-by; y is the sole of the foot."""
     coat = rnd.choice([(40, 44, 70), (70, 44, 52), (44, 64, 66), (84, 70, 50)])
     cv.rect(x + 1, y - 13, 3, 3, (196, 150, 130))
     cv.rect(x, y - 10, 5, 6, coat)

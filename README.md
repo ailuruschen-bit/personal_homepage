@@ -1,91 +1,119 @@
-# 个人主页
+# Personal site
 
-像素风个人站。开幕是一段夜车车窗的动画，车厢本身就是主菜单：
-视线聚焦到哪个物件，就进入哪个板块。
+A pixel-art personal site. It opens on a night train: the camera tilts the
+blinds open, flies out through the window, and settles on the city outside.
+Click once and it flies back in — and the carriage itself is the menu. Whatever
+object the light settles on is the section you enter.
 
-当前版本只有**结构和交互**，所有文字都是占位，搜 `TODO` 可以找到要填的地方。
+The current version is **structure and interaction only**. Every piece of copy
+is a placeholder; search for `TODO` to find what still needs writing.
 
-技术栈：Vite + TypeScript，无运行时依赖。
+Stack: Vite + TypeScript, no runtime dependencies.
 
-## 开发
+## Development
 
 ```bash
 npm install
 npm run dev      # http://localhost:5173
-npm run build    # 类型检查 + 打包到 dist/
-npm run preview  # 预览打包结果
-npm run format   # Prettier 格式化
+npm run build    # type check, then bundle into dist/
+npm run preview  # serve the built output
+npm run format   # Prettier
 ```
 
-纯静态站点，`dist/` 可直接部署到任何静态托管。
-路由用 hash（`#/about`），所以不需要服务端改写规则。
+The site is fully static: `dist/` can be dropped onto any static host. Routing
+uses the hash (`#/about`), so no server rewrite rules are needed.
 
-## 目录
+## Layout
 
 ```
-public/assets/        场景素材（WebP，由脚本生成，勿手工改）
-tools/art/            生成上述素材的脚本（Python）
+docs/                 technical documentation (start at docs/README.md)
+public/assets/        scene artwork (WebP, generated — do not edit by hand)
+tools/art/            the Python scripts that generate that artwork
 src/
-  main.ts             入口：按路由渲染场景或板块页
-  router.ts           hash 路由
+  main.ts             entry point: renders either the scene or a section page
+  router.ts           hash router
   content/
-    site.ts           站点级文案（封面标题、外链）  ← 填这里
-    sections.ts       板块注册表：id / 名称 / 占位内容  ← 填这里
+    site.ts           site-wide copy (cover headline, external links)  <- edit
+    sections.ts       section registry: id / name / placeholder blocks <- edit
   scene/
-    units.ts          480×480 场景坐标系与屏幕坐标换算
-    hotspots.ts       可聚焦物件：目标板块、磁吸范围、光池、抬起轮廓
-    dom.ts            生成车厢 DOM
-    focus.ts          磁吸聚焦 + 聚光 + 相机（每帧 rAF）
-    opening.ts        阶段机 intro/idle/back/hub/peek
-    scene.css         场景样式与所有动画时长
+    units.ts          the 480x480 scene grid and its screen conversions
+    hotspots.ts       focusable objects: target, snap region, light, outline
+    dom.ts            builds the carriage DOM
+    focus.ts          snapping, spotlight and camera, driven per frame
+    opening.ts        phase machine: intro / idle / back / settling / hub / peek
+    scene.css         scene styles and every animation timing
   sections/
-    layout.ts         板块页外壳（目前所有板块共用）
+    layout.ts         section page shell (shared by all sections for now)
     sections.css
   styles/
-    tokens.css        颜色、字体、动效变量  ← 换色改这里
+    tokens.css        colour, type and motion variables  <- recolour here
     base.css
 ```
 
-## 素材
+## Artwork
 
-`public/assets/` 里的场景图（天空、三层城市、车厢）都由 `tools/art/` 的脚本生成，
-不是手工导出的。改画面就改脚本，然后重新生成：
+Everything in `public/assets/` — the sky, the three city layers, the carriage —
+is produced by the scripts in `tools/art/`, not exported from an image editor.
+To change the picture, change the script and regenerate:
 
 ```bash
 pip install pillow numpy scipy
 python3 tools/art/build.py
 ```
 
-- `street.py` / `city.py` 中景：霓虹街区 + 一段破败街区（`c2.webp`，长图循环）
-- `far.py` 远景天际线 `c1.webp`、轨旁设施 `c3.webp`、天空 `sky.webp`
-- `room.py` 车厢 `room.webp` 及左右延伸段 `room-l.webp` / `room-r.webp`
-- `px.py` / `parts.py` 画布、打光与各种零件
+- `street.py` / `city.py` — mid distance: the neon district plus a stretch of
+  derelict blocks (`c2.webp`, one long looping strip)
+- `far.py` — distant skyline `c1.webp`, trackside gear `c3.webp`, sky `sky.webp`
+- `room.py` — the carriage `room.webp` and its side extensions
+  `room-l.webp` / `room-r.webp`
+- `px.py` / `parts.py` — canvas, lighting and the shared building blocks
 
-素材按 1 倍的像素坐标来画，输出时放大到 2 倍：固有色用 EPX 算法削掉斜线上的阶梯，
-光照和辉光直接在 2 倍分辨率上计算。倍率在 `build.py` 的 `px.SCALE`。
+Art is drawn on a 1x pixel grid and written out at 2x: EPX trims the
+stair-stepping off diagonals in the albedo, while lighting and bloom are
+computed at the output resolution. The factor lives in `px.SCALE`, set by
+`build.py`.
 
-车厢里可聚焦物件的位置要和 `src/scene/hotspots.ts` 对得上；城市素材的尺寸变了，
-要同步改 `scene.css` 里 `.ly` 的高度和各层的 `--tile`。
+Two things have to stay in sync by hand. The focusable objects' outlines in
+`src/scene/hotspots.ts` must match where `room.py` actually draws them, and if
+a city layer changes size, `.ly`'s height and each layer's `--tile` in
+`scene.css` have to follow.
 
-## 几个关键设计
+## Documentation
 
-**场景坐标系。** 车厢是一张 480×480 的画。物件位置、磁吸范围、光池都用这套
-坐标描述，与屏幕尺寸无关；`units.ts` 负责换算。改物件位置只改 `hotspots.ts`。
+`docs/` covers the architecture, the scene coordinate system, the phase
+machine, the focus system, the compositing rules and the art pipeline in
+detail. Start at [docs/README.md](docs/README.md).
 
-**聚焦逻辑。** 镜头保持一个固定的宽构图，不随指针推拉。吸附的是光和物件：
-指针靠近物件时被牵引，进入范围瞬间吸附，离开立刻脱离。参考 iPadOS 的指针磁吸
-与 tvOS 的焦点（抬起 + 打亮，而不是把其它地方压黑）。
+## Key design decisions
 
-**阶段机。** `.stage` 上的 class 决定阶段，动画时长全部写在 `scene.css` 里，
-TS 只切 class。想调开幕节奏，改 CSS 里 `.intro .xxx` 那几行的 duration/delay。
+**One scene grid.** The carriage is a 480x480 drawing. Object positions, snap
+regions and light pools are all expressed on that grid, independent of screen
+size; `units.ts` does the conversion. Moving an object means editing
+`hotspots.ts` and nothing else.
 
-## 待办
+**Focus, not zoom.** The camera holds one fixed wide framing and never pushes
+in with the pointer. What snaps is the light and the object: the light is
+pulled in as the pointer approaches, snaps on entering range, and lets go on
+leaving. The references are the iPadOS pointer and tvOS focus — lift and
+brighten the target rather than dimming everything else.
 
-- [ ] 填入正式文案：`content/site.ts`、`content/sections.ts`
-- [ ] notes / hobby / chat 三个板块还没有对应物件，需要画素材并在 `hotspots.ts` 注册
-- [ ] 板块进入转场（目前是淡入，目标是「物件被拿起」式的转场）
-- [ ] 笔记系统：Markdown 内容源、分类、搜索
-- [ ] 对话板块与机器可读入口
-- [ ] 回访者跳过开幕（目前只在单次访问内记住）
-- [ ] 移动端真机验证：触摸是「点一下聚焦、再点进入」
-- [ ] 多语言
+**Phases in CSS, switching in TS.** A class on `.stage` selects the phase and
+every duration lives in `scene.css`; TypeScript only swaps the class. To retune
+the opening, edit the `duration` and `delay` on the `.intro .*` rules.
+
+## To do
+
+- [ ] Write the real copy: `content/site.ts`, `content/sections.ts`
+- [ ] notes / hobby / chat have no object yet — draw the artwork, then register
+      them in `hotspots.ts`
+- [ ] Section entry transition (currently a fade; the goal is an object being
+      picked up)
+- [ ] Notes system: Markdown sources, categories, search
+- [ ] Chat section and a machine-readable entry point
+- [ ] Remember that a returning visitor has seen the opening (currently only
+      within a single visit)
+- [ ] Verify touch on a real device: tap to focus, tap again to enter
+- [ ] Internationalisation
+- [ ] Chrome: the city outside is drawn over the carriage and flickers after
+      the opening and when focus changes. See
+      [docs/05-rendering-and-compositing.md](docs/05-rendering-and-compositing.md)

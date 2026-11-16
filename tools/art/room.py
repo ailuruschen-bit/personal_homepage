@@ -1,4 +1,8 @@
-"""车厢内景。在 720×480 的画布上画（场景坐标 x∈[-120,600)），再切成中间 480 与左右各 120 的延伸段。"""
+"""The carriage interior.
+
+Drawn on a 720x480 canvas covering scene x in [-120, 600), then cut into the
+central 480 plus a 120-wide extension on each side.
+"""
 import random
 
 import numpy as np
@@ -23,7 +27,8 @@ AMBER = (255, 206, 110)
 
 
 class Off:
-    """带水平偏移的画布包装：下面所有坐标都写场景坐标"""
+    """Canvas wrapper with a horizontal offset, so everything below is written in
+    scene coordinates."""
 
     def __init__(self, cv):
         self.cv = cv
@@ -93,10 +98,10 @@ def ri(p):
     return (int(round(p[0])), int(round(p[1])))
 
 
-# ------------------------------------------------------------------ 壳体
+# ------------------------------------------------------------------ Shell
 def shell(g, rnd):
     L, Wd = -120, 720
-    # 天花
+    # ceiling
     g.rect(L, 0, Wd, 48, CEIL)
     for x in range(L, 600, 80):
         g.rect(x, 0, 1, 48, mul(CEIL, 0.7))
@@ -109,16 +114,16 @@ def shell(g, rnd):
         g.lrect(x0, 35, w, 1, (255, 196, 120), 0.7, body=(240, 200, 150))
         for x in range(x0 + 49, x0 + w, 50):
             g.rect(x, 29, 2, 8, (38, 40, 62))
-    # 通风格栅
+    # ventilation grilles
     for x0 in (-60, 150, 300, 470):
         g.rect(x0, 8, 30, 10, (40, 42, 66))
         for y in range(10, 17, 2):
             g.rect(x0 + 2, y, 26, 1, (24, 26, 44))
-    # 顶角线
+    # cornice
     g.rect(L, 48, Wd, 10, (50, 54, 84))
     g.rect(L, 48, Wd, 1, (96, 102, 140))
     g.rect(L, 56, Wd, 2, (30, 32, 54))
-    # 上墙：带菱形暗纹的墙板
+    # upper wall: panelling with a faint diamond pattern
     g.rect(L, 58, Wd, 238, WALL)
     cvp = g.cv.im.load()
     d1, d2 = mul(WALL, 0.9), mul(WALL, 1.06)
@@ -130,7 +135,7 @@ def shell(g, rnd):
             elif a == 6 and b == 6:
                 cvp[x, y] = d2 + (255,)
     g.speckle(L, 58, Wd, 238, 0.07, rnd, 0.3)
-    # 墙板接缝与铆钉
+    # panel seams and rivets
     for x in (-92, -8, 30, 116, 364, 450, 488, 572):
         g.rect(x, 58, 1, 232, mul(WALL, 0.62))
         g.rect(x + 1, 58, 1, 232, mul(WALL, 1.18))
@@ -139,7 +144,7 @@ def shell(g, rnd):
             g.px(x - 3, y + 1, mul(WALL, 0.6))
             g.px(x + 4, y, mul(WALL, 1.35))
             g.px(x + 4, y + 1, mul(WALL, 0.6))
-    # 水渍与划痕
+    # water stains and scratches
     for _ in range(60):
         x, y = rnd.randrange(L, 600), rnd.randrange(60, 250)
         for i in range(rnd.randrange(8, 40)):
@@ -147,12 +152,12 @@ def shell(g, rnd):
     for _ in range(26):
         x, y = rnd.randrange(L, 600), rnd.randrange(110, 288)
         g.line([(x, y), (x + rnd.randrange(3, 12), y - rnd.randrange(1, 4))], mul(WALL, 1.16))
-    # 腰线 + 灯带
+    # string course plus light strip
     g.rect(L, 288, Wd, 8, (70, 80, 118))
     g.rect(L, 288, Wd, 1, (128, 138, 176))
     g.rect(L, 294, Wd, 2, (36, 42, 70))
     g.lrect(L, 296, Wd, 2, (95, 242, 230), 0.8, body=(170, 250, 244))
-    # 下墙：竖向压型板
+    # lower wall: vertical ribbed panelling
     g.rect(L, 298, Wd, 142, WALL_LO)
     for x in range(L, 600, 6):
         g.rect(x, 298, 1, 138, mul(WALL_LO, 0.84))
@@ -161,7 +166,7 @@ def shell(g, rnd):
     g.speckle(L, 298, Wd, 142, 0.08, rnd, 0.25)
     for x in (-8, 30, 116, 364, 450, 488):
         g.rect(x, 300, 2, 136, mul(WALL_LO, 0.6))
-    # 踢脚与地板
+    # skirting and floor
     g.rect(L, 434, Wd, 6, (38, 42, 68))
     g.rect(L, 434, Wd, 1, (84, 90, 126))
     g.rect(L, 440, Wd, 40, (46, 48, 76))
@@ -171,7 +176,7 @@ def shell(g, rnd):
     for y in (449, 462):
         g.rect(L, y, Wd, 1, (28, 30, 50))
     g.speckle(L, 440, Wd, 40, 0.12, rnd, 0.3)
-    # 采暖格栅
+    # heater grille
     g.rect(168, 388, 146, 46, (52, 58, 90))
     g.rect(168, 388, 146, 1, (104, 112, 150))
     g.rect(171, 391, 140, 40, (20, 22, 40))
@@ -184,10 +189,10 @@ def shell(g, rnd):
         g.px(x, 430, (130, 138, 170))
 
 
-# ------------------------------------------------------------------ 行李架
+# ------------------------------------------------------------------ Luggage rack
 def rack(g, rnd):
     g.shadow(-120, 96, 720, 12, 0.5)
-    # 路线图
+    # route map
     g.shadow(172, 86, 136, 6, 0.6)
     g.rect(173, 67, 134, 20, (60, 66, 100))
     g.rect(173, 67, 134, 1, (120, 130, 170))
@@ -209,14 +214,14 @@ def rack(g, rnd):
     for x in (175, 304):
         g.px(x, 69, (150, 158, 190))
         g.px(x, 84, (150, 158, 190))
-    # 托架
+    # brackets
     for x in (-100, -30, 70, 164, 346, 440, 510, 580):
         g.rect(x, 60, 3, 37, (84, 94, 130))
         g.rect(x, 60, 1, 37, (136, 146, 182))
         g.rect(x - 2, 60, 7, 3, (64, 72, 106))
         g.line([(x + 3, 84), (x + 9, 93)], (64, 72, 106))
-    # 行李（底边 y=92）
-    # 纸箱
+    # luggage, sitting on y = 92
+    # cardboard box
     g.rect(28, 72, 36, 20, (176, 138, 98))
     g.rect(28, 72, 36, 2, (210, 174, 130))
     g.rect(28, 90, 36, 2, (120, 90, 66))
@@ -225,14 +230,14 @@ def rack(g, rnd):
     g.rect(53, 80, 6, 1, (120, 60, 60))
     g.rect(53, 82, 4, 1, (90, 90, 110))
     g.shade(60, 72, 4, 20, 0.8)
-    # 卷起来的图纸
+    # rolled-up drawings
     g.rect(6, 86, 24, 6, (226, 222, 210))
     g.rect(6, 86, 24, 1, (250, 248, 240))
     g.rect(6, 90, 24, 2, (170, 166, 160))
     g.ellipse(27, 86, 5, 6, (190, 186, 178))
     g.px(29, 88, (90, 88, 96))
     g.rect(14, 86, 2, 6, (200, 70, 70))
-    # 旅行袋
+    # holdall
     c = (60, 140, 138)
     g.rrect(96, 68, 55, 24, 7, c)
     g.rrect(98, 69, 51, 8, 4, mul(c, 1.28))
@@ -247,7 +252,7 @@ def rack(g, rnd):
     g.rect(146, 78, 5, 9, (236, 226, 200))
     g.rect(147, 80, 3, 1, (150, 60, 60))
     g.px(148, 77, (40, 40, 56))
-    # 公文包（聚焦轮廓：318-386 × 55-92）
+    # briefcase (focus outline: 318-386 x 55-92)
     lb = (150, 96, 62)
     g.rect(318, 58, 68, 34, lb)
     g.rect(318, 58, 68, 3, mul(lb, 1.3))
@@ -277,13 +282,13 @@ def rack(g, rnd):
     g.rect(343, 77, 3, 3, (236, 240, 240))
     g.rect(354, 78, 10, 7, (214, 70, 70))
     g.rect(354, 80, 10, 2, (240, 232, 220))
-    # 长柄伞
+    # umbrella
     g.rect(398, 88, 42, 4, (44, 50, 84))
     g.rect(398, 88, 42, 1, (84, 92, 136))
     g.rect(412, 88, 2, 4, (150, 60, 70))
     g.rect(394, 89, 4, 2, (160, 166, 190))
     g.line([(440, 89), (446, 89), (447, 86), (445, 84)], BRASS)
-    # 搁板：两道横杆
+    # the shelf itself: two rails
     g.rect(-120, 92, 720, 2, STEEL)
     g.rect(-120, 92, 720, 1, (170, 180, 210))
     g.rect(-120, 96, 720, 1, (64, 72, 106))
@@ -292,9 +297,9 @@ def rack(g, rnd):
         g.px(x + 2, 95, (84, 94, 130))
 
 
-# ------------------------------------------------------------------ 车窗与窗帘
+# ------------------------------------------------------------------ Window and curtains
 def window(g, rnd):
-    # 铜杆
+    # brass rail
     g.shadow(118, 104, 244, 5, 0.6)
     for x in (128, 240, 352):
         g.rect(x, 97, 2, 5, (120, 92, 50))
@@ -306,7 +311,7 @@ def window(g, rnd):
         g.px(x + 2, 99, (255, 240, 190))
         g.px(x + 3, 99, (255, 240, 190))
         g.rect(x + 2, 104, 5, 1, (130, 96, 50))
-    # 窗帘（束在两侧）
+    # curtains, tied back on both sides
     cc = (58, 110, 96)
     for x0 in (123, 344):
         g.shadow(x0 - 1, 106, 16, 168, 0.62)
@@ -315,7 +320,7 @@ def window(g, rnd):
             g.rect(x0 + i, 104, 1, 164, mul(cc, k))
         for x in range(x0, x0 + 13, 2):
             g.rect(x, 100, 1, 5, (150, 112, 56))
-        # 束带
+        # tieback
         g.rect(x0, 196, 13, 3, BRASS)
         g.rect(x0, 196, 13, 1, (255, 232, 160))
         g.rect(x0, 200, 13, 2, mul(cc, 0.5))
@@ -324,7 +329,7 @@ def window(g, rnd):
             g.rect(x0 + i, 268, 1, hh + 1, mul(cc, 0.9))
         g.rect(x0 + 6, 199, 1, 6, (190, 146, 70))
         g.rect(x0 + 5, 205, 3, 3, (230, 190, 100))
-    # 窗框
+    # window frame
     fr = (104, 118, 158)
     g.shadow(133, 108, 214, 174, 0.55)
     g.rrect(136, 110, 208, 168, 18, (44, 50, 80))
@@ -340,23 +345,23 @@ def window(g, rnd):
         g.rect(x, y, 2, 2, (190, 200, 228))
         g.px(x + 1, y + 2, (50, 56, 88))
         g.px(x + 2, y + 1, (50, 56, 88))
-    # 把手
+    # handle
     g.rect(232, 269, 16, 4, (60, 68, 104))
     g.rect(234, 270, 12, 2, (160, 170, 204))
-    # 窗台
+    # sill
     g.shadow(129, 283, 222, 9, 0.5)
     g.rect(130, 277, 220, 6, mul(fr, 0.95))
     g.rect(130, 277, 220, 1, (184, 196, 228))
     g.rect(130, 282, 220, 1, (50, 56, 88))
     g.rect(132, 283, 216, 2, (40, 46, 74))
-    # 窗台上的小物：一盆多肉、一枚硬币
+    # odds and ends on the sill: a succulent and a coin
     g.rect(154, 271, 9, 6, (176, 96, 70))
     g.rect(153, 270, 11, 2, (208, 124, 90))
     g.rect(155, 266, 2, 4, (86, 160, 110))
     g.rect(158, 264, 3, 6, (106, 184, 124))
     g.rect(161, 267, 2, 3, (76, 140, 100))
     g.px(159, 263, (150, 220, 160))
-    # 铭牌
+    # nameplate
     g.rect(221, 284, 39, 6, (26, 28, 48))
     g.rect(221, 284, 39, 1, (70, 76, 110))
     g.lrect(224, 286, 9, 2, AMBER, 0.85)
@@ -365,7 +370,7 @@ def window(g, rnd):
     g.lrect(236, 288, 12, 1, (120, 130, 170), 0.2)
 
 
-# ------------------------------------------------------------------ 墙上的东西
+# ------------------------------------------------------------------ Things on the walls
 def poster(g, x, y, w, h, kind):
     g.shadow(x - 1, y + 1, w + 4, h + 3, 0.6)
     g.rect(x - 2, y - 2, w + 4, h + 4, (84, 60, 54))
@@ -402,9 +407,9 @@ def poster(g, x, y, w, h, kind):
 
 
 def walls(g, rnd):
-    # ---- 左墙
+    # ---- left wall
     poster(g, 22, 118, 48, 70, 'sunset')
-    # 霓虹灯管
+    # neon tube
     g.line([(97, 58), (97, 96)], (30, 30, 50))
     g.line([(97, 104), (97, 123)], (30, 30, 50))
     g.rect(91, 121, 12, 8, (64, 68, 100))
@@ -416,21 +421,21 @@ def walls(g, rnd):
     g.lrect(95, 129, 4, 123, (255, 200, 235), 1.0, body=(255, 226, 244))
     g.lrect(96, 131, 2, 119, (255, 255, 255), 1.0)
     g.light(56, 110, 84, 176, MAG, 0.6)
-    # 拍立得
+    # instant photos
     for x, y, c in ((106, 146, (90, 130, 170)), (109, 166, (190, 120, 90))):
         g.shadow(x, y + 1, 13, 15, 0.7)
         g.rect(x, y, 12, 14, (238, 234, 224))
         g.rect(x + 1, y + 1, 10, 9, c)
         g.rect(x + 1, y + 7, 10, 3, mul(c, 0.6))
         g.px(x + 6, y - 1, (220, 70, 70))
-    # 喇叭
+    # speaker
     g.rect(84, 264, 24, 16, (52, 58, 90))
     g.rect(84, 264, 24, 1, (110, 118, 156))
     for y in range(267, 278, 2):
         for x in range(87, 106, 2):
             g.px(x + (y // 2) % 2, y, (22, 24, 42))
-    # ---- 右墙
-    # 壁灯
+    # ---- right wall
+    # wall lamp
     g.rect(379, 132, 10, 7, (84, 90, 126))
     g.rect(379, 132, 10, 1, (150, 156, 190))
     g.rect(382, 139, 4, 9, (150, 116, 60))
@@ -449,7 +454,7 @@ def walls(g, rnd):
     g.rect(399, 196, 3, 3, BRASS)
     g.light(348, 176, 72, 84, (255, 160, 80), 0.34)
     g.light(362, 116, 44, 30, (255, 160, 80), 0.2)
-    # 控制面板（聚焦区外，仅装饰）
+    # control panel (outside any focus region, decorative only)
     g.shadow(365, 204, 42, 38, 0.6)
     g.rect(365, 203, 40, 36, (92, 104, 142))
     g.rect(365, 203, 40, 1, (160, 172, 206))
@@ -464,7 +469,7 @@ def walls(g, rnd):
     g.lrect(371, 232, 20, 1, (130, 140, 190), 0.35)
     g.lrect(397, 231, 3, 3, (255, 80, 80), 0.8)
     g.lrect(392, 231, 3, 3, (90, 255, 150), 0.7)
-    # 小画框与应急锤
+    # small picture frame and emergency hammer
     poster(g, 420, 114, 34, 30, 'moon')
     g.shadow(423, 188, 26, 30, 0.6)
     g.rect(422, 186, 24, 28, (196, 56, 62))
@@ -479,7 +484,7 @@ def walls(g, rnd):
     g.rect(427, 210, 6, 1, (150, 50, 50))
 
 
-# ------------------------------------------------------------------ 座椅
+# ------------------------------------------------------------------ Seats
 def seat(g, rnd, mirror):
     def X(x):
         return 480 - x if mirror else x
@@ -491,20 +496,20 @@ def seat(g, rnd, mirror):
         g.rect(X(x + w - 1) if mirror else x, y, w, h, c)
 
     back = SEAT
-    # 椅背投在墙上的影子
+    # shadow the seat back casts on the wall
     g.shadow(X(84) if mirror else 68, 236, 16, 120, 0.55)
     g.shadow(X(146) if mirror else 10, 346, 136, 14, 0.6)
-    # 底座
+    # base
     R(10, 428, 124, 52, (56, 30, 50))
     R(10, 428, 124, 2, (30, 16, 30))
     R(14, 436, 116, 1, (84, 48, 70))
-    # 坐垫正面
+    # front face of the cushion
     R(10, 404, 124, 24, mul(back, 0.72))
     R(10, 404, 124, 2, mul(back, 1.25))
     R(10, 424, 124, 4, mul(back, 0.5))
     for x in range(16, 130, 9):
         g.px(X(x), 407, mul(back, 1.5))
-    # 坐垫顶面
+    # top face of the cushion
     g.poly(P([(70, 352), (141, 352), (133, 404), (10, 404)]), mul(back, 1.12))
     g.poly(P([(70, 352), (141, 352), (140, 358), (63, 358)]), mul(back, 0.8))
     g.line(P([(52, 368), (138, 368)]), mul(back, 0.94))
@@ -513,9 +518,9 @@ def seat(g, rnd, mirror):
     for x, y in ((92, 364), (112, 376), (72, 378), (96, 392), (50, 394), (120, 396)):
         g.px(X(x), y, mul(back, 0.6))
         g.px(X(x), y + 1, mul(back, 1.5))
-    # 椅背正面
+    # front of the seat back
     g.poly(P([(10, 249), (70, 238), (70, 352), (10, 404)]), back)
-    # 菱形拉扣
+    # diamond tufting
     def ty(x):
         return 286 - (x - 10) * 22 / 60
 
@@ -534,12 +539,12 @@ def seat(g, rnd, mirror):
         if 12 < x < 68 and y < 392 - (70 - x) * 0.8:
             g.rect(X(x) - (1 if mirror else 0), int(y), 2, 2, mul(back, 0.5))
             g.px(X(x), int(y) - 1, mul(back, 1.5))
-    # 外侧立面与顶面
+    # outer face and top edge
     g.poly(P([(0, 252), (10, 249), (10, 480), (0, 480)]), mul(back, 0.5))
     g.poly(P([(0, 250), (10, 247), (70, 236), (70, 238), (10, 249), (0, 252)]), mul(back, 1.5))
-    # 靠近墙的一侧压暗
+    # darken the side nearest the wall
     g.poly(P([(66, 262), (70, 261), (70, 352), (66, 355)]), mul(back, 0.7))
-    # 头枕巾
+    # antimacassar
     cloth = (196, 192, 212)
     g.poly(P([(10, 249), (70, 238), (70, 264), (10, 286)]), cloth)
     g.poly(P([(10, 249), (70, 238), (70, 242), (10, 253)]), (226, 224, 240))
@@ -553,10 +558,10 @@ def seat(g, rnd, mirror):
     g.poly(P([(0, 252), (10, 249), (10, 286), (0, 290)]), (176, 170, 194))
 
 
-# ------------------------------------------------------------------ 桌子与桌上的东西
+# ------------------------------------------------------------------ Table and what is on it
 def table(g, rnd):
     BL, BR, FL, FR = (150, 327), (330, 327), (118, 372), (362, 372)
-    # 桌腿
+    # table leg
     g.shadow(196, 420, 88, 16, 0.5, ell=True)
     g.rect(232, 382, 16, 36, (64, 72, 108))
     g.rect(232, 382, 3, 36, (120, 130, 168))
@@ -564,7 +569,7 @@ def table(g, rnd):
     g.poly([(224, 418), (256, 418), (262, 426), (218, 426)], (54, 60, 94))
     g.line([(224, 418), (256, 418)], (120, 130, 168))
     g.shadow(120, 384, 240, 14, 0.42)
-    # 桌面
+    # table top
     g.poly([BL, BR, FR, FL], WOOD)
     for k in range(1, 7):
         a, b = lerp(BL, BR, k / 7), lerp(FL, FR, k / 7)
@@ -579,7 +584,7 @@ def table(g, rnd):
     g.line([(BL[0], BL[1] + 1), (BR[0], BR[1] + 1)], mul(WOOD, 0.8))
     g.line([BL, FL], mul(WOOD, 1.25))
     g.line([BR, FR], mul(WOOD, 0.7))
-    # 包边与侧板
+    # edging and apron
     g.rect(118, 372, 245, 2, BRASS)
     g.rect(118, 372, 245, 1, (255, 236, 170))
     g.rect(118, 374, 245, 9, mul(WOOD, 0.6))
@@ -587,7 +592,7 @@ def table(g, rnd):
     g.rect(118, 382, 245, 1, mul(WOOD, 0.36))
     for x in range(124, 360, 12):
         g.px(x, 378, mul(WOOD, 0.9))
-    # ---- 电脑（轮廓见 hotspots.ts 的 projects）
+    # ---- laptop (outline: the projects entry in hotspots.ts)
     g.shadow(152, 350, 96, 20, 0.5)
     S = [(148, 292), (214, 288), (218, 343), (151, 348)]
     g.poly(S, (44, 48, 76))
@@ -596,7 +601,7 @@ def table(g, rnd):
     D = [(151, 295), (212, 291), (215, 340), (154, 345)]
     g.lpoly(D, (40, 70, 160), 0.42, body=(22, 30, 62))
     colors = [MAG, CYA, (255, 206, 110), (150, 255, 170), (226, 232, 255), (176, 130, 255)]
-    tilt = (D[0][1] - D[1][1]) / (D[1][0] - D[0][0])  # 跟着屏幕上边的斜率走
+    tilt = (D[0][1] - D[1][1]) / (D[1][0] - D[0][0])  # follow the slope of the screen top edge
     for r in range(10):
         y0 = 299 + r * 4.4
         x = 157 + rnd.choice([0, 0, 4, 8, 4])
@@ -609,8 +614,9 @@ def table(g, rnd):
                 break
             c = rnd.choice(colors)
             x1 = min(x + ln, 210) - 1
-            # 每段本身是水平的，整行跟着透视逐段下沉：
-            # 段内一旦带上斜率，就会多出一道硬台阶，反而像线被掰弯
+            # Each run is horizontal in itself and the row sinks run by run with the
+            # perspective. Sloping within a run would add a hard step and read as a
+            # bent line instead.
             yc = y0 - ((x + x1) / 2 - 157) * tilt
             g.fline([(x, yc), (x1, yc)], c, 0.95)
             x += ln + 2
@@ -619,7 +625,7 @@ def table(g, rnd):
     for r in range(10):
         g.lpx(154, int(round(299 + r * 4.4)), (90, 110, 170), 0.5)
     g.px(181, 290, (20, 22, 40))
-    # 机身
+    # body
     Bq = [(151, 348), (218, 343), (241, 357), (170, 366)]
     g.poly(Bq, (160, 168, 198))
     g.line([Bq[0], Bq[1]], (40, 44, 70))
@@ -636,14 +642,14 @@ def table(g, rnd):
     g.rect(int(tp[0]) - 7, int(tp[1]) - 1, 14, 3, (182, 190, 216))
     g.light(150, 336, 100, 40, (90, 150, 255), 0.5)
     g.light(146, 286, 76, 60, (80, 120, 255), 0.25)
-    # ---- 咖啡
+    # ---- coffee
     g.shadow(256, 354, 62, 14, 0.5, ell=True)
     g.ellipse(258, 351, 58, 13, (232, 230, 244))
     g.ellipse(258, 351, 58, 11, (248, 246, 255))
     g.ellipse(266, 353, 42, 7, (196, 194, 220))
     g.line([(262, 357), (273, 360)], (190, 196, 214))
     g.rect(261, 356, 3, 2, (220, 224, 238))
-    # 把手
+    # handle
     hc = (232, 230, 246)
     g.rect(301, 337, 7, 2, hc)
     g.rect(307, 338, 3, 9, hc)
@@ -651,7 +657,7 @@ def table(g, rnd):
     g.px(309, 338, (190, 188, 214))
     g.px(309, 346, (190, 188, 214))
     g.rect(301, 348, 6, 1, (176, 174, 204))
-    # 杯身
+    # cup body
     body = (240, 238, 250)
     g.rect(272, 333, 30, 20, body)
     g.ellipse(272, 344, 30, 14, body)
@@ -668,7 +674,7 @@ def table(g, rnd):
     g.ellipse(279, 331, 13, 3, (196, 130, 84))
     g.px(284, 331, (236, 190, 140))
     g.px(293, 333, (150, 96, 70))
-    # ---- 车票（轮廓见 hotspots.ts 的 about）
+    # ---- ticket (outline: the about entry in hotspots.ts)
     g.shadow(318, 349, 32, 15, 0.6)
     T = [(316, 346), (344, 344), (348, 358), (320, 361)]
     g.poly(T, (240, 228, 198))
@@ -682,14 +688,14 @@ def table(g, rnd):
     g.rect(341, 349, 4, 4, (60, 56, 76))
     g.px(342, 350, (240, 228, 198))
     g.px(344, 352, (240, 228, 198))
-    # ---- 钢笔
+    # ---- pen
     g.line([(254, 366), (267, 363)], (40, 60, 120))
     g.line([(254, 367), (267, 364)], (24, 36, 80))
     g.px(268, 363, BRASS)
     g.px(258, 365, BRASS)
 
 
-# ------------------------------------------------------------------ 两侧延伸段
+# ------------------------------------------------------------------ Side extensions
 def extensions(g, rnd):
     back = mul(SEAT, 0.82)
     for mirror in (False, True):
@@ -699,16 +705,16 @@ def extensions(g, rnd):
         def R(x, y, w, h, c):
             g.rect(X(x + w - 1) if mirror else x, y, w, h, c)
 
-        # 背靠背的邻座：只看到椅背背面
+        # the back-to-back seat next door: only the rear of its back is visible
         R(-56, 252, 56, 228, back)
         R(-56, 250, 56, 3, mul(back, 1.5))
         R(-56, 252, 2, 228, mul(back, 0.6))
         R(-2, 252, 2, 228, mul(back, 0.55))
         R(-56, 428, 56, 52, (56, 30, 50))
-        # 头枕巾背面
+        # back of the antimacassar
         R(-54, 253, 52, 26, (196, 190, 212))
         R(-54, 278, 52, 1, (150, 144, 170))
-        # 网兜与报纸
+        # seat-back net with a newspaper
         R(-48, 330, 40, 40, mul(back, 0.7))
         R(-40, 322, 22, 30, (226, 220, 204))
         R(-38, 326, 18, 2, (70, 66, 80))
@@ -719,12 +725,12 @@ def extensions(g, rnd):
         for x in range(-48, -8, 4):
             R(x, 334, 1, 36, (60, 30, 44))
         R(-49, 329, 42, 2, (110, 100, 110))
-        # 扶手吊环
+        # hanging grab handles
         for x in (-86, -70):
             R(x, 58, 1, 30, (190, 190, 206))
             g.ellipse(X(x + 4) if mirror else x - 4, 88, 9, 10, (200, 200, 216))
             g.ellipse(X(x + 2) if mirror else x - 2, 90, 5, 6, WALL)
-    # 左：线路海报、灭火器
+    # left: route poster and fire extinguisher
     poster(g, -110, 130, 44, 60, 'map')
     g.shadow(-101, 306, 16, 44, 0.6)
     g.rect(-100, 304, 12, 40, (200, 56, 60))
@@ -735,7 +741,7 @@ def extensions(g, rnd):
     g.rect(-98, 316, 8, 8, (240, 232, 226))
     g.rect(-102, 310, 16, 2, (84, 94, 130))
     g.rect(-102, 336, 16, 2, (84, 94, 130))
-    # 右：衣钩上的外套与挎包
+    # right: a coat and a shoulder bag on the hooks
     g.rect(536, 148, 56, 3, BRASS)
     g.rect(536, 148, 56, 1, (255, 236, 170))
     for x in (544, 564, 584):
@@ -770,11 +776,12 @@ def build_room(seed=21):
     seat(g, rnd, False)
     seat(g, rnd, True)
     table(g, rnd)
-    # 整体的光：顶灯洗墙、窗外的冷光
+    # Overall lighting: the ceiling strip washing the walls, cold light from outside
     g.light(-120, 40, 720, 50, (255, 214, 160), 0.26)
     g.light(150, 125, 180, 138, (120, 150, 255), 0.55)
     g.light(110, 300, 260, 80, (120, 150, 255), 0.22)
-    # 灯带往下洗、桌面吃到的壁灯暖光、过道的地脚灯
+    # the strip washing downward, warm lamp light landing on the table, floor
+    # lights along the aisle
     g.light(-120, 300, 720, 50, (95, 242, 230), 0.16)
     g.light(250, 318, 150, 70, (255, 180, 100), 0.26)
     g.light(-20, 380, 180, 90, (255, 120, 170), 0.14)
@@ -800,11 +807,11 @@ def build_room(seed=21):
     )
     k = px.SCALE
     a = np.asarray(im).copy()
-    # 延伸段的光也跟着边缘衰减
+    # the extensions fall off toward the edges along with the light
     fall = np.repeat(0.4 + 0.6 * edge[0, :, 0] ** 0.7, k).reshape(1, W * k, 1)
     a[..., :3] = (a[..., :3] * fall).astype(np.uint8)
     a[..., 3] = 255
-    # 抠出窗洞：沿用原图的洞形，位置与 .win 对齐
+    # Punch out the window opening, reusing the original hole mask so it lines up with .win
     hole = np.asarray(Image.open('hole.png').convert('L'))[..., None]
     n = 1
     while n < k:

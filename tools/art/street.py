@@ -1,4 +1,4 @@
-"""霓虹街区：密集招牌、砖墙骑楼、暖光店面。"""
+"""The neon district: dense signage, brick arcades and warmly lit shopfronts."""
 import random
 
 from PIL import Image
@@ -7,9 +7,9 @@ from parts import *
 from px import C, F8, F8B, F16, Cv, bitmap_mask, mix, mul, text_mask
 
 H = 320
-GY = 274  # 人行道顶边
-SH = 38  # 店面层高
-FH = 28  # 楼层高
+GY = 274  # top edge of the pavement
+SH = 38  # height of the shopfront storey
+FH = 28  # height of an upper storey
 
 STYLES = {
     'brick_red': dict(tex=brick, base=(156, 82, 68), trim=(196, 164, 134), frame=(64, 42, 46), arch=True),
@@ -112,7 +112,7 @@ def roof(cv, rnd, x, top, w, st, feature=None):
                 if m.width > bw - 4:
                     m = text_mask(t, F8B)
                 cv.lmask(cx + (bw - m.width) // 2, by + (bh - m.height) // 2, m, col)
-            # 一圈跑马灯
+            # a ring of chaser bulbs
             for xx in range(cx + 1, cx + bw - 1, 3):
                 cv.lpx(xx, by, WARM, 0.9)
                 cv.lpx(xx, by + bh - 1, WARM, 0.9)
@@ -122,7 +122,7 @@ def roof(cv, rnd, x, top, w, st, feature=None):
 def shop(cv, rnd, x, w, st, kind):
     y0 = GY - SH
     base = st['base']
-    # 店面层换一种更深的底色，上沿一条腰线
+    # the shopfront storey gets a darker base colour and a string course along its top
     cv.rect(x, y0, w, SH, mul(base, 0.62))
     cv.rect(x, y0, w, 2, st['trim'])
     cv.rect(x, y0 + 2, w, 1, mul(st['trim'], 0.55))
@@ -137,7 +137,7 @@ def shop(cv, rnd, x, w, st, kind):
         cv.lrect(gx0, y0 + 12, gx1 - gx0, 5, mix(wc, (255, 255, 255), 0.4), 0.85)
         for xx in range(gx0 + 8, gx1 - 2, 12):
             cv.rect(xx, y0 + 12, 1, 20, (50, 40, 52))
-        # 货架与商品
+        # shelves and goods
         for yy in (y0 + 20, y0 + 26):
             cv.lrect(gx0, yy, gx1 - gx0, 1, mul(wc, 0.55), 0.4)
             for xx in range(gx0 + 1, gx1 - 2, 3):
@@ -155,12 +155,12 @@ def shop(cv, rnd, x, w, st, kind):
         ox, ow_ = x + 8, w - 16
         cv.lrect(ox, y0 + 12, ow_, 23, (255, 196, 110), 0.85)
         cv.lrect(ox, y0 + 26, ow_, 9, (255, 220, 150), 0.7)
-        # 柜台与食客
+        # counter and diners
         cv.rect(ox, y0 + 28, ow_, 2, (90, 54, 40))
         for xx in range(ox + 3, ox + ow_ - 5, 9):
             cv.rect(xx + 1, y0 + 22, 3, 3, (40, 28, 36))
             cv.rect(xx, y0 + 25, 5, 4, (40, 28, 36))
-        # 暖帘
+        # noren curtain
         nc = rnd.choice([(40, 50, 110), (120, 36, 44), (36, 80, 76)])
         for i, xx in enumerate(range(ox, ox + ow_ - 1, 7)):
             cv.rect(xx, y0 + 11, 6, 9, nc)
@@ -175,7 +175,7 @@ def shop(cv, rnd, x, w, st, kind):
         cv.rect(x + 4, y0 + 8, w - 8, SH - 11, sc)
         for yy in range(y0 + 9, GY - 3, 2):
             cv.rect(x + 4, yy, w - 8, 1, mul(sc, 0.72))
-        # 涂鸦
+        # graffiti
         for _ in range(3):
             gc = rnd.choice([MAG, CYA, YEL, GRN])
             pts = [(x + 8 + rnd.randrange(w - 16), y0 + 12 + rnd.randrange(18)) for _ in range(4)]
@@ -228,10 +228,10 @@ def building(cv, rnd, x, w, nfl, style, shop_kind, signs=2, roof_feats=None):
     top = GY - SH - nfl * FH
     base = st['base']
     st['tex'](cv, x, top, w, GY - top, base, rnd)
-    # 两侧压暗一条，给体积感
+    # darken both edges for a sense of volume
     shade(cv, x, top, 2, GY - top, 1.18)
     shade(cv, x + w - 3, top, 3, GY - top, 0.72)
-    # 窗
+    # windows
     n = max(1, (w - 10) // 19)
     gap = (w - n * 11) / (n + 1)
     lit_p = rnd.uniform(0.3, 0.6)
@@ -249,7 +249,7 @@ def building(cv, rnd, x, w, nfl, style, shop_kind, signs=2, roof_feats=None):
                 ac_unit(cv, wx, fy + 25 - 1)
         if has_balc:
             balcony(cv, rnd, int(x + gap) - 3, fy + FH - 4, int(w - 2 * gap) + 6, st['trim'])
-    # 水管
+    # downpipes
     if rnd.random() < 0.7:
         pipe(cv, x + (3 if rnd.random() < 0.5 else w - 6), top + 2, GY - SH)
     shop(cv, rnd, x, w, st, shop_kind)
@@ -258,10 +258,11 @@ def building(cv, rnd, x, w, nfl, style, shop_kind, signs=2, roof_feats=None):
 
 
 def sign_set(cv, rnd, x, w, top, shop_kind):
-    """给一栋楼挂招牌：竖招牌挂在楼侧，横招牌压在店面腰线上"""
+    """Hang signs on a building: vertical ones off the side, horizontal ones across
+    the shopfront string course."""
     y0 = GY - SH
     used = []
-    # 竖招牌
+    # vertical signs
     for side in rnd.sample(['l', 'r'], k=rnd.choice([1, 1, 2])):
         chars = rnd.choice(V_SIGNS)
         col = rnd.choice(NEONS)
@@ -272,7 +273,7 @@ def sign_set(cv, rnd, x, w, top, shop_kind):
             lightbox_v(cv, sx + 1, sy, chars, bg=rnd.choice([(255, 232, 190), (255, 244, 220), (220, 240, 255)]), fg=rnd.choice([(130, 20, 30), (30, 40, 110), (20, 80, 60)]))
         else:
             vsign(cv, sx, sy, chars, col, side=side)
-    # 店招
+    # shop sign
     if shop_kind in ('glass', 'noodle', 'bar', 'arcade', 'stairs'):
         if rnd.random() < 0.5:
             t = rnd.choice(H_SIGNS_CJK)
@@ -289,7 +290,7 @@ def sign_set(cv, rnd, x, w, top, shop_kind):
             m = text_mask(t, F8B)
             bx = x + (w - m.width - 8) // 2
             hsign(cv, bx, y0 - 9, t, col, font=F8B, pad=3)
-        # 霓虹小图标
+        # small neon icon
         if rnd.random() < 0.6:
             ic = {'noodle': 'bowl', 'bar': 'glass', 'stairs': 'arrow', 'glass': rnd.choice(['cup', 'star', 'fish', 'heart']), 'arcade': rnd.choice(['star', 'moon', 'heart'])}[shop_kind]
             icon(cv, x + rnd.choice([4, w - 16]), y0 - 26 - rnd.randrange(0, 6), ic, rnd.choice(NEONS))
@@ -341,7 +342,7 @@ def neon_district(cv, rnd, x0, x1):
         x += w + rnd.choice([0, 0, 5, 9, 14])
     for bx, bw, top, kind in tops:
         sign_set(cv, rnd, bx, bw, top, kind)
-    # 街面：路灯、售货机、行人
+    # street level: lamps, vending machines, passers-by
     xx = x0 + 30
     while xx < x1 - 20:
         r = rnd.random()
@@ -357,7 +358,7 @@ def neon_district(cv, rnd, x0, x1):
             cv.rect(xx, GY - 7, 6, 7, (60, 74, 70))
             cv.rect(xx - 1, GY - 8, 8, 1, (84, 100, 96))
         xx += rnd.randrange(34, 80)
-    # 横跨街面的电线与小灯串
+    # cables and string lights spanning the street
     for bi in range(len(tops) - 1):
         ax, aw, at, _ = tops[bi]
         bx2, bw2, bt, _ = tops[bi + 1]

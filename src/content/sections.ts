@@ -1,17 +1,17 @@
 /**
- * 板块注册表。
+ * Section registry.
  *
- * 新增板块：在这里加一条；需要从车厢进入的话，再去 scene/hotspots.ts
- * 注册一个 target 为该 id 的物件。
+ * To add a section, add an entry here. To make it reachable from the carriage,
+ * also register an object in scene/hotspots.ts whose target is this id.
  */
 export interface SectionDef {
-  /** 路由 id，对应 #/about 这样的地址 */
+  /** Route id, that is the #/about part of the URL */
   id: string;
-  /** 板块名，显示在车厢聚焦提示与页面标题 */
+  /** Section name, shown in the focus caption and as the page title */
   title: string;
-  /** 页面导语 */
+  /** Page lede */
   lede: string;
-  /** 页面里预留的内容块，正式内容接入后替换 */
+  /** Placeholder blocks on the page, replaced once real content lands */
   blocks: string[];
 }
 

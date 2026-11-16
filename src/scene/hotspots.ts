@@ -1,23 +1,27 @@
 import { SCENE } from './units';
 
 /**
- * 车厢里可聚焦的物件。
+ * The objects in the carriage that can take focus.
  *
- * zone  磁吸判定范围 [x0, y0, x1, y1]，场景单位。比物件本身略大一圈，
- *       指针进入即吸附；离开即脱离。
- * light 吸附后光池落在哪里、多大：中心 (x, y) 与半径 (rx, ry)。
- * shape 物件轮廓（多边形顶点）。用于从车厢底图上抠出一份副本，
- *       聚焦时抬起、提亮、加投影。不填则只打光不抬起（如窗户）。
- *       必须严格贴着物件在 room.webp 上的边缘：多出来的部分会连同周围的
- *       墙面、桌面一起被抬起来。改动画面后要回到 tools/art/room.py 核对。
+ * zone  Snap region [x0, y0, x1, y1] in scene units. A little larger than the
+ *       object itself: the pointer snaps on entering and lets go on leaving.
+ * light Where the pool of light lands once snapped, and how big it is:
+ *       centre (x, y) and radii (rx, ry).
+ * shape Outline of the object as polygon vertices. Used to cut a copy out of
+ *       the carriage artwork, which is then lifted, brightened and given a
+ *       shadow on focus. Leave it out to light an object without lifting it
+ *       (the window does this).
+ *       The outline must hug the object's edge in room.webp exactly: anything
+ *       beyond it lifts the surrounding wall or table along with the object.
+ *       After changing the artwork, check these against tools/art/room.py.
  */
-/** 「窗外」不是板块：选中它是回到封面 */
+/** "Outside" is not a section: selecting it returns to the cover */
 export const COVER = 'cover';
 
 export interface Hotspot {
-  /** 进入的板块 id（见 content/sections.ts），或 COVER */
+  /** Id of the section to open (see content/sections.ts), or COVER */
   target: string;
-  /** 物件名，聚焦时显示在板块名下方 */
+  /** Object name, shown under the section name while focused */
   object: string;
   zone: [number, number, number, number];
   light: { x: number; y: number; rx: number; ry: number };
@@ -86,13 +90,13 @@ export const hotspots: Hotspot[] = [
       [173, 87],
     ],
   },
-  // TODO: notes / hobby / chat 还没有对应物件，素材画好后在这里注册。
+  // TODO: notes / hobby / chat have no object yet. Draw the artwork, then register them here.
 ];
 
 export const hotspotByTarget = (target: string): Hotspot | null =>
   hotspots.find((h) => h.target === target) ?? null;
 
-/** 距离指针最近的物件及其距离 */
+/** The object nearest the pointer, and how far away it is */
 export function nearestHotspot(p: { X: number; Y: number }): {
   hotspot: Hotspot;
   distance: number;
@@ -109,7 +113,7 @@ export function nearestHotspot(p: { X: number; Y: number }): {
   return { hotspot: best, distance: bd };
 }
 
-/** 指针到某个物件判定框的距离，框内为 0 */
+/** Distance from the pointer to an object's snap region; 0 inside it */
 export function zoneDistance(h: Hotspot, p: { X: number; Y: number }): number {
   const [x0, y0, x1, y1] = h.zone;
   const dx = Math.max(x0 - p.X, 0, p.X - x1);
@@ -118,11 +122,12 @@ export function zoneDistance(h: Hotspot, p: { X: number; Y: number }): number {
 }
 
 /**
- * 由轮廓算出「抬起副本」的 CSS：
- * 把底图按原比例放大，再用 clip-path 只留下这个物件。
+ * Turn an outline into the CSS for the lifted copy: scale the carriage
+ * artwork so it lines up, then clip-path away everything but this object.
  *
- * 裁剪严格落在轮廓上。外面那圈 1 单位只是让元素框比物件大一点，
- * 并不参与裁剪：多出来的像素会连着墙一起浮起来。
+ * The clip sits exactly on the outline. The 1-unit margin only makes the
+ * element box slightly larger than the object and takes no part in the clip:
+ * any pixel beyond the outline would float up with the wall attached.
  */
 export function popStyle(shape: Array<[number, number]>) {
   const x0 = Math.min(...shape.map((p) => p[0])) - 1;

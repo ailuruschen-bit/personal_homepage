@@ -18,7 +18,7 @@ export interface SceneEls {
 
 const BLIND_SLATS = 14;
 
-/** 生成车厢场景的 DOM，并返回需要在运行时操作的节点 */
+/** Build the DOM for the carriage scene and return the nodes touched at runtime */
 export function buildScene(root: HTMLElement): SceneEls {
   const slats = Array.from(
     { length: BLIND_SLATS },
@@ -53,13 +53,13 @@ export function buildScene(root: HTMLElement): SceneEls {
 <div class="stage intro" id="stage">
   <div class="sky"></div>
 
-  <!-- 窗外：三层城市做视差 -->
+  <!-- Outside: three city layers for parallax -->
   <div class="ow" id="ow"><div class="out">
     <div class="ly c1"></div><div class="ly c2"></div><div class="ly c3"></div><div class="base"></div>
   </div></div>
   <div class="rain2"></div>
 
-  <!-- 车厢。cam 负责开幕的推进，look 负责主菜单的构图与视差 -->
+  <!-- The carriage. cam drives the opening push, look holds the hub framing and parallax -->
   <div class="cam" id="cam"><div class="look" id="look"><div class="sway"><div class="scene">
     <div class="win">
       <div class="rain"></div><div class="glass"></div>
@@ -77,18 +77,19 @@ export function buildScene(root: HTMLElement): SceneEls {
     <div class="cur"></div>
     <div class="vig"></div>
     <div class="spot" id="spot"></div><div class="beam" id="beam"></div>
-    <!-- 压暗层之上再放一遍光源，聚焦时霓虹与台灯不被压掉 -->
+    <!-- Light sources again above the dimming layer, so the neon and the lamp
+         are not dimmed along with everything else while an object is focused -->
     <div class="glow g-lamp"></div><div class="glow g-neon"></div><div class="glow g-out"></div>
     ${zones}
   </div></div></div></div>
 
-  <!-- 封面标题 -->
+  <!-- Cover headline -->
   <div class="hero" id="hero"><div class="txt">
     <h1>${l1}<br>${l2}<span style="color:var(--leica)">_</span></h1>
     <p>${site.heroLede}</p>
   </div></div>
 
-  <!-- 待机时的回车厢引导 -->
+  <!-- Idle-state hint for getting back to the carriage -->
   <div class="ghost gt"></div><div class="ghost gb"></div>
   <div class="lens"></div><div class="grain"></div>
   <div class="hint" id="hint"><i>▼</i><span id="hintt">点击 · 回到车厢</span></div>

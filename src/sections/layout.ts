@@ -2,10 +2,11 @@ import './sections.css';
 import type { SectionDef } from '../content/sections';
 
 /**
- * 板块页的外壳。
+ * Shell for a section page.
  *
- * 目前所有板块共用这一个版式：顶栏 + 标题 + 占位块。
- * 正式内容接入时，可以给个别板块写自己的渲染函数（见 index.ts 的 renderers）。
+ * Every section currently shares this one layout: top bar, title, placeholder
+ * blocks. Once real content lands, individual sections can get their own
+ * render function.
  */
 export function renderSection(section: SectionDef, onBack: () => void): HTMLElement {
   const page = document.createElement('div');

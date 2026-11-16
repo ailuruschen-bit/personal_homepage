@@ -1,4 +1,6 @@
-"""窗外中景：霓虹街区 + 一段破败街区，拼成一张可循环的长图。"""
+"""The mid-distance outside the window: a neon district and a stretch of derelict
+blocks, assembled into one long strip that loops seamlessly.
+"""
 import random
 
 import numpy as np
@@ -9,13 +11,14 @@ from parts import *
 import px
 from px import Cv, mix, mul, render, text_mask
 
-CONC = (86, 78, 108)  # 混凝土（偏紫灰）
+CONC = (86, 78, 108)  # concrete, on the purple-grey side
 CONC_D = (52, 46, 72)
 
 
-# ------------------------------------------------------------------ 后排楼
+# ------------------------------------------------------------------ Back row
 def back_row(cv, rnd, x0, x1):
-    """前排楼身后的一排高楼：只露出上半截，颜色压暗偏蓝"""
+    """The row of taller buildings behind the front one: only their upper half shows,
+    darkened and pushed toward blue."""
     x = x0
     while x < x1:
         w = rnd.randrange(70, 130)
@@ -25,7 +28,7 @@ def back_row(cv, rnd, x0, x1):
         cv.speckle(x, top, w, GY - top, 0.1, rnd, 0.2)
         shade(cv, x + w - 5, top, 5, GY - top, 0.72)
         shade(cv, x, top, 2, GY - top, 1.2)
-        # 楼顶
+        # roof
         cv.rect(x - 1, top - 3, w + 2, 3, mul(base, 1.3))
         cv.rect(x - 1, top - 1, w + 2, 1, mul(base, 0.6))
         kind = rnd.choice(['grid', 'grid', 'band', 'tall'])
@@ -45,7 +48,7 @@ def back_row(cv, rnd, x0, x1):
                     else:
                         cv.rect(wx, fy, ww, wh, mul(base, 0.5))
                         cv.px(wx, fy + wh - 1, mul(base, 0.8))
-        # 楼顶设施
+        # rooftop structures
         r = rnd.random()
         if r < 0.4:
             hgt = rnd.randrange(18, 44)
@@ -54,7 +57,7 @@ def back_row(cv, rnd, x0, x1):
             cv.rect(ax - 3, top - hgt + 6, 7, 1, (50, 50, 76))
             cv.lpx(ax, top - 4 - hgt, RED, 1.0)
         elif r < 0.75:
-            # 屋顶大字招牌：一字一格
+            # large rooftop sign, one character per box
             t = rnd.choice(['夜航', '東雲', '銀河', '大安', '雨巷', '南風', '白鯨'])
             col = rnd.choice([MAG, CYA, RED, YEL, VIO])
             sx = x + (w - len(t) * 22) // 2
@@ -65,14 +68,14 @@ def back_row(cv, rnd, x0, x1):
                 cv.rect(bx, top - 28, 20, 1, (60, 54, 90))
                 m = text_mask(ch)
                 cv.lmask(bx + (20 - m.width) // 2, top - 26 + (16 - m.height) // 2, m, col, 0.9)
-        # 侧面竖招牌
+        # vertical sign down the side
         if rnd.random() < 0.5:
             chars = rnd.choice(['旅館', '麻雀', '酒', '湯', '質', '薬'])
             vsign(cv, x + rnd.choice([3, w - 23]), top + rnd.randrange(8, 30), chars, rnd.choice(NEONS), side='r')
         x += w + rnd.choice([-6, 0, 4, 10])
 
 
-# ------------------------------------------------------------------ 破败街区
+# ------------------------------------------------------------------ Derelict blocks
 ROOM_WALLS = [(66, 96, 72), (96, 70, 128), (62, 110, 112), (104, 86, 70), (78, 80, 110)]
 
 
@@ -84,7 +87,7 @@ def crack(cv, rnd, x, y, n, c):
 
 
 def broken_edge(cv, rnd, x, y0, y1, c, side):
-    """把一道竖直的墙边啃成参差的断口，并伸出几根钢筋"""
+    """Chew a vertical wall edge into a ragged break and leave some rebar sticking out."""
     for y in range(y0, y1):
         d = rnd.randrange(0, 4)
         if d:
@@ -102,25 +105,26 @@ def broken_edge(cv, rnd, x, y0, y1, c, side):
 
 
 def cutaway_room(cv, rnd, x, y, w, h, lit=True):
-    """外墙脱落后露出的房间。x,y 左上，h 含楼板。"""
+    """A room laid open where the outer wall has fallen away. x, y is the top-left and
+    h includes the floor slab."""
     wall = rnd.choice(ROOM_WALLS)
     back = mul(wall, 0.8 if lit else 0.36)
     cv.rect(x, y, w, h - 4, back)
     cv.speckle(x, y, w, h - 4, 0.14, rnd, 0.2)
-    # 踢脚线与墙裙
+    # skirting and dado
     cv.rect(x, y + h - 12, w, 8, mul(back, 0.78))
     cv.rect(x, y + h - 13, w, 1, mul(back, 1.25))
-    # 天花阴影
+    # shadow under the ceiling
     shade(cv, x, y, w, 3, 0.6)
     for _ in range(2):
         crack(cv, rnd, x + rnd.randrange(3, w - 3), y + rnd.randrange(2, 8), rnd.randrange(5, 12), mul(back, 0.55))
-    # 门
+    # door
     if w > 26 and rnd.random() < 0.7:
         dx = x + rnd.randrange(4, w - 14)
         cv.rect(dx, y + h - 24, 10, 20, mul(back, 0.5))
         cv.rect(dx + 1, y + h - 23, 8, 19, (74, 52, 46) if lit else (40, 30, 34))
         cv.px(dx + 7, y + h - 13, (200, 170, 110))
-    # 家具
+    # furniture
     fx = x + 3
     while fx < x + w - 12:
         f = rnd.choice(['sofa', 'shelf', 'tv', 'fridge', 'box', 'none', 'none'])
@@ -167,14 +171,14 @@ def cutaway_room(cv, rnd, x, y, w, h, lit=True):
             fx += 11
         else:
             fx += rnd.randrange(6, 14)
-    # 墙上的海报
+    # poster on the wall
     if rnd.random() < 0.6:
         px_ = x + rnd.randrange(3, max(4, w - 10))
         pc = rnd.choice([(190, 80, 110), (220, 190, 120), (90, 150, 190)])
         cv.rect(px_, y + 7, 6, 8, mul(pc, 0.8 if lit else 0.4))
         cv.rect(px_ + 1, y + 9, 4, 2, mul(pc, 0.45))
     if lit:
-        # 一盏吊灯
+        # a single pendant lamp
         lx = x + w // 2 + rnd.randrange(-6, 7)
         col = rnd.choice([(255, 196, 110), (190, 255, 190), (255, 160, 90), (200, 180, 255)])
         cv.rect(lx, y, 1, 6, (20, 18, 30))
@@ -184,11 +188,11 @@ def cutaway_room(cv, rnd, x, y, w, h, lit=True):
 
 
 def ruin_block(cv, rnd, x, w, nfl, fh=30):
-    """一栋裸露框架的混凝土楼"""
+    """A concrete building stripped back to its frame."""
     top = GY - nfl * fh
     cv.rect(x, top, w, GY - top, CONC)
     cv.speckle(x, top, w, GY - top, 0.16, rnd, 0.3)
-    # 水渍
+    # water staining
     for _ in range(w // 8):
         sx = x + rnd.randrange(w)
         sy = top + rnd.randrange(GY - top - 12)
@@ -205,7 +209,7 @@ def ruin_block(cv, rnd, x, w, nfl, fh=30):
             if r < 0.42:
                 cutaway_room(cv, rnd, bx, fy + 4, ww, fh - 4, lit=rnd.random() < 0.45)
             elif r < 0.75:
-                # 残存的窗：木板封死或破玻璃
+                # a surviving window, either boarded up or with broken glass
                 wx, wy, w2, h2 = bx + ww // 2 - 7, fy + 9, 14, 14
                 cv.rect(wx - 1, wy - 1, w2 + 2, h2 + 2, CONC_D)
                 cv.rect(wx, wy, w2, h2, (14, 12, 26))
@@ -228,7 +232,7 @@ def ruin_block(cv, rnd, x, w, nfl, fh=30):
                     cv.rect(wx + 3, wy + h2 - 7, 4, 7, (24, 18, 30))
                     cv.rect(wx + 4, wy + h2 - 10, 2, 3, (24, 18, 30))
             else:
-                # 整面墙：裂缝与涂鸦
+                # a blank wall, with cracks and graffiti
                 for _ in range(2):
                     crack(cv, rnd, bx + rnd.randrange(ww), fy + 6 + rnd.randrange(8), rnd.randrange(6, 16), CONC_D)
                 if rnd.random() < 0.5:
@@ -237,17 +241,17 @@ def ruin_block(cv, rnd, x, w, nfl, fh=30):
                     pts = [(gx + i * 4, gy + rnd.randrange(0, 9)) for i in range(5)]
                     cv.line(pts, mul(gc, 0.6))
                     cv.line([(p[0], p[1] + 1) for p in pts], mul(gc, 0.42))
-        # 楼板
+        # floor slab
         cv.rect(x - 2, fy, w + 4, 4, mul(CONC, 1.12))
         cv.rect(x - 2, fy, w + 4, 1, mul(CONC, 1.4))
         cv.rect(x - 2, fy + 3, w + 4, 1, CONC_D)
-    # 立柱
+    # columns
     for b in range(bays + 1):
         cx_ = int(x + b * bw) - (3 if b == bays else 0)
         cv.rect(cx_, top, 4, GY - top, mul(CONC, 1.05))
         cv.rect(cx_, top, 1, GY - top, mul(CONC, 1.3))
         cv.rect(cx_ + 3, top, 1, GY - top, CONC_D)
-    # 屋顶：残破的女儿墙、钢筋、水箱
+    # roof: a broken parapet, rebar and a water tank
     for xx in range(x, x + w, 5):
         hh = rnd.choice([0, 2, 3, 5, 6])
         if hh:
@@ -266,7 +270,7 @@ def ladder(cv, x, y0, y1, c=(70, 96, 150)):
 
 
 def fence(cv, rnd, x0, x1, y, h=20):
-    """铁丝网围栏，y 为地面"""
+    """Chain-link fence; y is the ground line."""
     c = (70, 78, 98)
     for xx in range(x0, x1, 28):
         cv.rect(xx, y - h - 3, 2, h + 3, (56, 60, 80))
@@ -277,7 +281,7 @@ def fence(cv, rnd, x0, x1, y, h=20):
             if (xx + yy) % 4 == 0 or (xx - yy) % 4 == 0:
                 if rnd.random() < 0.9:
                     cv.px(xx, yy, mul(c, 0.82))
-    # 刺网
+    # barbed wire
     for xx in range(x0, x1, 3):
         cv.px(xx, y - h - 2 - (xx // 3) % 2, (96, 100, 120))
 
@@ -306,7 +310,7 @@ def rubble(cv, rnd, x, y, w):
 
 
 def wreck(cv, rnd, x, y):
-    """报废的车"""
+    """A wrecked car."""
     c = rnd.choice([(92, 70, 66), (64, 80, 96), (96, 90, 66)])
     cv.rect(x, y - 8, 30, 6, c)
     cv.rect(x + 6, y - 14, 16, 6, mul(c, 0.9))
@@ -321,25 +325,25 @@ def wreck(cv, rnd, x, y):
 
 
 def bunker_bar(cv, rnd, x, w=132):
-    """混凝土地堡式的酒吧：整段街区里唯一还亮着的店"""
+    """A bunker-like concrete bar: the only place still lit in the whole stretch."""
     top = GY - 62
     cv.rect(x, top, w, 62, mul(CONC, 0.8))
     cv.speckle(x, top, w, 62, 0.14, rnd, 0.3)
     cv.rect(x - 3, top - 6, w + 6, 6, mul(CONC, 1.05))
     cv.rect(x - 3, top - 6, w + 6, 1, mul(CONC, 1.4))
     cv.rect(x - 3, top - 1, w + 6, 1, CONC_D)
-    # 敞开的门脸
+    # the open frontage
     ox, ow_, oy, oh = x + 18, w - 36, top + 22, 37
     cv.rect(ox - 2, oy - 2, ow_ + 4, oh + 2, CONC_D)
     cv.rect(ox, oy, ow_, oh, (52, 22, 36))
-    # 酒架
+    # bottle shelves
     for r in range(3):
         yy = oy + 4 + r * 6
         cv.lrect(ox + 6, yy + 4, ow_ - 12, 1, (150, 40, 60), 0.5)
         for xx in range(ox + 7, ox + ow_ - 7, 2):
             if rnd.random() < 0.8:
                 cv.lrect(xx, yy + 4 - rnd.choice([3, 4]), 1, rnd.choice([3, 4]), rnd.choice([(255, 90, 90), (255, 160, 120), (255, 210, 160), (220, 90, 140)]), 0.55)
-    # 吧台与客人
+    # counter and customers
     cv.rect(ox, oy + 24, ow_, 3, (150, 92, 104))
     cv.rect(ox, oy + 24, ow_, 1, (214, 150, 150))
     cv.rect(ox, oy + 27, ow_, 10, (66, 36, 56))
@@ -351,7 +355,7 @@ def bunker_bar(cv, rnd, x, w=132):
             cv.rect(xx - 1, oy + 21, 6, 8, (24, 16, 28))
     for xx in (ox + 4, ox + ow_ - 11, ox + ow_ // 2 - 3):
         lantern(cv, xx, oy + 3, c=(255, 60, 60))
-    # 红色霓虹店招
+    # red neon sign
     t = '赤提灯'
     sw = len(t) * 17 + 8
     sx = x + (w - sw) // 2
@@ -360,19 +364,19 @@ def bunker_bar(cv, rnd, x, w=132):
     for i, ch in enumerate(t):
         m = text_mask(ch)
         cv.lmask(sx + 5 + i * 17 + (16 - m.width) // 2, top + 3 + (16 - m.height) // 2, m, RED, 1.0)
-    # 侧门与出口灯
+    # side door and exit light
     cv.rect(x + 3, GY - 26, 10, 26, (28, 22, 40))
     cv.rect(x + 2, GY - 34, 13, 6, (40, 20, 28))
     m = text_mask('EXIT', F8)
     cv.lmask(x + 3, GY - 33, m.crop((0, 0, min(m.width, 11), m.height)), RED, 0.9)
-    # 通风管
+    # ventilation duct
     cv.rect(x + w - 12, top - 20, 8, 14, (74, 76, 96))
     cv.rect(x + w - 14, top - 22, 12, 3, (96, 98, 118))
     return top
 
 
 def dead_billboard(cv, rnd, x, top, w=84):
-    """楼顶的坏广告牌：一半的字已经不亮"""
+    """A dead billboard on the roof, with half of its letters no longer lit."""
     bh = 26
     by = top - bh - 12
     for xx in (x + 6, x + w - 8):
@@ -392,20 +396,20 @@ def dead_billboard(cv, rnd, x, top, w=84):
     for i in range(len(t)):
         part = m.crop((i * cw, 0, (i + 1) * cw if i < len(t) - 1 else m.width, m.height))
         if i in dead:
-            cv.mask(ox + i * cw, oy, part, (70, 40, 60))  # 不亮的字
+            cv.mask(ox + i * cw, oy, part, (70, 40, 60))  # the letters that no longer light
         else:
             cv.lmask(ox + i * cw, oy, part, col, 0.9)
-    # 破洞
+    # holes punched through it
     for _ in range(3):
         hx, hy = x + rnd.randrange(4, w - 8), by + rnd.randrange(3, bh - 6)
         cv.rect(hx, hy, rnd.randrange(3, 7), rnd.randrange(2, 5), (14, 12, 24))
 
 
 def overpass(cv, rnd, x, w=96):
-    """横跨而过的高架桥：两片街区之间的分界"""
+    """An overpass crossing the view: the divide between the two districts."""
     deck_y = 92
     c = (78, 76, 100)
-    # 桥墩
+    # pier
     px_ = x + w // 2 - 15
     cv.rect(px_, deck_y, 30, GY - deck_y, c)
     cv.rect(px_, deck_y, 3, GY - deck_y, mul(c, 1.3))
@@ -415,7 +419,7 @@ def overpass(cv, rnd, x, w=96):
         cv.rect(px_, yy, 30, 1, mul(c, 0.6))
     cv.poly([(px_ - 12, deck_y + 14), (px_, deck_y + 30), (px_, deck_y + 14)], mul(c, 0.8))
     cv.poly([(px_ + 42, deck_y + 14), (px_ + 30, deck_y + 30), (px_ + 30, deck_y + 14)], mul(c, 0.55))
-    # 墩身涂鸦与警示条
+    # graffiti and hazard stripes on the pier
     for i in range(6):
         cv.rect(px_ + i * 5, GY - 12 + (0 if i % 2 else 0), 5, 5, (220, 180, 60) if i % 2 == 0 else (30, 28, 40))
     for _ in range(3):
@@ -423,30 +427,30 @@ def overpass(cv, rnd, x, w=96):
         gx, gy = px_ + 4, GY - 60 + rnd.randrange(30)
         pts = [(gx + i * 4, gy + rnd.randrange(0, 10)) for i in range(6)]
         cv.line(pts, mul(gc, 0.7))
-    # 桥面箱梁
+    # box girder carrying the deck
     cv.rect(x, deck_y - 4, w, 20, c)
     cv.rect(x, deck_y - 4, w, 2, mul(c, 1.35))
     cv.rect(x, deck_y + 12, w, 4, mul(c, 0.55))
     cv.speckle(x, deck_y - 4, w, 20, 0.12, rnd, 0.3)
-    # 护栏与隔音板
+    # railing and noise barrier
     cv.rect(x, deck_y - 14, w, 10, (50, 56, 84))
     for xx in range(x, x + w, 12):
         cv.rect(xx, deck_y - 14, 1, 10, (34, 38, 60))
     cv.rect(x, deck_y - 15, w, 1, (96, 104, 140))
-    # 钠灯
+    # sodium lamps
     for xx in (x + 14, x + w - 16):
         cv.rect(xx, deck_y - 40, 1, 26, (50, 52, 72))
         cv.rect(xx - 4, deck_y - 40, 5, 1, (50, 52, 72))
         cv.lrect(xx - 5, deck_y - 39, 3, 1, (255, 170, 70), 1.0, body=(255, 230, 180))
         cv.light(xx - 16, deck_y - 36, 26, 22, (255, 170, 70), 0.9)
-    # 路牌
+    # road sign
     cv.rect(x + w // 2 - 22, deck_y - 6, 44, 20, (26, 92, 78))
     cv.rect(x + w // 2 - 22, deck_y - 6, 44, 1, (200, 220, 210))
     cv.rect(x + w // 2 - 22, deck_y + 13, 44, 1, (16, 56, 50))
     m = text_mask('出口', F16)
     cv.mask(x + w // 2 - m.width // 2, deck_y - 4 + (16 - m.height) // 2, m, (224, 240, 230))
     cv.light(x + w // 2 - 20, deck_y - 6, 40, 20, (150, 220, 255), 0.5)
-    # 梁底的冷光灯
+    # cold light under the girder
     cv.lrect(x + 8, deck_y + 16, 10, 1, (150, 220, 255), 0.9)
     cv.lrect(x + w - 18, deck_y + 16, 10, 1, (150, 220, 255), 0.9)
     cv.light(px_ - 14, deck_y + 20, 58, 60, (150, 220, 255), 0.5)
@@ -454,7 +458,8 @@ def overpass(cv, rnd, x, w=96):
 
 
 def ruin_back(cv, rnd, x0, x1):
-    """破败街区身后的剪影：烂尾楼、塔吊、烟囱、气罐"""
+    """Silhouettes behind the derelict blocks: unfinished towers, a crane, a chimney,
+    a gas holder."""
     c = (52, 44, 78)
     x = x0
     while x < x1:
@@ -499,7 +504,7 @@ def ruin_back(cv, rnd, x0, x1):
 
 
 def ruin_district(cv, rnd, x0, x1):
-    # 人行道碎裂
+    # the pavement is broken up
     for _ in range((x1 - x0) // 12):
         cv.rect(x0 + rnd.randrange(x1 - x0), GY + rnd.randrange(0, 5), rnd.randrange(2, 6), 1, (50, 50, 70))
     x = x0 + 4
@@ -523,7 +528,7 @@ def ruin_district(cv, rnd, x0, x1):
             x += 132 + 10
         else:
             w = rnd.randrange(50, 76)
-            # 空地：围栏、瓦砾、火桶、废车
+            # vacant lot: fence, rubble, a burning barrel, a wreck
             cv.rect(x - 4, GY - 30, w + 8, 30, (40, 36, 58))
             cv.speckle(x - 4, GY - 30, w + 8, 30, 0.2, rnd, 0.3)
             for xx in range(x - 4, x + w + 4, 6):
@@ -534,20 +539,21 @@ def ruin_district(cv, rnd, x0, x1):
             barrel_fire(cv, rnd, x + w - 14, GY)
             fence(cv, rnd, x - 6, x + w + 6, GY + 1, 22)
             x += w + 6
-    # 垂落的电线
+    # cables drooping between the buildings
     for i in range(len(tops) - 1):
         ax, aw, at = tops[i]
         bx, bw_, bt = tops[i + 1]
         cable(cv, ax + aw - 4, at + 6, bx + 4, bt + 10, rnd.randrange(10, 22))
-    # 坏掉的路灯
+    # street lamps, some of them dead
     for xx in range(x0 + 40, x1 - 20, 150):
         street_lamp(cv, xx, GY, h=54, c=(255, 150, 80) if rnd.random() < 0.5 else (60, 50, 40))
     return tops
 
 
-# ------------------------------------------------------------------ 合成
+# ------------------------------------------------------------------ Composition
 def wet_road(im, strength=0.5, seed=3):
-    """把路面以上的画面倒映在积水的路面上（im 已按 px.SCALE 放大）"""
+    """Mirror everything above the road into the standing water on it.
+    im has already been upscaled by px.SCALE."""
     k = px.SCALE
     gy = (GY + 7) * k
     a = np.asarray(im).astype(np.float32) / 255
@@ -560,14 +566,14 @@ def wet_road(im, strength=0.5, seed=3):
         if sy < 0:
             break
         row = a[sy]
-        # 逐行左右抖动出水纹
+        # jitter each row sideways to break the reflection into ripples
         sh = int(round((np.sin(d * 1.7) * 1.5 + rnd.randint(-1, 2)) * k))
         row = np.roll(row, sh, axis=0)
         f = strength * (1 - (y - gy) / (h - gy)) ** 0.6
         lum = row[:, :3].max(axis=1, keepdims=True)
         refl = row[:, :3] * row[:, 3:4] * (0.35 + 0.65 * lum)
         out[y, :, :3] = np.clip(out[y, :, :3] + refl * f, 0, 1)
-    # 竖向拉丝
+    # vertical smearing
     from scipy.ndimage import uniform_filter1d
 
     band = out[gy:, :, :3]
@@ -576,7 +582,8 @@ def wet_road(im, strength=0.5, seed=3):
 
 
 def build_c2(seed=11, w_neon=1440, w_ruin=720):
-    """中景长图：[高架桥][霓虹街区……][高架桥][破败街区……] 首尾相接"""
+    """The mid-distance strip: [overpass][neon district...][overpass][derelict...],
+    joining seamlessly end to end."""
     rnd = random.Random(seed)
     W = w_neon + w_ruin
     back = Cv(W, H)
@@ -593,7 +600,7 @@ def build_c2(seed=11, w_neon=1440, w_ruin=720):
     overpass(op, rnd, 0, 96)
     for ox in (-48, W - 48, w_neon - 48):
         cv.paste(op, ox, 0) if 0 <= ox <= W - 96 else None
-    # 跨越接缝的那一座：左右各贴半座
+    # the overpass that straddles the seam: half pasted at each end
     half_l, half_r = Cv(48, H), Cv(48, H)
     for dst, sx in ((half_r, 0), (half_l, 48)):
         dst.im = op.im.crop((sx, 0, sx + 48, H))
@@ -601,7 +608,8 @@ def build_c2(seed=11, w_neon=1440, w_ruin=720):
         dst.lt = op.lt.crop((sx, 0, sx + 48, H))
     cv.paste(half_r, W - 48, 0)
     cv.paste(half_l, 0, 0)
-    # 环境光：越往上越暗；破败街区没有霓虹，靠更亮、偏青的月光托住
+    # Ambient light dims toward the top. The derelict stretch has no neon of its own,
+    # so it is carried by brighter, more cyan moonlight
     amb = np.ones((H, W, 3), np.float32)
     amb[:GY] *= np.linspace(0.62, 1.0, GY).reshape(GY, 1, 1)
     t = np.clip((np.arange(W) - w_neon) / 60.0, 0, 1) * np.clip((W - np.arange(W)) / 60.0, 0, 1)

@@ -1,4 +1,7 @@
-"""生成全部场景素材，写到 public/assets/。用法：python3 tools/art/build.py [输出目录]"""
+"""Generate every scene asset into public/assets/.
+
+Usage: python3 tools/art/build.py [output directory]
+"""
 import os
 import sys
 
@@ -10,8 +13,9 @@ os.chdir(HERE)
 
 import px  # noqa: E402
 
-# 所有素材按 1 倍的像素坐标来画，输出时放大到 2 倍：
-# 固有色用 EPX 削掉斜线上的阶梯，光照和辉光直接在 2 倍分辨率上算，所以是平滑的。
+# Everything is drawn on a 1x pixel grid and written out at 2x: EPX trims the
+# stair-stepping off diagonals in the albedo, while lighting and bloom are computed
+# at the output resolution and so come out smooth.
 px.SCALE = 2
 
 from city import build_c2  # noqa: E402
@@ -28,7 +32,8 @@ def save(im, path):
 
 
 def build_grain(size=192, seed=7):
-    """胶片颗粒：一张可平铺的黑白噪点，亮点和暗点各半，强弱写在 alpha 里"""
+    """Film grain: a tileable black-and-white noise sheet, half bright specks and half
+    dark ones, with the strength carried in the alpha channel."""
     rs = np.random.RandomState(seed)
     v = rs.normal(0, 1, (size, size))
     lum = np.where(v > 0, 255, 0).astype(np.uint8)

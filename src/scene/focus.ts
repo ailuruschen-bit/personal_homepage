@@ -3,20 +3,20 @@ import type { Phase } from './opening';
 import { hotspotByTarget, hotspots, nearestHotspot, zoneDistance } from './hotspots';
 import { toScene, toScreen, unitSize, type Camera, type ScenePoint } from './units';
 
-/** 判定框外多少场景单位内仍然吸附 */
+/** How many scene units beyond its region an object still snaps from */
 const SNAP_RANGE = 22;
-/** 牵引范围：这个距离内，光点会朝最近的物件偏过去 */
+/** Pull range: within this distance the light drifts toward the nearest object */
 const PULL_RANGE = 78;
-/** 牵引最强时，光点朝物件偏移的比例 */
+/** How far the light leans toward the object at full pull, as a fraction */
 const PULL_MAX = 0.42;
-/** 距离变化超过这个量才算「在移动」，用来忽略抖动 */
+/** Distance must change by at least this much to count as movement; ignores jitter */
 const DIRECTION_EPSILON = 1.2;
-/** .cam 的缩放原点（scene.css 里的 transform-origin: 50% 43.71%）对应的场景 y */
+/** Scene y of .cam's zoom origin (transform-origin: 50% 43.71% in scene.css) */
 const CAM_ORIGIN_Y = 480 * 0.4371;
-/** 自由状态下光池的半径（场景单位），吸附动画从这个大小展开 */
+/** Radius of the free-floating pool in scene units; the snap animation grows from it */
 const FREE_RADIUS = 30;
 
-/** 各项指数平滑的时间常数（秒），越小越跟手 */
+/** Time constants for the exponential smoothing, in seconds. Smaller is snappier */
 const TAU = {
   camera: 0.34,
   parallax: 0.09,
@@ -29,13 +29,14 @@ const TAU = {
 const smoothing = (dt: number, tau: number) => 1 - Math.exp(-dt / tau);
 const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
 
-type Direction = -1 | 0 | 1; // -1 靠近，1 远离
+type Direction = -1 | 0 | 1; // -1 approaching, 1 moving away
 
 /**
- * 聚焦系统。
+ * Focus system.
  *
- * 镜头保持一个固定的宽构图，不随指针推拉；吸附的是光与物件本身。
- * 指针靠近物件时光点被牵引，进入范围瞬间吸附；离开物件立刻脱离。
+ * The camera holds one fixed wide framing and never pushes in with the pointer.
+ * What snaps is the light and the object itself: the light is pulled in as the
+ * pointer approaches, snaps the moment it enters range, and lets go on leaving.
  */
 export class FocusEngine {
   private focus: string | null = null;
@@ -45,9 +46,9 @@ export class FocusEngine {
   private frameKey = '';
   private lookTransform = '';
   private lastPhase: Phase | null = null;
-  /** 物件上的光池 */
+  /** Pool of light resting on the object */
   private pool = { x: 240, y: 240, rx: FREE_RADIUS, ry: FREE_RADIUS, alpha: 0, dim: 0 };
-  /** 光点（跟随指针）所在的场景坐标，光池从这里展开 */
+  /** Scene position of the pointer light, the point the pool grows out of */
   private lightAt: ScenePoint = { X: 240, Y: 240 };
   private distanceRef = new Map<string, number>();
   private direction = new Map<string, Direction>();
@@ -84,7 +85,8 @@ export class FocusEngine {
     this.placeLight();
   }
 
-  /** 只记录指针位置，不做聚焦判定（主菜单以外的阶段用，给视差提前就位） */
+  /** Record the pointer without resolving focus. Used outside the hub so the
+   *  parallax is already in place when the hub arrives. */
   trackPointer(x: number, y: number) {
     this.pointer = { x, y };
   }
@@ -94,7 +96,7 @@ export class FocusEngine {
     this.setFocus(null);
   }
 
-  /** 触摸没有悬停：点在物件范围内才算选中 */
+  /** Touch has no hover: only a tap inside an object counts as selecting it */
   targetAt(x: number, y: number): string | null {
     const { hotspot, distance } = nearestHotspot(toScene(x, y, this.camera));
     return distance < SNAP_RANGE ? hotspot.target : null;
@@ -116,7 +118,7 @@ export class FocusEngine {
     }
   }
 
-  /** 记录指针相对每个物件是在靠近还是远离 */
+  /** Track whether the pointer is approaching or leaving each object */
   private trackDirections(p: ScenePoint) {
     for (const h of hotspots) {
       const d = zoneDistance(h, p);
@@ -134,7 +136,7 @@ export class FocusEngine {
     }
   }
 
-  /** 吸附判定：靠近才吸，离开即脱离，停住则维持现状 */
+  /** Snap rule: only snap while approaching, let go on leaving, hold when still */
   private resolveFocus(p: ScenePoint): string | null {
     this.trackDirections(p);
 
@@ -157,7 +159,7 @@ export class FocusEngine {
     return best;
   }
 
-  /** 光点：一比一跟随指针；朝物件靠近时被它牵引 */
+  /** The light follows the pointer one to one, and is pulled toward an object as it nears */
   private placeLight() {
     if (!this.pointer) return;
     let { x, y } = this.pointer;
@@ -197,10 +199,12 @@ export class FocusEngine {
   }
 
   /**
-   * 主菜单的构图：略微拉远，让行李架到桌面都在一屏内。
+   * The hub framing: pull back slightly so everything from the luggage rack to
+   * the table fits on screen.
    *
-   * 构图不由这里逐帧驱动，而是写进 .stage 的 --fz / --fy，交给 .cam 的 CSS 使用：
-   * 回程动画直接落在这个构图上，跳过开幕时由 CSS 过渡补间。开幕阶段保持原始的近景。
+   * This is not driven frame by frame. It is written to --fz / --fy on .stage and
+   * consumed by .cam in CSS, so the return animation lands exactly on this framing
+   * and a skipped opening tweens to it. The opening keeps the original close-up.
    */
   syncFrame() {
     const vw = window.innerWidth;
@@ -213,7 +217,8 @@ export class FocusEngine {
     this.camera.z = zoom;
     this.camera.by = baseY;
 
-    // .cam 的缩放原点在窗缝处而不是画面中心，换算成等价的位移
+    // .cam's zoom origin sits at the gap in the blinds rather than the centre of the
+    // frame, so convert the framing offset into the equivalent translation
     const shift = baseY + (240 - CAM_ORIGIN_Y) * u * (1 - zoom);
     const key = `${zoom.toFixed(4)},${shift.toFixed(2)}`;
     if (key === this.frameKey) return;
@@ -222,7 +227,7 @@ export class FocusEngine {
     this.els.stage.style.setProperty('--fy', `${shift.toFixed(2)}px`);
   }
 
-  /** 跟随指针的几像素视差：车厢动得多，窗外动得少 */
+  /** A few pixels of pointer parallax: the carriage moves more, the city outside less */
   private updateParallax(dt: number) {
     const phase = this.phase();
     const seated = phase === 'hub' || phase === 'back';
@@ -230,9 +235,11 @@ export class FocusEngine {
     const tx = seated && this.pointer ? -(this.pointer.x - window.innerWidth / 2) * 0.02 : 0;
     const ty = seated && this.pointer ? -(this.pointer.y - window.innerHeight / 2) * 0.02 : 0;
 
-    // .look 只在主菜单里逐帧更新（那时它是独立的合成层）。
-    // 镜头还在推拉时改它会让整个车厢逐帧重绘，所以其余阶段只在看不见的时候一步到位：
-    // 回程开始的那一帧对准指针，看向窗外时保持不动，其余归零。
+    // .look is only updated per frame inside the hub, where it is its own compositing
+    // layer. Touching it while the camera is still zooming would repaint the whole
+    // carriage every frame, so in every other phase it jumps straight to its target
+    // while out of sight: aimed at the pointer on the first frame of the return, held
+    // still while looking outside, zeroed otherwise.
     if (phase === 'hub') {
       const fast = smoothing(dt, TAU.parallax);
       c.px += (tx - c.px) * fast;
@@ -248,7 +255,7 @@ export class FocusEngine {
       this.els.look.style.transform = look;
     }
 
-    // 窗外一直可见，位移始终平滑过渡
+    // The city outside is always visible, so its offset is always eased
     const slow = smoothing(dt, TAU.camera);
     const o = this.outside;
     o.x += (tx * 0.5 - o.x) * slow;
@@ -264,13 +271,14 @@ export class FocusEngine {
     if (light) {
       target = { ...light, alpha: 1 };
       if (this.pointer) {
-        // 吸住后光池朝指针方向略偏，保留「光还跟着手」的感觉
+        // Once snapped the pool still leans toward the pointer, so the light keeps
+        // feeling attached to the hand
         const q = toScene(this.pointer.x, this.pointer.y, this.camera);
         target.x += clamp((q.X - light.x) * 0.14, -light.rx * 0.22, light.rx * 0.22);
         target.y += clamp((q.Y - light.y) * 0.14, -light.ry * 0.22, light.ry * 0.22);
       }
     } else if (active && this.pointer) {
-      // 未吸附时光池藏在光点下面，吸附瞬间从这里展开
+      // While unsnapped the pool hides under the pointer light and grows out of it
       p.x = target.x = this.lightAt.X;
       p.y = target.y = this.lightAt.Y;
       p.rx = p.ry = target.rx = target.ry = FREE_RADIUS;

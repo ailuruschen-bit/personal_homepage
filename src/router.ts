@@ -1,11 +1,11 @@
 /**
- * 极简 hash 路由。
+ * Minimal hash router.
  *
- *   #/            车厢（开幕 → 待机 → 主菜单）
- *   #/about 等    板块页，和 content/sections.ts 的 id 对应
+ *   #/              the carriage (opening -> idle -> hub)
+ *   #/about, ...    a section page, keyed by the ids in content/sections.ts
  *
- * 用 hash 而不是 history API，是为了能直接作为静态文件部署，
- * 不需要服务端把所有路径都指向 index.html。
+ * Hash rather than the history API so the site can be deployed as plain static
+ * files: no server rewrite pointing every path at index.html.
  */
 export type Route = { name: 'scene' } | { name: 'section'; id: string };
 

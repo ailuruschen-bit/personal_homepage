@@ -1,4 +1,4 @@
-/* 内容页外壳。深色负责惊艳，浅色负责阅读 */
+/* Content page shell. The dark scene is there to impress, these pages to be read */
 .page {
   position: fixed;
   inset: 0;
@@ -71,7 +71,7 @@
   line-height: 1.8;
 }
 
-/* 占位块：正式内容接入后删除 */
+/* Placeholder block: delete once real content lands */
 .ph {
   border: 2px dashed var(--line);
   background: var(--paper);
