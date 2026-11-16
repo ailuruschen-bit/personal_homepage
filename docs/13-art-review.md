@@ -478,12 +478,22 @@ From stage 1 it adds the vanishing point and horizon.
 
 ### 0.6 Preview
 
-`tools/art/preview.py`, run as `npm run art:preview [id]`: the full hub
-composite, each object focused, 3× nearest-neighbour crops of every object, the
-debug overlay baked in, and the same set from the baseline beside it. From
-stage 3 it also writes a luminance-only image for judging values.
+`tools/art/preview.py`, run as `npm run art:preview -- [label]`, reads the built
+assets and the generated geometry and writes to `.review/<label>/` (the label
+defaults to the current commit):
 
-Scripts added to `package.json`: `art`, `art:check`, `art:preview`.
+- `hub.png` — the carriage composited as the page lays it out;
+- `hub-debug.png` — the same with the geometry drawn over it;
+- `luma.png` — luminance only, for judging values in stage 3;
+- `objects.png` — every sprite at 3× on magenta, so stray pixels show;
+- `crops/` — the seats, the table, the rack, both walls and the window at 3×;
+- `compare-*.png` — the baseline on the left and now on the right, for the hub
+  and every crop. `--against DIR` compares with another asset folder.
+
+It takes about a second, so it runs after every step.
+
+Scripts added to `package.json`: `art` (build, then check), `art:check`,
+`art:preview`.
 
 ### 0.7 Chrome smoke test — optional
 
@@ -600,7 +610,7 @@ Updated in the same commit as each step.
 | 0     | 0.3  | done    |
 | 0     | 0.4  | done    |
 | 0     | 0.5  | done    |
-| 0     | 0.6  | pending |
+| 0     | 0.6  | done    |
 | 0     | 0.7  | pending |
 | 1     | 1.0  | pending |
 | 1     | 1.1  | pending |
