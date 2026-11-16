@@ -93,6 +93,9 @@ def write_geometry(geo, path):
         '/** The window opening and its corner radius, in scene units */',
         f"export const WINDOW = {{ x: {num(w['x'])}, y: {num(w['y'])}, w: {num(w['w'])}, h: {num(w['h'])}, r: {num(w['r'])} }};",
         '',
+        '/** Width of each side extension (room-l, room-r) beyond the 480 scene */',
+        f"export const SIDE = {num(geo['side'])};",
+        '',
         '/** One-point perspective: the vanishing point, and the window wall as drawn face-on */',
         'export const PERSPECTIVE: { vx: number; vy: number; wall: [number, number, number, number] } = '
         f"{{ vx: {num(geo['perspective']['vx'])}, vy: {num(geo['perspective']['vy'])}, "
@@ -134,6 +137,9 @@ def write_geometry_css(geo, path):
         ('.win', f"left: {pct(w['x'])}; top: {pct(w['y'])}; width: {pct(w['w'])}; height: {pct(w['h'])};\n"
                  f"  border-radius: calc(var(--u) * {num(w['r'])});"),
         ('.cam', f"transform-origin: {pct(cam['x'])} {pct(cam['y'])};"),
+        # Overlays that shade the room span the side extensions too; stopped at
+        # the edge of the 480 scene they leave a visible step in tone there
+        ('.vig,\n.spot,\n.beam', f"left: -{pct(geo['side'])}; right: -{pct(geo['side'])};"),
     ]
     for key, (x, y, gw, gh) in geo['glows'].items():
         rules.append((f'.g-{key}', f'left: {pct(x)}; top: {pct(y)}; width: {pct(gw)}; height: {pct(gh)};'))

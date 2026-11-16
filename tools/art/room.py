@@ -131,6 +131,7 @@ def geometry(masks):
     (bx0, by0), (bx1, by1) = P(-ROOM_HALF_WIDTH, ROOM_CEILING, WALL_DIST), P(ROOM_HALF_WIDTH, 0, WALL_DIST)
     vx, vy = vanishing_point()
     return dict(
+        side=OX,
         perspective=dict(vx=vx, vy=vy, wall=(bx0, by0, bx1, by1)),
         window=dict(x=wx, y=wy, w=ww, h=wh, r=WINDOW_RADIUS),
         camera=dict(x=wx + CAM_GAP[0], y=wy + CAM_GAP[1]),

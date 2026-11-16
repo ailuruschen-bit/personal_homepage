@@ -8,6 +8,11 @@
 .cam {
   transform-origin: 50% 43.71%;
 }
+.vig,
+.spot,
+.beam {
+  left: -25%; right: -25%;
+}
 .g-lamp {
   left: 61.25%; top: 18.3333%; width: 37.5%; height: 37.5%;
 }

@@ -15,6 +15,9 @@ export interface ObjectGeometry {
 /** The window opening and its corner radius, in scene units */
 export const WINDOW = { x: 150, y: 124, w: 180, h: 140, r: 10 };
 
+/** Width of each side extension (room-l, room-r) beyond the 480 scene */
+export const SIDE = 120;
+
 /** One-point perspective: the vanishing point, and the window wall as drawn face-on */
 export const PERSPECTIVE: { vx: number; vy: number; wall: [number, number, number, number] } = { vx: 240, vy: 209.808, wall: [24, 26, 456, 440] };
 

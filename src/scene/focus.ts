@@ -2,7 +2,7 @@ import type { SceneEls } from './dom';
 import type { Phase } from './opening';
 import { hotspotByTarget, hotspots, nearestHotspot, zoneDistance } from './hotspots';
 import { toScene, toScreen, unitSize, type Camera, type ScenePoint } from './units';
-import { CAMERA } from './geometry.gen';
+import { CAMERA, SIDE } from './geometry.gen';
 
 /** How many scene units beyond its region an object still snaps from */
 const SNAP_RANGE = 22;
@@ -298,10 +298,13 @@ export class FocusEngine {
     this.els.spot.style.opacity = p.dim.toFixed(3);
     if (p.alpha < 0.004 && p.dim < 0.004) return;
 
+    // .spot and .beam span the side extensions as well (SIDE either side of
+    // the 480 scene), so horizontal positions are a share of that wider box
+    const wide = 480 + 2 * SIDE;
     for (const el of [this.els.spot, this.els.beam]) {
-      el.style.setProperty('--sx', `${(p.x / 4.8).toFixed(2)}%`);
+      el.style.setProperty('--sx', `${(((p.x + SIDE) / wide) * 100).toFixed(2)}%`);
       el.style.setProperty('--sy', `${(p.y / 4.8).toFixed(2)}%`);
-      el.style.setProperty('--rx', `${(p.rx / 4.8).toFixed(2)}%`);
+      el.style.setProperty('--rx', `${((p.rx / wide) * 100).toFixed(2)}%`);
       el.style.setProperty('--ry', `${(p.ry / 4.8).toFixed(2)}%`);
     }
   }

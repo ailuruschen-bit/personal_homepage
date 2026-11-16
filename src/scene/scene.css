@@ -231,11 +231,21 @@
 .g-out {
   background: radial-gradient(ellipse, rgba(120, 150, 255, 0.14), transparent 68%);
 }
+/* The vignette, like .spot and .beam, spans the room and both side extensions
+   (left and right come from geometry.gen.css), so it shades them as one picture.
+   Its ellipse is the one `farthest-corner` gave over the 480 square before, in
+   scene units, so inside the room it is unchanged and outside it simply carries
+   on instead of stopping dead at the room's edge. */
 .vig {
   position: absolute;
-  inset: 0;
+  top: 0;
+  bottom: 0;
   pointer-events: none;
-  background: radial-gradient(ellipse at 50% 42%, transparent 38%, rgba(5, 4, 14, 0.5) 82%);
+  background: radial-gradient(
+    ellipse calc(var(--u) * 409.2) calc(var(--u) * 343.7) at 50% 42%,
+    transparent 38%,
+    rgba(5, 4, 14, 0.5) 82%
+  );
 }
 .steam {
   position: absolute;
@@ -290,7 +300,8 @@
 .spot,
 .beam {
   position: absolute;
-  inset: 0;
+  top: 0;
+  bottom: 0;
   pointer-events: none;
   opacity: 0;
   --sx: 50%;
