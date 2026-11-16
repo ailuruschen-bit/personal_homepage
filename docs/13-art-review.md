@@ -599,7 +599,7 @@ Updated in the same commit as each step.
 | 0     | 0.2  | done    |
 | 0     | 0.3  | done    |
 | 0     | 0.4  | done    |
-| 0     | 0.5  | pending |
+| 0     | 0.5  | done    |
 | 0     | 0.6  | pending |
 | 0     | 0.7  | pending |
 | 1     | 1.0  | pending |
