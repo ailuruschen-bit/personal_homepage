@@ -592,7 +592,7 @@ Updated in the same commit as each step.
 | ----- | ---- | ------- |
 | 0     | 0.1  | done    |
 | 0     | 0.2  | done    |
-| 0     | 0.3  | pending |
+| 0     | 0.3  | done    |
 | 0     | 0.4  | pending |
 | 0     | 0.5  | pending |
 | 0     | 0.6  | pending |

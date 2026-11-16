@@ -68,7 +68,7 @@ GLOWS = {
 def geometry(masks):
     """What build.py writes out for the page: the window, and for every focusable
     object its snap zone, its light and, for drawn objects, the bounding box of
-    its silhouette. The window is focusable too: it snaps within 8 of the opening
+    its silhouette and the sprite cut from it. The window is focusable too: it snaps within 8 of the opening
     and its light is 1.2 times the opening."""
     wx, wy, ww, wh = WINDOW
     objects = {
@@ -85,6 +85,7 @@ def geometry(masks):
             zone=(ax + z[0], ay + z[1], ax + z[2], ay + z[3]),
             light=(ax + li[0], ay + li[1], li[2], li[3]),
             box=(x0 - OX, y0, x1 - x0, y1 - y0),
+            sprite=f'/assets/obj-{key}.webp',
         )
     glows = {}
     for key, gl in GLOWS.items():

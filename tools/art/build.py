@@ -27,7 +27,7 @@ from far import build_c1, build_c3, build_sky  # noqa: E402
 from room import OX, build_room, geometry  # noqa: E402
 
 
-def save(im, path):
+def save(im, path, lossless=False):
     """Write an asset, unless the file already holds exactly these pixels.
 
     WebP encoders differ between machines, so the same picture can come out as
@@ -36,7 +36,11 @@ def save(im, path):
     rebuild that changed nothing then leaves git with nothing to show."""
     buf = io.BytesIO()
     if path.endswith('.webp'):
-        im.save(buf, 'WEBP', quality=90, method=6, alpha_quality=100)
+        # Sprites are small and sit on top of the room: keep them exact
+        if lossless:
+            im.save(buf, 'WEBP', lossless=True, quality=100, method=6)
+        else:
+            im.save(buf, 'WEBP', quality=90, method=6, alpha_quality=100)
     else:
         im.save(buf, 'PNG', optimize=True)
     name = os.path.basename(path)
@@ -81,6 +85,8 @@ def write_geometry(geo, path):
         '  light: { x: number; y: number; rx: number; ry: number };',
         '  /** Bounding box of the drawn object, when it is drawn as an object */',
         '  box?: { x: number; y: number; w: number; h: number };',
+        '  /** The object alone, cut out along its own silhouette; covers `box` */',
+        '  sprite?: string;',
         '}',
         '',
         '/** The window opening and its corner radius, in scene units */',
@@ -101,6 +107,7 @@ def write_geometry(geo, path):
         if 'box' in o:
             bx = o['box']
             parts.append(f"box: {{ x: {num(bx[0])}, y: {num(bx[1])}, w: {num(bx[2])}, h: {num(bx[3])} }}")
+            parts.append(f"sprite: '{o['sprite']}'")
         lines.append(f"  {key}: {{ {', '.join(parts)} }},")
     lines += ['};', '']
     with open(path, 'w') as f:
@@ -136,6 +143,26 @@ def write_geometry_css(geo, path):
     print(f'{os.path.basename(path)}')
 
 
+def sprites(room, masks):
+    """Each focusable object alone: the finished carriage cut out along the
+    object's own silhouette and cropped to it. The 1x silhouette is upscaled the
+    same way the artwork is, so its edge follows the artwork's edge."""
+    k = px.SCALE
+    out = {}
+    for key, m in masks.items():
+        a = np.asarray(m)[..., None]
+        n = 1
+        while n < k:
+            a = px.epx(a, wrap=False)
+            n *= 2
+        x0, y0, x1, y1 = m.getbbox()
+        box = (x0 * k, y0 * k, x1 * k, y1 * k)
+        rgba = np.asarray(room.crop(box)).copy()
+        rgba[..., 3] = np.where(a[y0 * k : y1 * k, x0 * k : x1 * k, 0] > 127, 255, 0)
+        out[key] = Image.fromarray(rgba, 'RGBA')
+    return out
+
+
 def main(out, src=None):
     os.makedirs(out, exist_ok=True)
     k = px.SCALE
@@ -144,6 +171,8 @@ def main(out, src=None):
     save(build_c2(), os.path.join(out, 'c2.webp'))
     save(build_c3(), os.path.join(out, 'c3.webp'))
     room, masks = build_room()
+    for key, im in sprites(room, masks).items():
+        save(im, os.path.join(out, f'obj-{key}.webp'), lossless=True)
     save(room.crop((OX * k, 0, (OX + 480) * k, 480 * k)), os.path.join(out, 'room.webp'))
     save(room.crop((0, 0, OX * k, 480 * k)).convert('RGB'), os.path.join(out, 'room-l.webp'))
     save(room.crop(((OX + 480) * k, 0, (OX + 600) * k, 480 * k)).convert('RGB'), os.path.join(out, 'room-r.webp'))

@@ -1,5 +1,4 @@
 import { OBJECTS } from './geometry.gen';
-import { SCENE } from './units';
 
 /**
  * The objects in the carriage that can take focus.
@@ -10,13 +9,10 @@ import { SCENE } from './units';
  *       centre (x, y) and radii (rx, ry).
  *       Both come from geometry.gen.ts, which tools/art/room.py generates
  *       along with the artwork: move an object there and they move with it.
- * shape Outline of the object as polygon vertices. Used to cut a copy out of
- *       the carriage artwork, which is then lifted, brightened and given a
- *       shadow on focus. Leave it out to light an object without lifting it
- *       (the window does this).
- *       The outline must hug the object's edge in room.webp exactly: anything
- *       beyond it lifts the surrounding wall or table along with the object.
- *       After changing the artwork, check these against tools/art/room.py.
+ * box, sprite
+ *       The object drawn alone, cut out along its own silhouette, and where it
+ *       sits. On focus the sprite is lifted, brightened and given a shadow.
+ *       Objects without one (the window) are lit without being lifted.
  */
 /** "Outside" is not a section: selecting it returns to the cover */
 export const COVER = 'cover';
@@ -28,14 +24,15 @@ export interface Hotspot {
   object: string;
   zone: [number, number, number, number];
   light: { x: number; y: number; rx: number; ry: number };
-  shape?: Array<[number, number]>;
+  box?: { x: number; y: number; w: number; h: number };
+  sprite?: string;
 }
 
-/** Zone and light for an object, from the generated geometry */
-function geo(target: string): Pick<Hotspot, 'zone' | 'light'> {
+/** Where an object is, from the generated geometry */
+function geo(target: string): Pick<Hotspot, 'zone' | 'light' | 'box' | 'sprite'> {
   const g = OBJECTS[target];
   if (!g) throw new Error(`geometry.gen.ts has no object "${target}"`);
-  return { zone: g.zone, light: g.light };
+  return { zone: g.zone, light: g.light, box: g.box, sprite: g.sprite };
 }
 
 export const hotspots: Hotspot[] = [
@@ -48,52 +45,21 @@ export const hotspots: Hotspot[] = [
     target: 'projects',
     object: '电脑',
     ...geo('projects'),
-    shape: [
-      [148, 292],
-      [214, 288],
-      [218, 343],
-      [241, 357],
-      [241, 359],
-      [170, 368],
-      [151, 348],
-    ],
   },
   {
     target: 'about',
     object: '车票',
     ...geo('about'),
-    shape: [
-      [316, 346],
-      [344, 344],
-      [348, 358],
-      [320, 361],
-    ],
   },
   {
     target: 'stack',
     object: '公文包',
     ...geo('stack'),
-    shape: [
-      [318, 58],
-      [346, 58],
-      [346, 55],
-      [358, 55],
-      [358, 58],
-      [386, 58],
-      [386, 92],
-      [318, 92],
-    ],
   },
   {
     target: 'journey',
     object: '线路图',
     ...geo('journey'),
-    shape: [
-      [173, 67],
-      [307, 67],
-      [307, 87],
-      [173, 87],
-    ],
   },
   // TODO: notes / hobby / chat have no object yet. Draw the artwork, then register them here.
 ];
@@ -124,33 +90,4 @@ export function zoneDistance(h: Hotspot, p: { X: number; Y: number }): number {
   const dx = Math.max(x0 - p.X, 0, p.X - x1);
   const dy = Math.max(y0 - p.Y, 0, p.Y - y1);
   return Math.hypot(dx, dy);
-}
-
-/**
- * Turn an outline into the CSS for the lifted copy: scale the carriage
- * artwork so it lines up, then clip-path away everything but this object.
- *
- * The clip sits exactly on the outline. The 1-unit margin only makes the
- * element box slightly larger than the object and takes no part in the clip:
- * any pixel beyond the outline would float up with the wall attached.
- */
-export function popStyle(shape: Array<[number, number]>) {
-  const x0 = Math.min(...shape.map((p) => p[0])) - 1;
-  const x1 = Math.max(...shape.map((p) => p[0])) + 1;
-  const y0 = Math.min(...shape.map((p) => p[1])) - 1;
-  const y1 = Math.max(...shape.map((p) => p[1])) + 1;
-  const w = x1 - x0;
-  const h = y1 - y0;
-  const poly = shape
-    .map(([x, y]) => `${(((x - x0) / w) * 100).toFixed(2)}% ${(((y - y0) / h) * 100).toFixed(2)}%`)
-    .join(',');
-  return {
-    left: `${((x0 / SCENE) * 100).toFixed(3)}%`,
-    top: `${((y0 / SCENE) * 100).toFixed(3)}%`,
-    width: `${((w / SCENE) * 100).toFixed(3)}%`,
-    height: `${((h / SCENE) * 100).toFixed(3)}%`,
-    backgroundSize: `${((SCENE / w) * 100).toFixed(3)}% ${((SCENE / h) * 100).toFixed(3)}%`,
-    backgroundPosition: `${((x0 / (SCENE - w)) * 100).toFixed(3)}% ${((y0 / (SCENE - h)) * 100).toFixed(3)}%`,
-    clipPath: `polygon(${poly})`,
-  };
 }

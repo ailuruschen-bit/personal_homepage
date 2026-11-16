@@ -934,12 +934,13 @@
     transform 0.2s cubic-bezier(0.3, 1.9, 0.5, 1),
     filter 0.1s;
 }
-/* The outline is clipped on the inner element so the outer element's shadow can
-   fall outside the object instead of being clipped away with it */
+/* The inner element carries the object's sprite (set inline from the generated
+   geometry); its transparency is the object's own outline, so the outer
+   element's drop shadow follows the object and nothing around it lifts */
 .pop > i {
   position: absolute;
   inset: 0;
-  background-image: url(/assets/room.webp);
+  background-size: 100% 100%;
 }
 /* Periodic glint. While focused, the rule below takes over the filter. */
 .hub .pop {
