@@ -611,7 +611,7 @@ Updated in the same commit as each step.
 | 0     | 0.4  | done    |
 | 0     | 0.5  | done    |
 | 0     | 0.6  | done    |
-| 0     | 0.7  | pending |
+| 0     | 0.7  | skipped |
 | 1     | 1.0  | pending |
 | 1     | 1.1  | pending |
 | 1     | 1.2  | pending |
