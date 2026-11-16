@@ -24,7 +24,7 @@ contradict an earlier page, the earlier page is still what the code does.
 | [10 Scroll narrative](10-scroll-narrative.md)                   | _Proposed._ Scroll as the only clock: chapters, apertures, carry and dolly      |
 | [11 Premise and voice](11-premise-and-voice.md)                 | _Proposed._ The detective and his tape; a plausibility audit; the objects       |
 | [12 Script](12-script.md)                                       | _Proposed._ The setting, the cast and the lines, scene by scene                 |
-| [13 Art review](13-art-review.md)                               | _Plan._ A strict critique of the artwork and a numbered list of fixes           |
+| [13 Art review](13-art-review.md)                               | _Plan._ A strict critique of the artwork, and the staged workflow that fixes it |
 
 ## Conventions used in these pages
 

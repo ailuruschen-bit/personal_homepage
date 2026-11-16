@@ -12,8 +12,10 @@ behind the window. How those assets are produced is in
 in `tools/art/`, not to an image.
 
 Each item has an id. Structural items are `S`, lighting `L`, rendering `R`,
-objects `O`. Work them in the order given in [Order of work](#order-of-work),
-because most object fixes are wasted if the structure under them moves.
+objects `O`, new objects `N`. The second half of the page is the
+[Workflow](#workflow) that works through them: a foundation stage that
+removes the hand-copied geometry first, then seven stages with review gates.
+To begin, say **开始 docs/13**.
 
 ## Verdict
 
@@ -297,32 +299,333 @@ faces, the map unrolled, the briefcase open, the screen at reading size. None
 of those exist. They are separate drawings and are the larger part of the art
 still to do.
 
-## Order of work
+## Workflow
 
-The order matters more than the list. Each stage invalidates the hotspots'
-outlines, so [06](06-art-pipeline.md#keeping-the-outlines-in-sync) applies at
-every step.
+Everything from here down is the procedure. It is written so that the work can
+start from a single instruction and resume from the same one after any break.
 
-1. **Perspective.** S-01, then S-02, S-03, S-04, S-05, S-06, S-07. Block the
-   whole room in flat colour in the new projection before finishing anything.
-2. **Scale and placement.** S-09, O-10, O-11, O-12, and reserve space for the
-   new objects.
-3. **Light.** L-06 first, to set the value plan, then L-01, L-02, L-04, L-03,
-   L-05.
-4. **Rendering.** R-01, R-02, R-03, R-04. These are pipeline changes in
-   `px.py` and touch every asset, the city included.
-5. **Objects.** Redraws before refines, large before small.
-6. **Foreground.** S-08, last, because it is framed against everything else.
-7. **Open states and the door.** After the room is final.
+### Starting and resuming
 
-After stage 1 the picture will look worse than it does now. That is expected:
-it will be correct and unfinished instead of finished and wrong.
+To start:
+
+> 开始 docs/13
+
+To resume after a break, the same phrase works: the
+[Progress](#progress) table at the bottom of this page records the last
+finished step, and work continues from the next one. To jump, name the id:
+
+> 继续 docs/13，从 S-02 开始
+
+On either instruction the first thing that happens is [Preflight](#preflight).
+Nothing is drawn until it passes.
+
+### Preflight
+
+1. **Pull.** Bring the working copy to the tip of `origin/main`, then create or
+   check out the branch `art/redraw`. All art work happens there; `main` keeps
+   the current picture until a stage is accepted.
+2. **Choose the mode.**
+   - **Mode A — on your Mac, live.** Used when this conversation is linked to
+     the Mac and its shell can run Python with `numpy` and `Pillow` (installed
+     into the shell's environment if missing). Edits and art builds happen
+     directly in the project folder, and the `npm run dev` you already have
+     running serves the new assets on refresh. This is the mode for live
+     review.
+   - **Mode B — remote.** Used otherwise. Work happens in the cloud copy, each
+     reviewable step is pushed to `art/redraw`, and review is `git pull` then
+     refresh.
+3. **Check the toolchain.** `tsc --noEmit` passes and the art scripts build.
+   (In Mode A the shell is a Linux environment and cannot run `vite build` —
+   the native modules in `node_modules` are for macOS — so the full build is
+   checked remotely. Type checking and the art scripts both work.)
+4. **Record the baseline**, once, before step 0.1: build every asset and save
+   the decoded pixels and preview composites to `.review/baseline/`. Stage 0 is
+   judged against it.
+
+### On your side
+
+Keep `npm run dev` running and the page open in **Chrome**, which is the
+browser that has broken before. At each gate you will be told what changed and
+asked to refresh. If an image looks stale, hard-refresh with `Cmd+Shift+R`.
+
+From step 0.5 onward, adding `?debug=geometry` to the address draws every
+outline, snap zone, light, the window rectangle and the camera origin over the
+scene. From stage 1 it also draws the perspective guides. Use it at every gate.
+
+### The loop, for every step
+
+1. Change the script, or the code in stage 0.
+2. `npm run art` — rebuild every asset and the geometry manifest.
+3. `npm run art:check` — the manifest, the hotspots and the asset sizes agree.
+4. `tsc --noEmit`.
+5. `npm run art:preview` — composites and before/after crops into
+   `.review/<id>/`, including the luminance-only view from stage 3.
+6. Commit to `art/redraw` as `art(<id>): <what changed>`.
+7. If the step ends at a gate, stop and wait. Otherwise carry on and post the
+   preview.
+
+A step that fails 3 or 4 is not finished, whatever it looks like.
+
+### Gates
+
+Work stops at each gate until you have looked at it in the browser and said so.
+Every gate includes the **Chrome check**, which is the F-001 reproduction:
+
+- [ ] Let the opening run about a second, skip it, and land in the carriage.
+      Nothing from the city shows over the carriage.
+- [ ] Let it run to the end and return by clicking. Same.
+- [ ] Sweep the pointer across every object, then back. No flicker, no wall
+      lifted with an object, the light lands on the object.
+- [ ] With `?debug=geometry`, every outline sits on its object.
+- [ ] A quick look in Safari.
+
+Pass, and the stage is merged to `main` and pushed. Fail, and the step is
+reworked; nothing proceeds past a failed gate.
+
+### Commits
+
+One commit per item id, on `art/redraw`, merged to `main` at each accepted
+stage. Messages name the id and say what changed. **No AI attribution of any
+kind** — no co-author lines, no session links — and the author is the
+repository owner's identity.
+
+Because WebP encoders differ between machines, assets built on the Mac and in
+the cloud differ in bytes even when the pixels are identical. Comparisons in
+this workflow decode the images and compare pixels, never bytes.
+
+## Stage 0 — Foundation
+
+**Changes no pixel.** The point of this stage is that every later stage can
+move objects without anything else having to be updated by hand. It removes the
+root of the bug class described in
+[06](06-art-pipeline.md#keeping-the-outlines-in-sync): geometry written down
+twice.
+
+### 0.1 Geometry manifest
+
+`room.py` currently draws each object at coordinates written into the drawing
+code, and `hotspots.ts` repeats those coordinates by hand. Move every
+interactive object's position into named constants at the top of `room.py`,
+draw from those constants, and have `build.py` write them out as
+`src/scene/geometry.gen.ts`: for each object its id, bounding box, snap zone
+and light, plus the asset sizes. The generated file is committed and carries a
+do-not-edit header.
+
+`hotspots.ts` keeps what is not geometry — target, object name, and later the
+lines — and takes everything else from the manifest by id.
+
+**Done when** the rebuilt assets are pixel-identical to the baseline and the
+hub behaves exactly as before.
+
+### 0.2 Window and camera from the manifest
+
+The window is written down four times: `hole.png`, the `.win` rectangle in
+`scene.css` (150, 124, 180 × 140 in scene units), `transform-origin: 50%
+43.71%` on `.cam`, and `CAM_ORIGIN_Y` in `focus.ts`. Make `room.py` the owner:
+it draws the hole from a constant rectangle rather than reading `hole.png`, and
+the build writes `src/scene/geometry.gen.css` with custom properties for the
+window rectangle and the camera origin. `scene.css` and `focus.ts` read those.
+`hole.png` is deleted.
+
+**Done when** the assets are pixel-identical to the baseline and the opening,
+the skip and the return look the same frame for frame.
+
+### 0.3 Objects as sprites
+
+Each focusable object is rendered a second time, alone, to
+`public/assets/obj-<id>.webp`, with its own alpha. The pop uses that image
+instead of a copy of `room.webp` clipped by a polygon, so its edge is the edge
+of the drawing and cannot pick up the wall. The `shape` polygons and
+`popStyle()` go away; hit testing already uses the snap zone.
+
+The compositing rules from F-001 hold: a sprite at rest is an ordinary
+painted element, not a layer of its own; `will-change` appears only while it
+animates; its `z-index` stays pinned. **Check in Chrome DevTools' Layers panel
+that the layer count at rest is the same as before.**
+
+This is also the shape [10](10-scroll-narrative.md) needs: an object that can
+be carried has to exist apart from the room.
+
+**Done when** the room is pixel-identical, the focused objects look the same or
+cleaner at the edges, and the Layers count has not changed.
+
+### 0.4 Check
+
+`tools/art/check.py`, run as `npm run art:check` and as the first step of
+`npm run build`: every manifest id has exactly one hotspot and every hotspot an
+id; every sprite exists; every asset has the size the CSS expects; the window
+rectangle sits inside the room. A mismatch fails the build with a message that
+names the file to fix.
+
+### 0.5 Debug overlay
+
+`?debug=geometry` loads a small module — imported only when the flag is
+present, so the normal bundle does not grow — that draws the manifest over the
+scene: zones, lights, sprite boxes, the window rectangle, the camera origin.
+From stage 1 it adds the vanishing point and horizon.
+
+### 0.6 Preview
+
+`tools/art/preview.py`, run as `npm run art:preview [id]`: the full hub
+composite, each object focused, 3× nearest-neighbour crops of every object, the
+debug overlay baked in, and the same set from the baseline beside it. From
+stage 3 it also writes a luminance-only image for judging values.
+
+Scripts added to `package.json`: `art`, `art:check`, `art:preview`.
+
+### 0.7 Chrome smoke test — optional
+
+A Playwright script that performs the F-001 reproduction in Chrome and saves a
+screenshot after each step. Headless Chrome does not composite exactly as a
+desktop window does, so it cannot prove the bug absent; it can catch the
+obvious return of it between gates. Decide at the stage 0 gate whether it is
+worth the setup.
+
+### Stage 0 gate
+
+The full Chrome check, plus: the scene is indistinguishable from `main`. Merge.
+
+## Stage 1 — Perspective
+
+The structural redraw. **Constraint for the whole stage: the window rectangle
+does not move.** The opening, the city layers and the camera origin all hang
+on it, and keeping it fixed removes the largest risk in the redraw.
+
+| Step | Ids        | What                                                                                               | Gate |
+| ---- | ---------- | -------------------------------------------------------------------------------------------------- | ---- |
+| 1.0  | S-01       | Vanishing point at the window centre and the horizon, as manifest constants; guides in the overlay |      |
+| 1.1  | S-01       | Block-in: the whole room in flat colour in the new projection, no detail                           | yes  |
+| 1.2  | S-02, S-04 | Seat backs and cushions as slabs in perspective                                                    | yes  |
+| 1.3  | S-03       | Side walls, receding, with the side fittings placed on them                                        |      |
+| 1.4  | S-05       | Luggage rack seen from below                                                                       |      |
+| 1.5  | S-06       | Ceiling plane and fixture                                                                          |      |
+| 1.6  | S-07       | Table meets the wall; contact shadows                                                              | yes  |
+
+After 1.1 the picture will look worse than `main`. That is the block-in doing
+its job; the gate is about whether the space is right, not whether it is
+finished.
+
+## Stage 2 — Scale and placement
+
+| Step | Ids              | What                                                                     | Gate |
+| ---- | ---------------- | ------------------------------------------------------------------------ | ---- |
+| 2.1  | S-09             | Rescale cup, saucer, pen and ticket to the laptop                        |      |
+| 2.2  | O-10, O-11, O-12 | Briefcase, line indicator to the wall, rolled map on the rack            |      |
+| 2.3  | N-01, N-04       | Card behind the ticket; space reserved for the notebook and hobby object | yes  |
+
+## Stage 3 — Light
+
+| Step | Ids  | What                                                     | Gate |
+| ---- | ---- | -------------------------------------------------------- | ---- |
+| 3.1  | L-06 | Value plan per depth plane, judged on the luminance view | yes  |
+| 3.2  | L-01 | Cast shadows from every wall object                      |      |
+| 3.3  | L-02 | Occlusion in every inside corner                         |      |
+| 3.4  | L-04 | The lamp lights its surroundings                         |      |
+| 3.5  | L-03 | Core shadow and rim light on rounded forms               |      |
+| 3.6  | L-05 | Reflections: glass, table, floor, laptop                 | yes  |
+
+## Stage 4 — Rendering
+
+These change `px.py` and therefore every asset, the city included. Each step's
+preview covers the whole scene, not only the room.
+
+| Step | Ids  | What                                             | Gate |
+| ---- | ---- | ------------------------------------------------ | ---- |
+| 4.1  | R-01 | Bloom confined to emitters; pixel edges sharp    |      |
+| 4.2  | R-02 | Lighting quantised to bands, with ordered dither |      |
+| 4.3  | R-03 | Clean runs on shallow diagonals                  |      |
+| 4.4  | R-04 | One distinguishing mark per material             | yes  |
+
+## Stage 5 — Objects
+
+Redraws first, largest first; refines after, in batches. Each redraw is its own
+step; refines are grouped by area.
+
+| Step | Ids                                                            | Gate |
+| ---- | -------------------------------------------------------------- | ---- |
+| 5.1  | O-06 laptop                                                    | yes  |
+| 5.2  | O-03 curtains, O-17 lamp                                       |      |
+| 5.3  | O-08 ticket, O-22 floor, O-23 side fittings                    | yes  |
+| 5.4  | Refines, window wall: O-01, O-02, O-14, O-15, O-16, O-18, O-19 |      |
+| 5.5  | Refines, table: O-05, O-07, O-09                               |      |
+| 5.6  | Refines, lower room: O-13, O-20, O-21, O-24                    | yes  |
+
+## Stage 6 — Foreground
+
+S-08, drawn **into `room.webp`** first, as part of the static picture. Making it
+a separate layer that moves under parallax is a scene change with exactly the
+compositing risk recorded in F-001, so it is a separate decision taken after
+this stage, with its own Chrome check.
+
+Gate: the full Chrome check.
+
+## Stage 7 — Open states and the door
+
+The ticket's two faces, the map unrolled, the briefcase open with its books,
+the screen at reading size, and the door. These are new drawings for
+[10](10-scroll-narrative.md) and [12](12-script.md), and their apertures go
+into the manifest. They are drawn here and wired up when the scroll narrative
+is built.
+
+## Rollback
+
+Every step is one commit on `art/redraw`, and `main` only moves at a gate, so:
+
+- a step that looks wrong is reverted on the branch and redone;
+- a stage that fails its gate is not merged, and `main` still has the last good
+  picture;
+- if something breaks after a merge, reverting the merge commit restores the
+  previous stage exactly.
+
+## Progress
+
+Updated in the same commit as each step.
+
+| Stage | Step | Status  |
+| ----- | ---- | ------- |
+| 0     | 0.1  | pending |
+| 0     | 0.2  | pending |
+| 0     | 0.3  | pending |
+| 0     | 0.4  | pending |
+| 0     | 0.5  | pending |
+| 0     | 0.6  | pending |
+| 0     | 0.7  | pending |
+| 1     | 1.0  | pending |
+| 1     | 1.1  | pending |
+| 1     | 1.2  | pending |
+| 1     | 1.3  | pending |
+| 1     | 1.4  | pending |
+| 1     | 1.5  | pending |
+| 1     | 1.6  | pending |
+| 2     | 2.1  | pending |
+| 2     | 2.2  | pending |
+| 2     | 2.3  | pending |
+| 3     | 3.1  | pending |
+| 3     | 3.2  | pending |
+| 3     | 3.3  | pending |
+| 3     | 3.4  | pending |
+| 3     | 3.5  | pending |
+| 3     | 3.6  | pending |
+| 4     | 4.1  | pending |
+| 4     | 4.2  | pending |
+| 4     | 4.3  | pending |
+| 4     | 4.4  | pending |
+| 5     | 5.1  | pending |
+| 5     | 5.2  | pending |
+| 5     | 5.3  | pending |
+| 5     | 5.4  | pending |
+| 5     | 5.5  | pending |
+| 5     | 5.6  | pending |
+| 6     | 6    | pending |
+| 7     | 7    | pending |
 
 ## Keep in sync
 
-- Every outline in `hotspots.ts` against `room.py`, after each stage.
-- The vanishing point in `room.py` and `CAM_ORIGIN_Y` in `focus.ts`: the camera
-  already zooms about the gap in the blinds, and the perspective should
-  converge where the camera pushes.
+- After stage 0, geometry has one source: `room.py`. If a coordinate appears by
+  hand anywhere in `src/`, stage 0 is incomplete.
+- [06 Art pipeline](06-art-pipeline.md) and
+  [08 Maintenance recipes](08-maintenance-recipes.md) describe the hand-synced
+  outlines and change with stage 0.
 - The objects here and the evidence map in
   [11](11-premise-and-voice.md#the-evidence-map).
+- The [Progress](#progress) table and the commits on `art/redraw`.
