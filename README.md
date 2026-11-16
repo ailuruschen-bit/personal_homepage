@@ -11,6 +11,10 @@ the briefcase and what is still open on the laptop are evidence, and the site is
 what you make of them. The detective talks to himself while he works, and the
 last thing that happens is that the occupant comes back and catches him.
 
+None of it is happening now: what you are watching is the recording, which is
+why you can scroll back through it, and the chat at the end is the moment
+playback catches up with the present.
+
 The current version is **structure and interaction only**. Every piece of copy
 is a placeholder; search for `TODO` to find what still needs writing.
 

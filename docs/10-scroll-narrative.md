@@ -4,7 +4,7 @@
 the site as it is; this one describes where it is going and is the reference for
 the refactor. It settles how the camera moves;
 [11 Premise and voice](11-premise-and-voice.md) settles what it moves through,
-and the two should be read together. Numbers given here are starting points to tune against the real
+and [12 Script](12-script.md) puts the two together scene by scene. Numbers given here are starting points to tune against the real
 thing, not measurements.
 
 ## The idea
@@ -79,7 +79,7 @@ backwards. See [the ending](11-premise-and-voice.md#the-ending).
 | ----------- | --------------- | ---------------------------------------------------------------- | --------- |
 | Cover       | 0 → 240         | city parallax; the opening line is anchored here, not a greeting | yes       |
 | Porch       | 240 → 480       | camera eases back toward the window, blinds brighten             | yes       |
-| Window in   | locked, ~1100ms | the existing fixed animation; scroll input captured              | no        |
+| Window in   | locked, ~1100ms | the existing animation, run inward; scroll input captured        | no        |
 | Hub         | 480 → 900       | nothing moves; pointer parallax and pointer focus are live       | yes       |
 | Chapter _n_ | see below       | approach, open, read, close, handoff                             | yes       |
 | Porch out   | 240             | camera retreats to the window after the confrontation            | yes       |
@@ -89,6 +89,10 @@ backwards. See [the ending](11-premise-and-voice.md#the-ending).
 Upward from any point the same map runs in reverse. The two porches are the
 same zone and the two window transits are the same locked segment, which is why
 the ending costs almost nothing to build.
+
+The transit is a glance out of the window and back, not a way in or out. Under
+the premise the detective is already inside, having come through the connecting
+door — see [11](11-premise-and-voice.md#the-premise).
 
 ### Why a porch
 
@@ -231,8 +235,9 @@ y = -clamp(readProgress, 0, 1) * max(0, contentHeight - viewportHeight)
 ```
 
 No nested scrolling means no scroll chaining, no two-scrollbar confusion, no
-touch handoff bugs at the top and bottom edges, and one honest progress bar for
-the whole journey. The cost is that a very long chapter makes the global
+touch handoff bugs at the top and bottom edges, and one honest progress
+indicator for the whole journey — which, under
+[11](11-premise-and-voice.md#what-carries-it), is a timecode rather than a bar. The cost is that a very long chapter makes the global
 scrollbar coarse; if a chapter ever runs past about three screens, that is a
 signal to split it rather than to add a second scroller.
 

@@ -11,9 +11,17 @@ The reader is not browsing a profile. They are a detective who has let
 themselves into a sleeper carriage while its occupant is away, and they have
 until he comes back to work out who he is.
 
+He comes in through the connecting door from the next carriage, because that is
+the only way into a compartment on a moving train. Nobody climbs through a
+window at speed.
+
 Everything in the carriage is evidence. The ticket on the table, the route map
 on the wall, what is open on the laptop, what is in the briefcase. Nothing
 introduces itself. The reader picks things up and draws conclusions.
+
+And none of it is happening now. What the reader is watching is the recording
+of it, which is the part that makes the rest hold together — see
+[The recording](#the-recording).
 
 ## What this fixes
 
@@ -31,10 +39,13 @@ premise those stop being transitions and become actions. Carry is _you pick it
 up_. Dolly is _you lean in_. The interaction grammar now means something in the
 world, which is the difference between a motion design and a scene.
 
-**Why the site opens by going through a window.** The existing opening tilts the
-blinds, flies out, and comes back in. That animation was written before the
-premise and does not need to change; it simply acquires a meaning it did not
-have. The way in is the window. That is how the reader got here.
+**Why the site opens by going out of a window.** The existing opening tilts the
+blinds, flies out to the city, and comes back in. That animation was written
+before the premise, does not need to change, and acquires a meaning it did not
+have: he has just let himself in, and the first thing he does is look out to
+see where the train is. The transit is a glance, not an entrance. Treating it
+as an entrance was the earlier reading, and it was wrong — on a moving train
+there is no way in but the door.
 
 ## What it costs
 
@@ -72,6 +83,78 @@ is the hardest thing to carry across languages. A pastiche that lands in Chinese
 may be flat in English and stilted in Japanese. Either the voice gets written
 natively in each language or the annotation layer ships in one and the artifact
 layer in all three.
+
+## The recording
+
+The reader can scroll back. That is not a concession to usability, it is a fact
+about the medium that the fiction has to account for, because a break-in does
+not have an undo. The answer is that **the intrusion is not happening now. It
+is footage, and the reader is reviewing it.**
+
+### Recording rather than memory
+
+Both would rationalise rewinding. Footage wins on everything else.
+
+It is literal: scrubbing back and forth is what footage is for, and pausing is
+something you do to a tape. It gives the site a set of diegetic interface
+elements that are cheap, always visible, and would otherwise have had to be
+invented as ordinary chrome. And it retroactively justifies a decision already
+taken — the film grain added to the artwork stops being a style and becomes the
+reason you can see it.
+
+Memory would excuse a selective, moving, subjective camera more gracefully, and
+that is a real argument. But its signifiers are vague — vignettes, desaturation,
+soft edges — where a tape's are concrete and legible at a glance.
+
+### Who is watching
+
+The detective, afterwards, writing it up.
+
+This is what sorts the three layers into two time frames, and it is the reason
+the voices do not collide:
+
+| Layer      | When       | Voice                                    |
+| ---------- | ---------- | ---------------------------------------- |
+| artifact   | then       | none — it is a document                  |
+| spoken     | then       | in the moment, present tense, short      |
+| annotation | now, after | the report, reflective, knows the ending |
+
+So the spoken lines can be unsure and the annotation can be certain, without
+either being out of character. That is a free gift from the framing and worth
+more than the atmosphere.
+
+### What carries it
+
+| Element    | Doing double duty as                        |
+| ---------- | ------------------------------------------- |
+| timecode   | the scroll progress indicator               |
+| play state | a reminder that this already happened       |
+| grain      | already in the artwork; now it has a reason |
+| subtitle   | a transcript rather than a caption          |
+
+The timecode is the one worth building first. A progress bar would have been
+needed anyway for a document this tall, and a timecode is the same information
+wearing the premise. Map `s` onto elapsed minutes and it reads as a tape
+position.
+
+**Rejected: deliberate glitches.** Dropped frames, tearing and scanline judder
+at the seams are the obvious additions and they are a bad idea here. This
+project spent seven attempts removing an accidental compositing artefact in
+Chrome — see
+[09](09-fix-log.md#f-001-chrome-the-city-drawn-over-the-carriage) — and
+deliberately adding artefacts that look like it would make every future bug
+report ambiguous. Grain and a timecode carry the idea. Nothing else should
+pretend to be broken.
+
+### Where playback ends
+
+At the confrontation. He opens the door, and the tape chrome goes: the timecode
+stops, the indicator goes out, the subtitle sheds its transcript styling.
+Playback has caught up with the present and the conversation is live.
+
+It costs a few elements fading out and it is the strongest beat in the site.
+Everything the reader has seen so far was over before they arrived; this is the
+one thing that is not.
 
 ## Two layers
 
@@ -242,9 +325,11 @@ What the frame buys:
   answers the question the premise had left open — a scene that has only ever
   drawn a man's possessions should not suddenly draw the man — and a backlit
   figure in a doorway is exactly the register of the art it is modelled on.
-- **The exit stays open.** He is in the doorway; the window is behind you, the
-  way you came in. The reader can leave at any point in the conversation. That
-  is what makes staying a choice instead of a toll.
+- **The exit stays open.** He fills one doorway; a carriage has two, and the
+  far end is open the whole time. The reader can leave at any point in the
+  conversation. That is what makes staying a choice instead of a toll. (The
+  window is not the exit and never was — see
+  [the premise](#the-premise).)
 
 Two voices now share the subtitle, so it needs a speaker label. It stays one
 slot.
@@ -266,18 +351,17 @@ one, and it costs almost nothing to build because it reuses the opening in
 reverse.
 
 The confrontation is the last chapter. However it goes, it ends the same way:
-he is in the doorway, so the reader leaves the way they came. The camera
-retreats to the window and the window transit plays outward — the same locked
-segment as the way in, run the other way — and leaves them on the city where
-they started.
+the camera pulls back through the window to the city, which is the frame the
+tape opened on. The same locked segment, run outward.
 
 Two things fall out of that:
 
 - **The footer is diegetic.** It is the view from outside after you have left:
   links, colophon, source. A place, not a strip at the bottom of a page.
-- **The document is a ring.** The city is at both ends. Scrolling back up
-  re-enters the carriage rather than rewinding a page, which is what
-  [10](10-scroll-narrative.md)'s axis does anyway.
+- **The document is a ring.** The city is at both ends, because a tape ends on
+  the frame it began with. Scrolling back up re-enters the carriage rather than
+  rewinding a page, which is what [10](10-scroll-narrative.md)'s axis does
+  anyway — and under the recording it is simply rewinding.
 
 **Rejected: a timer.** The obvious move is to make his return a deadline. It is
 wrong. A reader who is being hurried cannot read, and punishing someone for
@@ -324,8 +408,13 @@ See [07 Content and routing](07-content-and-routing.md).
    to add is light and the corridor behind him, not a face.
 4. **Does the cover state the premise?** A detective who is told they are a
    detective is being handed the answer. Proposed: one line at most, or nothing,
-   and let the empty carriage do it.
-5. **Language of first release.** Proposed: write the annotation layer in one
+   and let the empty carriage and the timecode do it.
+5. **How hard does the tape press?** The timecode and the grain are the floor.
+   Above that sit a scrub bar, a play indicator, a transcript-styled subtitle
+   and a tape-stock colour cast, in roughly that order of how much they commit.
+   Proposed: build the floor, live with it a while, and add upward only if the
+   framing is not landing.
+6. **Language of first release.** Proposed: write the annotation layer in one
    language, properly, and ship `facts` in all three rather than translating a
    voice badly.
 
