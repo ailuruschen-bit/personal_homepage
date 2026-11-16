@@ -583,7 +583,7 @@ Updated in the same commit as each step.
 
 | Stage | Step | Status  |
 | ----- | ---- | ------- |
-| 0     | 0.1  | pending |
+| 0     | 0.1  | done    |
 | 0     | 0.2  | pending |
 | 0     | 0.3  | pending |
 | 0     | 0.4  | pending |

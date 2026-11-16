@@ -1,3 +1,4 @@
+import { OBJECTS } from './geometry.gen';
 import { SCENE } from './units';
 
 /**
@@ -7,6 +8,8 @@ import { SCENE } from './units';
  *       object itself: the pointer snaps on entering and lets go on leaving.
  * light Where the pool of light lands once snapped, and how big it is:
  *       centre (x, y) and radii (rx, ry).
+ *       Both come from geometry.gen.ts, which tools/art/room.py generates
+ *       along with the artwork: move an object there and they move with it.
  * shape Outline of the object as polygon vertices. Used to cut a copy out of
  *       the carriage artwork, which is then lifted, brightened and given a
  *       shadow on focus. Leave it out to light an object without lifting it
@@ -28,18 +31,23 @@ export interface Hotspot {
   shape?: Array<[number, number]>;
 }
 
+/** Zone and light for an object, from the generated geometry */
+function geo(target: string): Pick<Hotspot, 'zone' | 'light'> {
+  const g = OBJECTS[target];
+  if (!g) throw new Error(`geometry.gen.ts has no object "${target}"`);
+  return { zone: g.zone, light: g.light };
+}
+
 export const hotspots: Hotspot[] = [
   {
     target: COVER,
     object: '车窗',
-    zone: [142, 116, 338, 272],
-    light: { x: 240, y: 194, rx: 108, ry: 84 },
+    ...geo(COVER),
   },
   {
     target: 'projects',
     object: '电脑',
-    zone: [137, 279, 252, 376],
-    light: { x: 195, y: 328, rx: 62, ry: 52 },
+    ...geo('projects'),
     shape: [
       [148, 292],
       [214, 288],
@@ -53,8 +61,7 @@ export const hotspots: Hotspot[] = [
   {
     target: 'about',
     object: '车票',
-    zone: [306, 336, 358, 370],
-    light: { x: 332, y: 353, rx: 30, ry: 20 },
+    ...geo('about'),
     shape: [
       [316, 346],
       [344, 344],
@@ -65,8 +72,7 @@ export const hotspots: Hotspot[] = [
   {
     target: 'stack',
     object: '公文包',
-    zone: [308, 46, 396, 100],
-    light: { x: 352, y: 75, rx: 48, ry: 28 },
+    ...geo('stack'),
     shape: [
       [318, 58],
       [346, 58],
@@ -81,8 +87,7 @@ export const hotspots: Hotspot[] = [
   {
     target: 'journey',
     object: '线路图',
-    zone: [166, 60, 300, 94],
-    light: { x: 240, y: 77, rx: 78, ry: 18 },
+    ...geo('journey'),
     shape: [
       [173, 67],
       [307, 67],
