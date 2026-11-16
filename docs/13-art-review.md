@@ -523,6 +523,11 @@ on it, and keeping it fixed removes the largest risk in the redraw.
 | 1.5  | S-06       | Ceiling plane and fixture                                                                          |      |
 | 1.6  | S-07       | Table meets the wall; contact shadows                                                              | yes  |
 
+The side walls are the partitions of a sleeper compartment, and 1.1 already
+gives each one its folded upper berth with straps, plus a reading lamp or a net
+pocket in the strip below it: blank planes did not read as a train. 1.3 finishes
+those fittings.
+
 After 1.1 the picture will look worse than `main`. That is the block-in doing
 its job; the gate is about whether the space is right, not whether it is
 finished.

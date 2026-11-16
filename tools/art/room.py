@@ -590,7 +590,7 @@ def poster(g, x, y, w, h, kind):
 
 def walls(g, rnd):
     # ---- left wall
-    poster(g, 30, 118, 48, 70, 'sunset')
+    poster(g, 40, 118, 48, 70, 'sunset')
     # neon tube
     g.line([(97, 58), (97, 96)], (30, 30, 50))
     g.line([(97, 104), (97, 123)], (30, 30, 50))
@@ -652,7 +652,7 @@ def walls(g, rnd):
     g.lrect(397, 231, 3, 3, (255, 80, 80), 0.8)
     g.lrect(392, 231, 3, 3, (90, 255, 150), 0.7)
     # small picture frame and emergency hammer
-    poster(g, 420, 114, 34, 30, 'moon')
+    poster(g, 408, 112, 34, 30, 'moon')
     g.shadow(423, 188, 26, 30, 0.6)
     g.rect(422, 186, 24, 28, (196, 56, 62))
     g.rect(422, 186, 24, 1, (255, 120, 120))
@@ -707,6 +707,65 @@ def structure(g):
         g.line([ri(P(-HW, RACK_Y, z)), ri(P(HW, RACK_Y, z))], STEEL, width=3 if i == 3 else 1)
     for s in (-1, 1):
         g.line([ri(P(s * HW, RACK_Y, D)), ri(P(s * HW, RACK_Y, D - RACK_DEPTH))], STEEL, width=2)
+
+
+BERTH = (1.42, 1.90, 0.06)  # folded upper berth: bottom, top, thickness off the wall
+
+
+def side_wall(g, s):
+    """What makes the side walls a sleeper compartment's partitions rather than
+    blank planes: the upper berth folded up against each one, held by straps,
+    with a strip of wall between it and the backrest for the small fittings.
+    s = -1 on the left, +1 on the right."""
+    HW, C, D = ROOM_HALF_WIDTH, ROOM_CEILING, WALL_DIST
+    y0, y1, t = BERTH
+    wall = mul(WALL, 0.78)
+    on = lambda z, y, inset=0.0: ri(P(s * (HW - inset), y, z))
+    # partition panel seams
+    for z in (1.62, 1.24, 0.9):
+        g.line([on(z, BACK_TOP), on(z, C)], mul(wall, 0.7))
+    # the berth: its shadow on the wall, its underside, its face
+    receding(g, s * HW, y0 - 0.07, s * HW, y0, mul(wall, 0.62))
+    receding(g, s * HW, y0, s * (HW - t), y0, mul(WALL, 0.4))
+    face = (92, 102, 136)
+    receding(g, s * (HW - t), y0, s * (HW - t), y1, face)
+    g.line([on(D, y1, t), on(Z_NEAR, y1, t)], mul(face, 1.35))
+    g.line([on(D, y0, t), on(Z_NEAR, y0, t)], mul(face, 0.55))
+    g.line([on(D, y0 + 0.06, t), on(Z_NEAR, y0 + 0.06, t)], mul(face, 0.8))
+    g.line([on(D, y1 - 0.06, t), on(Z_NEAR, y1 - 0.06, t)], mul(face, 0.8))
+    # retaining straps and the pull handle
+    for z in (1.9, 1.5, 1.1):
+        quad(g, [(s * (HW - t), y0, z), (s * (HW - t), y1, z), (s * (HW - t), y1, z - 0.045), (s * (HW - t), y0, z - 0.045)], (150, 96, 62))
+        bx, by = on(z - 0.022, y0 + 0.1, t)
+        g.rect(bx - 1, by - 1, 3, 3, BRASS)
+    g.line([on(1.78, 1.66, t), on(1.62, 1.66, t)], BRASS, width=2)
+    if s > 0:
+        # reading lamp under the berth, by the window
+        pts = [P(HW - 0.04, y, z) for z, y in ((1.88, 1.27), (1.88, 1.34), (1.74, 1.34), (1.74, 1.27))]
+        g.lpoly([ri(q) for q in pts], (255, 190, 110), 0.8, body=(255, 232, 180))
+        lx, ly = on(1.81, 1.3)
+        g.light(lx - 40, ly - 22, 70, 60, (255, 170, 90), 0.3)
+    else:
+        # net pocket with a folded paper in it
+        net = lambda z, y: P(-(HW - 0.03), y, z)
+        g.poly([ri(net(1.82, 1.24)), ri(net(1.82, 1.4)), ri(net(1.6, 1.4)), ri(net(1.6, 1.24))], (226, 222, 210))
+        g.poly([ri(net(1.86, 1.2)), ri(net(1.86, 1.33)), ri(net(1.5, 1.33)), ri(net(1.5, 1.2))], (40, 44, 72))
+        g.line([ri(net(1.86, 1.33)), ri(net(1.5, 1.33))], STEEL)
+
+
+def floor_and_ceiling(g):
+    """Seams that run toward the camera and across it, so the floor and ceiling
+    read as planes with depth."""
+    HW, C, D = ROOM_HALF_WIDTH, ROOM_CEILING, WALL_DIST
+    dark = (30, 32, 54)
+    for x in (-0.3, 0.0, 0.3):
+        g.line([ri(P(x, 0, D)), ri(P(x, 0, Z_NEAR))], dark)
+    for z in (1.7, 1.42, 1.18, 0.98, 0.82):
+        g.line([ri(P(-HW, 0, z)), ri(P(HW, 0, z))], dark)
+    for x in (-0.6, 0.0, 0.6):
+        g.line([ri(P(x, C, D)), ri(P(x, C, Z_NEAR))], mul(CEIL, 0.7))
+    for z in (1.6, 1.25):
+        g.line([ri(P(-HW, C, z)), ri(P(HW, C, z))], mul(CEIL, 0.7))
 
 
 def bench(g, s):
@@ -872,6 +931,9 @@ def build_room(seed=21):
     rack(g, rng('rack'))
     window(g, rng('window'))
     structure(g)
+    floor_and_ceiling(g)
+    side_wall(g, -1)
+    side_wall(g, 1)
     bench(g, -1)
     bench(g, 1)
     table(g, rng('table'))
