@@ -42,7 +42,7 @@ OBJECTS = {
     'stack': dict(at=(326, 52), zone=(-10, -9, 78, 45), light=(34, 20, 48, 28), on_rack=1),
     # the map, half open on the table; the line display on the wall is the
     # railway's, and only a decoy
-    'journey': dict(at=(236, 342), zone=(-6, -6, 60, 36), light=(27, 15, 31, 18)),
+    'journey': dict(at=(233, 326), zone=(-6, -6, 77, 27), light=(32, 10, 38, 14)),
 }
 
 # The window opening (x y w h) and its corner radius. The page lays .win over it:
@@ -103,7 +103,7 @@ def P(X, Y, Z):
 
 # The cup and saucer were drawn too large for the laptop beside them: they are
 # drawn at COFFEE_SCALE about the middle of the saucer's foot.
-COFFEE_AT = (313, 333)
+COFFEE_AT = (281, 356)
 COFFEE_SCALE = 0.62
 
 # Small animated things the page lays over the art, each x y relative to what
@@ -985,7 +985,7 @@ def table_map(g, T):
     o = g.at(0, 0, 'journey')
     paper = (232, 222, 196)
     # the flat sheet, a little askew
-    A, B, C, D = T(0.487, 0.5), T(0.69, 0.46), T(0.708, 0.95), T(0.507, 0.98)
+    A, B, C, D = T(0.47, 0.14), T(0.77, 0.11), T(0.78, 0.35), T(0.48, 0.38)
     o.poly([A, B, C, D], paper)
     g.line([(D[0], D[1] + 1), (C[0], C[1] + 1)], mul(WOOD, 0.55))  # its shadow on the wood
 
@@ -1017,12 +1017,12 @@ def table_map(g, T):
     o.poly([ri(c) for c in curl], mul(paper, 0.8))
     o.line([ri(curl[2]), ri(curl[3])], (252, 248, 232))
     # the rest, rolled into a tube along the back edge, with a rubber band
-    for dy, c in ((0, (168, 158, 138)), (-1, (204, 194, 170)), (-2, (232, 226, 204)), (-3, (246, 240, 220)), (-4, (214, 204, 180))):
+    for dy, c in ((0, (168, 158, 138)), (-1, (196, 186, 162)), (-2, (222, 214, 192)), (-3, (240, 234, 212)), (-4, (248, 242, 224)), (-5, (232, 224, 202)), (-6, (206, 196, 172))):
         o.line([(A[0] - 1, A[1] + dy), (B[0] + 1, B[1] + dy)], c)
-    o.ellipse(B[0], B[1] - 5, 4, 6, (214, 204, 180))
-    o.px(B[0] + 2, B[1] - 2, (120, 110, 96))
+    o.ellipse(B[0] + 1, B[1] - 3, 3, 4, (214, 204, 180))
+    o.ellipse(B[0] + 1, B[1] - 3, 1, 2, (176, 164, 140))
     mx, my = lerp(A, B, 0.35)
-    o.rect(round(mx), round(my) - 5, 2, 6, (190, 60, 62))
+    o.rect(round(mx), round(my) - 6, 2, 7, (190, 60, 62))
 
 
 def bench(g, s):
@@ -1202,7 +1202,8 @@ def table(g, rnd):
     o.light(150, 336, 100, 40, (90, 150, 255), 0.5)
     o.light(146, 286, 76, 60, (80, 120, 255), 0.25)
     # ---- coffee
-    cg = scaled(g, COFFEE_SCALE, *COFFEE_AT)
+    # the cup stands in front of the map; it is cut out of the map's sprite
+    cg = scaled(g, COFFEE_SCALE, *COFFEE_AT).at(0, 0, '_cup')
     cg.shadow(256, 354, 62, 14, 0.5, ell=True)
     cg.ellipse(258, 351, 58, 13, (232, 230, 244))
     cg.ellipse(258, 351, 58, 11, (248, 246, 255))
@@ -1234,6 +1235,8 @@ def table(g, rnd):
     cg.ellipse(279, 331, 13, 3, (196, 130, 84))
     cg.px(284, 331, (236, 190, 140))
     cg.px(293, 333, (150, 96, 70))
+    cup = g.masks.pop('_cup')
+    g.masks['journey'] = ImageChops.multiply(g.masks['journey'], ImageChops.invert(cup))
     # ---- ticket (the about object)
     o = place(g, 'about', (316, 344))
     o.shadow(318, 349, 32, 15, 0.6)
