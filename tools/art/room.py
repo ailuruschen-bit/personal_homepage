@@ -1225,9 +1225,10 @@ def foreground_map(style):
 
 
 def foreground(g, style=None):
-    """Paint the foreground over both side extensions and clear any shadow or
-    invisible light left there by what was drawn before, so it is lit only by
-    the room's ambient light."""
+    """Paint the foreground over both side extensions and clear any shadow left
+    there by what was drawn before. The room's invisible lights are left alone:
+    they reach into the room through the render's blur, and clearing them here
+    would change the room as well as the foreground."""
     a = foreground_map(style or FOREGROUND)
     cv = g.cv
     for side, img in ((-1, a[:, ::-1]), (1, a)):
@@ -1237,7 +1238,6 @@ def foreground(g, style=None):
             cv.mask(x0, 0, m, c)
         box = (x0, 0, x0 + 120, H)
         cv.sh.paste(255, box)
-        cv.lt.paste((0, 0, 0), box)
 
 
 def build_room(seed=21, over_rack=True):
