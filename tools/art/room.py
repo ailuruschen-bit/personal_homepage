@@ -38,11 +38,11 @@ AMBER = (255, 206, 110)
 # object moves its focus target with it.
 OBJECTS = {
     'projects': dict(at=(148, 288), zone=(-11, -9, 104, 88), light=(47, 40, 62, 52)),
-    'about': dict(at=(316, 344), zone=(-10, -8, 42, 26), light=(16, 9, 30, 20)),
+    'about': dict(at=(306, 343), zone=(-10, -8, 42, 26), light=(16, 9, 30, 20)),
     'stack': dict(at=(326, 52), zone=(-10, -9, 78, 45), light=(34, 20, 48, 28), on_rack=1),
-    # the rolled map lying on the left rack; the line display on the wall is
-    # the railway's, and only a decoy
-    'journey': dict(at=(26, 72), zone=(-8, -10, 78, 26), light=(36, 10, 44, 16), on_rack=-1),
+    # the map, half unrolled on the left-hand bench; the line display on the
+    # wall is the railway's, and only a decoy
+    'journey': dict(at=(20, 360), zone=(-6, -6, 104, 60), light=(49, 27, 52, 30)),
 }
 
 # The window opening (x y w h) and its corner radius. The page lays .win over it:
@@ -103,7 +103,7 @@ def P(X, Y, Z):
 
 # The cup and saucer were drawn too large for the laptop beside them: they are
 # drawn at COFFEE_SCALE about the middle of the saucer's foot.
-COFFEE_AT = (287, 357)
+COFFEE_AT = (281, 356)
 COFFEE_SCALE = 0.62
 
 # Small animated things the page lays over the art, each x y relative to what
@@ -497,10 +497,10 @@ def rack(g, rnd, over_rack=True):
     # It is also flattened: bags laid on a rack are lower than they are wide.
     D = WALL_DIST
     lug = g.flatten(LUGGAGE_FLAT, 92).at(0, -3).depth(LUGGAGE_Z[-1])
-    rolled = place(g.flatten(LUGGAGE_FLAT, 92).depth(LUGGAGE_Z[-1]), 'journey', (26, 75))
+    bx = lug.at(24, 0)
     um = g.flatten(LUGGAGE_FLAT, 92).at(2, -3).depth(LUGGAGE_Z[1])
     # x0, x1, height as written, colour, silhouette tag
-    pieces = ((26, 90, 14, (226, 218, 196), 'journey'), (96, 151, 24, (60, 140, 138), None),
+    pieces = ((52, 88, 20, (176, 138, 98), None), (96, 151, 24, (60, 140, 138), None),
               (326, 394, 34, (150, 96, 62), 'stack'), (400, 448, 4, (44, 50, 84), None))
     for x0, x1, h, c, tag in pieces:
         xa, xb = (x0 - 240) / WALL_SCALE, (x1 - 240) / WALL_SCALE
@@ -514,8 +514,6 @@ def rack(g, rnd, over_rack=True):
     # to the wall: its body colour in shade, a lit top edge, and a band or two
     # carried round from the front
     for x0, x1, h, c, tag in pieces:
-        if tag == 'journey':
-            continue  # a roll ends in its spiral and its open edge, not a flat side
         xs = (x1 if x1 < 240 else x0)
         zl = LUGGAGE_Z[-1 if x1 < 240 else 1]
         X, top = (xs - 240) / WALL_SCALE, RACK_Y + h * LUGGAGE_FLAT / WALL_SCALE
@@ -527,27 +525,15 @@ def rack(g, rnd, over_rack=True):
             for f in (0.3, 0.7):
                 z = zl + (D - zl) * f
                 quad(t, [(X, RACK_Y, z), (X, top, z), (X, top, z + 0.025), (X, RACK_Y, z + 0.025)], mul(c, 0.42))
-    # the rolled map: a paper roll lying along the rack, a rubber band round
-    # it, its spiral at the near end and the free edge curling open at the
-    # far end to show the map printed inside
-    shades = [0.62, 0.78, 0.9, 1.0, 1.06, 1.08, 1.04, 0.96, 0.88, 0.78, 0.68, 0.58, 0.5, 0.44]
-    paper = (226, 218, 196)
-    for r, k in enumerate(shades):
-        rolled.rect(30, 78 + r, 56, 1, mul(paper, k))
-    for x in range(34, 84, 9):
-        rolled.rect(x, 79, 1, 12, mul(paper, 0.9))
-    rolled.ellipse(26, 78, 8, 14, mul(paper, 0.82))
-    rolled.ellipse(27, 80, 6, 10, mul(paper, 0.95))
-    rolled.ellipse(29, 83, 2, 4, (120, 110, 96))
-    rolled.rect(48, 78, 3, 14, (190, 60, 62))
-    rolled.rect(48, 78, 1, 14, (230, 110, 104))
-    # the free edge, curling up and open
-    rolled.poly([(84, 78), (95, 72), (98, 76), (88, 84)], mul(paper, 1.04))
-    rolled.line([(86, 80), (95, 74)], (70, 150, 160))
-    rolled.line([(88, 81), (96, 76)], (210, 80, 84))
-    rolled.px(91, 77, (40, 40, 60))
-    rolled.px(94, 75, (40, 40, 60))
-    rolled.line([(84, 78), (95, 72)], (255, 252, 240))
+    # cardboard box
+    bx.rect(28, 72, 36, 20, (176, 138, 98))
+    bx.rect(28, 72, 36, 2, (210, 174, 130))
+    bx.rect(28, 90, 36, 2, (120, 90, 66))
+    bx.rect(43, 72, 6, 20, (206, 186, 150))
+    bx.rect(52, 78, 9, 6, (236, 230, 214))
+    bx.rect(53, 80, 6, 1, (120, 60, 60))
+    bx.rect(53, 82, 4, 1, (90, 90, 110))
+    bx.shade(60, 72, 4, 20, 0.8)
     # holdall
     c = (60, 140, 138)
     lug.rrect(96, 68, 55, 24, 7, c)
@@ -991,6 +977,47 @@ BACK_ROLL = [
 BACK_ROLL_SHADES = [0.9, 1.04, 1.22, 1.38, 1.26]
 
 
+def journey_map(g):
+    """The journey object: a paper map thrown down on the left-hand bench by
+    the window, half unrolled. The sheet lies flat on the cushion and shows
+    what is printed on it; the rest is still rolled up along its far side.
+    Drawn in compartment coordinates, so it lies in the cushion's plane."""
+    o = g.at(0, 0, 'journey')
+    y = SEAT_H + 0.012
+    q = lambda X, Z, dy=0.0: ri(P(X, y + dy, Z))
+    xa, xb, za, zb = -0.86, -0.63, 1.86, 1.46  # the open sheet, back to front
+    paper, ink = (232, 224, 200), (60, 70, 96)
+    o.poly([q(xa, za), q(xb, za), q(xb, zb), q(xa, zb)], paper)
+    o.line([q(xb, za), q(xb, zb)], (250, 246, 230))
+    # what is printed: water, a park, streets, and the line with its stations
+    span = lambda u, v: (xa + (xb - xa) * u, za + (zb - za) * v)
+    o.poly([q(*span(0.0, 0.62)), q(*span(0.55, 0.48)), q(*span(1.0, 0.56)), q(*span(1.0, 0.68)), q(*span(0.5, 0.6)), q(*span(0.0, 0.74))], (150, 190, 214))
+    o.poly([q(*span(0.6, 0.08)), q(*span(0.92, 0.1)), q(*span(0.88, 0.3)), q(*span(0.62, 0.28))], (168, 204, 150))
+    for u in (0.25, 0.5, 0.78):
+        o.line([q(*span(u, 0.02)), q(*span(u, 0.98))], (206, 198, 176))
+    for v in (0.2, 0.42, 0.86):
+        o.line([q(*span(0.02, v)), q(*span(0.98, v))], (206, 198, 176))
+    route = [span(0.12, 0.06), span(0.3, 0.22), span(0.34, 0.45), span(0.7, 0.62), span(0.66, 0.84), span(0.86, 0.96)]
+    o.line([q(*r) for r in route], (210, 66, 70), width=2)
+    for i, r in enumerate(route):
+        sx, sy = q(*r)
+        o.rect(sx - 1, sy - 1, 3, 3, (250, 246, 230))
+        o.px(sx, sy, ink if i not in (2, 4) else (210, 66, 70))
+    # circled stations, as the script says: circled more than once
+    for r in (route[2], route[4]):
+        sx, sy = q(*r)
+        o.line([(sx - 3, sy - 2), (sx + 3, sy - 2), (sx + 4, sy + 1), (sx, sy + 3), (sx - 4, sy + 1), (sx - 3, sy - 2)], (200, 40, 50))
+    # the rolled part, along the sheet's far edge, with a rubber band
+    for dy, c in ((0.0, (170, 160, 140)), (0.012, (214, 206, 184)), (0.024, (240, 234, 214)), (0.034, (206, 198, 176))):
+        o.line([q(xa - 0.012, za, dy), q(xa - 0.012, zb - 0.02, dy)], c, width=2)
+    sx, sy = q(xa - 0.012, zb - 0.02, 0.018)
+    o.ellipse(sx - 2, sy - 3, 5, 6, (214, 206, 184))
+    o.px(sx, sy - 1, (120, 110, 96))
+    o.line([q(xa - 0.012, 1.7, 0.0), q(xa - 0.012, 1.7, 0.036)], (190, 60, 62), width=2)
+    # a soft shadow where the sheet meets the cushion along its near edge
+    g.line([q(xb + 0.004, za, -0.006), q(xb + 0.004, zb, -0.006)], mul(SEAT, 0.5))
+
+
 def bench(g, s):
     """A bench along a side wall, s = -1 on the left and +1 on the right, from
     the window wall to beyond the edge of the scene: a base, a cushion with a
@@ -1202,12 +1229,12 @@ def table(g, rnd):
     o = place(g, 'about', (316, 344))
     o.shadow(318, 349, 32, 15, 0.6)
     # the business card tucked behind it, one corner showing
-    C_ = [(325, 340), (349, 338), (352, 350), (328, 352)]
+    C_ = [(310, 341), (334, 339), (337, 350), (313, 352)]
     o.poly(C_, (236, 236, 242))
     o.line([C_[0], C_[1]], (255, 255, 255))
-    o.line([C_[1], C_[2]], (170, 170, 184))
-    o.fline([(336, 341.6), (346, 340.8)], (60, 60, 80))
-    o.fline([(338, 343.6), (346, 343.0)], (140, 140, 160))
+    o.line([C_[0], C_[3]], (190, 190, 204))
+    o.fline([(312.5, 342.6), (322, 341.9)], (60, 60, 80))
+    o.fline([(313, 344.6), (320, 344.1)], (140, 140, 160))
     T = [(316, 346), (344, 344), (348, 358), (320, 361)]
     o.poly(T, (240, 228, 198))
     o.line([T[0], T[1]], (255, 250, 232))
@@ -1409,6 +1436,7 @@ def build_room(seed=21, over_rack=True):
     side_wall(g, 1)
     bench(g, -1)
     bench(g, 1)
+    journey_map(g)
     table(g, rng('table'))
     # Overall lighting: the ceiling strip washing the walls, cold light from outside
     g.light(-120, 40, 720, 50, (255, 214, 160), 0.26)

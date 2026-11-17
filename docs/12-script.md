@@ -108,7 +108,8 @@ a professional's relief at being handed the answer.
 
 ## Scene 4 — 卷起来的线路图 (journey)
 
-**Camera:** carry, out of the luggage rack. **Scroll:** unrolls it. Stations
+**Camera:** carry, up off the left-hand bench, where it lies half unrolled.
+**Scroll:** unrolls it the rest of the way. Stations
 appear in order as it opens; each is `[经历]`.
 
 ```
