@@ -143,6 +143,9 @@ def write_geometry_css(geo, path):
                  f"  border-radius: calc(var(--u) * {num(w['r'])});"),
         ('.cam', f"transform-origin: {pct(cam['x'])} {pct(cam['y'])};"),
     ]
+    for key, (x, y) in geo['marks'].items():
+        sel = '.steam' if key == 'steam' else f'.{key}'
+        rules.append((sel, f'left: {pct(x)}; top: {pct(y)};'))
     for key, (x, y, gw, gh) in geo['glows'].items():
         rules.append((f'.g-{key}', f'left: {pct(x)}; top: {pct(y)}; width: {pct(gw)}; height: {pct(gh)};'))
     lines = [

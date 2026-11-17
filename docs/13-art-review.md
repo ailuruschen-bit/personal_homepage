@@ -858,13 +858,13 @@ something else.
 | 1     | 1.0  | done    |                                                                                                                                                                  |
 | 1     | 1.1  | done    | block-in, plus side walls as sleeper partitions and their baked vignette                                                                                         |
 | 1     | 1.2  | done    | benches as swept cross-sections with soft edges                                                                                                                  |
-| 1     | 1.3  | review  | side-wall fittings in the strips the scene shows: reading lamp with a lit hood, net pocket with a timetable; the rest of each side wall is behind the foreground |
-| 1     | 1.4  | review  | two racks, luggage standing on them with sides; the briefcase lifts whole behind the rail                                                                        |
-| 1     | 1.5  | review  | ceiling cove at the wall, vents within the strip of ceiling in view, light on the ceiling                                                                        |
-| 1     | 1.6  | review  | the table hinged to the wall: struts under it to plates on the wall, and the wall under it in shadow                                                             |
-| 2     | 2.1  | pending |                                                                                                                                                                  |
-| 2     | 2.2  | pending |                                                                                                                                                                  |
-| 2     | 2.3  | pending |                                                                                                                                                                  |
+| 1     | 1.3  | done    | side-wall fittings in the strips the scene shows: reading lamp with a lit hood, net pocket with a timetable; the rest of each side wall is behind the foreground |
+| 1     | 1.4  | done    | two racks, luggage standing on them with sides; the briefcase lifts whole behind the rail                                                                        |
+| 1     | 1.5  | done    | ceiling cove at the wall, vents within the strip of ceiling in view, light on the ceiling                                                                        |
+| 1     | 1.6  | done    | the table hinged to the wall: struts under it to plates on the wall, and the wall under it in shadow                                                             |
+| 2     | 2.1  | review  | cup and saucer drawn at 0.62 about the saucer's foot; pen lengthened to about 14 cm; steam and cursor positions generated                                        |
+| 2     | 2.2  | review  | journey moved to a rolled map on the left rack (box and small roll removed); the line display is a decoy with no hotspot                                         |
+| 2     | 2.3  | review  | business card behind the ticket; reserved: notebook at the table's front-left corner, hobby object in place of the holdall                                       |
 | 3     | 3.1  | pending |                                                                                                                                                                  |
 | 3     | 3.2  | pending |                                                                                                                                                                  |
 | 3     | 3.3  | pending |                                                                                                                                                                  |
@@ -909,7 +909,8 @@ Done so far in stage 1, beyond what the step table names:
   thing in front (`front` in the generated geometry). The briefcase lifts whole
   behind the rack's rail this way.
 
-Next: the stage 1 gate, then stage 2.
+Stage 1 passed its gate and is merged. Stage 2 is built and waiting at its
+gate.
 
 ## Keep in sync
 

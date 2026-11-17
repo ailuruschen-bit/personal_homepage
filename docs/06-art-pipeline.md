@@ -187,6 +187,7 @@ the top of `room.py`, and generated from there by `build.py`:
 | `WINDOW`     | the opening and its corner radius                              | `.win` in `geometry.gen.css`, the hole |
 | `CAM_GAP`    | the gap in the blinds the camera flies through                 | `.cam`'s origin, `CAMERA`              |
 | `GLOWS`      | the animated glows, two relative to their objects              | `.g-*` in `geometry.gen.css`           |
+| `MARKS`      | the steam over the cup and the cursor on the screen            | `.steam`, `.cur` in `geometry.gen.css` |
 
 `hotspots.ts` keeps only what is not geometry: the target section and the
 object's name. A focused object lifts its own sprite, cut out along the

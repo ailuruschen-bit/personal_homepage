@@ -239,8 +239,7 @@
 }
 .steam {
   position: absolute;
-  left: 59.167%;
-  top: 67.083%;
+  /* left and top come from geometry.gen.css, over the cup */
   width: calc(var(--u) * 3);
   height: calc(var(--u) * 3);
   background: #fff;
@@ -255,8 +254,7 @@
 }
 .cur {
   position: absolute;
-  left: 40.833%;
-  top: 69.167%;
+  /* left and top come from geometry.gen.css, on the laptop's screen */
   width: calc(var(--u) * 4);
   height: calc(var(--u) * 1.4);
   background: #5ff2e6;
