@@ -886,8 +886,9 @@ something else.
 
 ### Where things stand
 
-Stage 0 is merged to `main`. Stage 1 is in progress on `art/redraw` and has not
-been merged: its gate is after 1.6.
+Stage 0 is merged to `main`. Stage 1 was merged to `main` as a stable point
+after the side foreground was settled, ahead of its own gate after 1.6; the rest
+of stage 1 continues on `art/redraw` and merges at that gate as planned.
 
 Done so far in stage 1, beyond what the step table names:
 
@@ -901,6 +902,9 @@ Done so far in stage 1, beyond what the step table names:
   Luggage stands on them at its own depth, with undersides and inner sides. The
   canvas wrapper's `depth()` scales art written for the window wall to stand
   nearer the camera.
+- The side images are a foreground (D-01a): a pilaster in the walls' panelling
+  and a curtain in the benches' upholstery, and the central focus dimming is
+  back.
 - An object that something stands in front of gets a second sprite for the
   thing in front (`front` in the generated geometry). The briefcase lifts whole
   behind the rack's rail this way.
