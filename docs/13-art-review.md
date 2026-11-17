@@ -672,8 +672,8 @@ thin and recessed into the partitions so they go with the walls.
 
 **B. Look in through the doorway.** The camera is already standing just inside
 the door. Put the door frame in the picture: two jambs close to the camera,
-their inner edges exactly on the seam, filling the side extensions. A door
-0.9 m wide, 0.68 m from the camera, projects to x = 0 and 480.
+their inner edges exactly on the seam. A door 0.9 m wide, 0.68 m from the
+camera, projects to x = 0 and 480.
 
 - Solves it completely and at full height: the jamb is a near, flat-on object,
   so its edge is a true vertical on screen, and it is nearly black, so whether
@@ -681,23 +681,39 @@ their inner edges exactly on the seam, filling the side extensions. A door
 - Gives the picture the foreground it lacks (S-08) with no extra layer.
 - Fits the story: the detective has just come through this door, and the
   occupant comes back through it.
-- Costs everything now drawn in the extensions — the berths, straps, lamp and
-  net pocket would be behind the jambs — and the side walls would show only as
-  the same 24-unit strips.
+- **It cannot be narrow.** A jamb is the end of a wall, and the wall goes on
+  outward from it. Anything fixed to the side of the room that reaches in as
+  far as the seam hides all that lies beyond the seam. So B keeps the side
+  walls only where they are already inside the scene, the 24-unit strips, and
+  the berths, straps, lamp and net pocket in the extensions go behind it.
 
-**C. Curtains on the seam.** Hang a heavy curtain at each line: the door
-curtain a sleeper compartment has, drawn back to both sides, close to the
-camera, from above the frame to the floor, about 20 units wide and straddling
-the seam.
+**C. Berth curtains, drawn back.** What covers the seam does not have to cover
+the wall. It only has to stand **in the room, clear of the wall, and nearer
+than whatever crosses the line**; then it is a narrow band, and the side wall
+is seen past it on both sides.
 
-- Solves it by interruption rather than by hiding: the two tones are no longer
-  next to each other, and a curtain's folds are alternating light and dark
-  bands already, so a change of tone across it reads as fabric.
-- Keeps the side walls and their berths visible beyond the curtains on wide
-  screens.
-- Works at full height, because a hanging curtain is vertical.
-- Weaker than B if the curtain is drawn too narrow or too flat. It has to be a
-  real object with folds, not a strip.
+A sleeper has exactly that. Each berth has a privacy curtain on a rail along
+its open side, above the front of the bench, and when it is drawn back it
+gathers at the door end. Put the rail 0.67 m from the centre line and the
+gathered curtain 1.0 m from the camera: it projects onto x = 0 and x = 480. A
+bundle 5 to 6 cm thick is about 20 units wide on screen, enough to straddle the
+line, and it hangs from the ceiling to below the bottom of the picture, in
+front of the bench.
+
+- Solves it at full height, by interruption rather than by hiding: the two
+  tones are no longer side by side, and a gathered curtain is alternating light
+  and dark folds already, so a change of tone across it reads as fabric.
+- **Keeps everything.** The side walls, the berths and their fittings stay
+  visible outside the curtains on a wide screen, and the 24-unit strips stay
+  visible inside them.
+- Adds depth for free: the two rails run along the ceiling to the window wall
+  and converge on the vanishing point, and the curtains are a foreground.
+- Has to be drawn as a real object — folds, a hem, rings on the rail — and not
+  as a strip. Too narrow or too flat and the line shows through the idea.
+- The curtain is nearer than the benches, so nothing crosses in front of it.
+  That is what a post or a pilaster on the side wall cannot offer: the bench
+  runs in front of anything fixed to the wall, and the line reappears on the
+  bench.
 
 **D. Let the sides fall into shadow.** Put back what the artwork did
 originally: the extensions darken steeply toward the edges. The explanation in
@@ -725,22 +741,22 @@ timecode and the recording badge.
 
 #### Recommendation
 
-**B, with C as the alternative if losing the side walls is too much.** Both
-hide the line at its full height with one object, and neither depends on what
-crosses it. A is the right instinct — put the seam where the room has an edge —
-but the room only has an edge there above the seats, so on its own it does half
-the job; it is worth doing together with B or C only if the wider compartment
-is wanted for its own sake.
+**C.** It is the only option that hides the line at its full height and keeps
+the walls, and it is something a sleeper compartment actually has. B is as
+complete but pays for it with the side walls; it remains worth having as a
+second layer at the very edge of a wide screen — a jamb outside, the curtain
+inside it, which is what a sleeper's doorway looks like — but not instead of C.
 
-B and C can also be combined: a jamb at the very edge and a curtain inside it,
-which is what a sleeper's doorway looks like.
+A is the right instinct, to put the seam where the room has an edge, but the
+room only has an edge there above the seats, so on its own it does half the
+job. With C in place it is no longer needed for the seam, and stays open as a
+question about the compartment's width.
 
 #### When
 
-Before step 1.3, not after stage 3. The choice decides what the side extensions
-are: under B they are door jambs and the side-wall fittings 1.3 would finish are
-never seen; under C and D they stay. It also settles the foreground (S-08,
-stage 6) if B or C is chosen.
+Any time from now. Under C the side extensions stay what they are, so step 1.3
+goes ahead unchanged, and the curtains are also the foreground that stage 6
+asks for (S-08). Only B would change what 1.3 draws.
 
 #### What to do, in order
 
@@ -862,9 +878,9 @@ Done so far in stage 1, beyond what the step table names:
   thing in front (`front` in the generated geometry). The briefcase lifts whole
   behind the rack's rail this way.
 
-Next: choose among the options in [D-01a](#d-01a-bring-the-dimming-back-by-designing-the-seam-away),
-because the choice decides what step 1.3 draws. Then 1.3, 1.5, 1.6 and the
-stage 1 gate.
+Next: 1.3, 1.5, 1.6 and the stage 1 gate; and, once the original dimming has
+been checked in Chrome on its own, the berth curtains of
+[D-01a](#d-01a-bring-the-dimming-back-by-designing-the-seam-away).
 
 ## Keep in sync
 
