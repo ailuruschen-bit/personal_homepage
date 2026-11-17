@@ -149,11 +149,7 @@ export function layerSwitches(root: HTMLElement) {
     ['x-extfx', 'side panel shading', '.x-extfx .ext::before,.x-extfx .ext::after{display:none}'],
     ['x-sides', 'side panels', '.x-sides .ext.l,.x-sides .ext.r{display:none}'],
     ['x-glow', 'glows', '.x-glow .glow{display:none}'],
-    [
-      'x-vig',
-      'vignette and focus light',
-      '.x-vig .vig,.x-vig .beam{display:none}',
-    ],
+    ['x-vig', 'vignette and focus light', '.x-vig .vig,.x-vig .beam{display:none}'],
     ['x-grain', 'film grain', '.x-grain .grain{display:none}'],
   ];
   const style = document.createElement('style');

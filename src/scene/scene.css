@@ -935,6 +935,12 @@
   inset: 0;
   background-size: 100% 100%;
 }
+/* Static, above the sprites: see dom.ts */
+.pop-front {
+  position: absolute;
+  pointer-events: none;
+  background-size: 100% 100%;
+}
 /* Periodic glint. While focused, the rule below takes over the filter. */
 .hub .pop {
   animation: none;

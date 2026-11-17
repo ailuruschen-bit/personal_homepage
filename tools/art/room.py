@@ -136,6 +136,10 @@ def geometry(masks):
             box=(x0 - OX, y0, x1 - x0, y1 - y0),
             sprite=f'/assets/obj-{key}.webp',
         )
+        front = masks.get(f'{key}/front')
+        if front:
+            fx0, fy0, fx1, fy1 = front.getbbox()
+            objects[key]['front'] = dict(box=(fx0 - OX, fy0, fx1 - fx0, fy1 - fy0), sprite=f'/assets/obj-{key}-front.webp')
     glows = {}
     for key, gl in GLOWS.items():
         if isinstance(gl[0], str):
@@ -427,7 +431,7 @@ def shell(g, rnd):
 
 
 # ------------------------------------------------------------------ Luggage rack
-def rack(g, rnd):
+def rack(g, rnd, over_rack=True):
     # route map (the journey object)
     o = place(g, 'journey', (173, 67))
     o.shadow(172, 86, 136, 6, 0.6)
@@ -555,21 +559,19 @@ def rack(g, rnd):
     um.rect(394, 89, 4, 2, (160, 166, 190))
     um.line([(440, 89), (446, 89), (447, 86), (445, 84)], BRASS)
     # The briefcase stands inside the right rack, so the rack's floor and rail
-    # cross its foot. They are drawn over it, and its silhouette ends where
-    # they begin, so that its sprite is the briefcase alone and the rack stays
-    # put when it lifts.
-    rack_frame(g.at(0, 0, '_rack'), 1)
-    if '_rack' in g.masks:
+    # cross its foot. The page lifts the briefcase's sprite on focus, and a
+    # briefcase cut off at the rail looks sawn in two. So its silhouette stays
+    # whole, and the part of the rack that crosses it is recorded as a second
+    # silhouette, 'stack/front', which the page keeps on top of the sprite: the
+    # briefcase lifts behind the rail. build.py cuts the briefcase's sprite from
+    # a second render made with over_rack=False, where the rack is not in its way.
+    if over_rack:
+        rack_frame(g.at(0, 0, '_rack'), 1)
         over = g.masks.pop('_rack')
-        # Everything of the briefcase from the rail down is behind the rack:
-        # end its silhouette at the rail's top edge rather than leave slivers
-        # of its foot showing between the slats
-        both = np.asarray(ImageChops.multiply(g.masks['stack'], over))
-        rows = np.nonzero(both.any(axis=1))[0]
-        if len(rows):
-            m = np.asarray(g.masks['stack']).copy()
-            m[rows[0] :, :] = 0
-            g.masks['stack'] = Image.fromarray(m, 'L')
+        x0, y0, x1, y1 = g.masks['stack'].getbbox()
+        near = Image.new('L', over.size, 0)
+        ImageDraw.Draw(near).rectangle([x0 - 6, y0 - 6, x1 + 6, y1 + 3], fill=255)
+        g.masks['stack/front'] = ImageChops.multiply(over, near)
 
 
 def rack_frame(g, s):
@@ -1136,9 +1138,12 @@ def table(g, rnd):
     g.px(258, 365, BRASS)
 
 
-def build_room(seed=21):
+def build_room(seed=21, over_rack=True):
     """The carriage as one RGBA image at output resolution, and the silhouette
-    mask of every interactive object at 1x, keyed by object id."""
+    mask of every interactive object at 1x, keyed by object id. A key ending in
+    '/front' is what stands in front of that object and must stay on top of its
+    sprite. With over_rack=False the right-hand rack is left out, which is how
+    the briefcase is rendered without the rack across it."""
     # One random stream per section, so that changing one part of the room does
     # not reshuffle the texture of every part drawn after it
     rng = lambda name: random.Random(f'{seed}:{name}')
@@ -1146,7 +1151,7 @@ def build_room(seed=21):
     g = Off(cv)
     shell(g, rng('shell'))
     walls(g, rng('walls'))
-    rack(g, rng('rack'))
+    rack(g, rng('rack'), over_rack)
     window(g, rng('window'))
     structure(g)
     floor_and_ceiling(g)
