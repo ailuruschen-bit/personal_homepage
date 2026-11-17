@@ -155,8 +155,8 @@ Hotspot                aperture (scene units)       becomes
 ─────────────────────────────────────────────────────────────────
 车票  on the table      the ticket, and the card     the About panel
                        behind it
-线路图 rolled, in the    the sheet as it unrolls      the Journey panel
-      rack
+线路图 half unrolled,   the sheet as it unrolls      the Journey panel
+      on a backrest
 公文包 on the rack       the open lid's interior      the Stack panel
 电脑  on the table      the screen                   the Projects panel
 门                     the lit doorway              the chat

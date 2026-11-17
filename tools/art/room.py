@@ -38,9 +38,11 @@ AMBER = (255, 206, 110)
 # object moves its focus target with it.
 OBJECTS = {
     'projects': dict(at=(148, 288), zone=(-11, -9, 104, 88), light=(47, 40, 62, 52)),
-    'about': dict(at=(316, 344), zone=(-10, -8, 42, 26), light=(16, 9, 30, 20)),
-    'stack': dict(at=(326, 52), zone=(-10, -9, 78, 45), light=(34, 20, 48, 28), on_rack=True),
-    'journey': dict(at=(173, 67), zone=(-7, -7, 127, 27), light=(67, 10, 78, 18)),
+    'about': dict(at=(318, 352), zone=(-10, -8, 42, 26), light=(16, 9, 30, 20)),
+    'stack': dict(at=(326, 52), zone=(-10, -9, 78, 45), light=(34, 20, 48, 28), on_rack=1),
+    # the map, half open on the table; the line display on the wall is the
+    # railway's, and only a decoy
+    'journey': dict(at=(233, 326), zone=(-6, -6, 77, 27), light=(32, 10, 38, 14)),
 }
 
 # The window opening (x y w h) and its corner radius. The page lays .win over it:
@@ -99,6 +101,36 @@ def P(X, Y, Z):
     return (vx + X * k, vy - (Y - EYE) * k)
 
 
+# The cup and saucer were drawn too large for the laptop beside them: they are
+# drawn at COFFEE_SCALE about the middle of the saucer's foot.
+COFFEE_AT = (281, 356)
+COFFEE_SCALE = 0.62
+
+# Small animated things the page lays over the art, each x y relative to what
+# they belong to: the steam over the cup (in the cup's own coordinates, before
+# it was scaled) and the cursor on the laptop's screen.
+MARKS = {'steam': ('coffee', 284, 322), 'cur': ('projects', 48, 44)}
+
+
+def mark(key):
+    """Where a mark sits in the scene."""
+    owner, x, y = MARKS[key]
+    if owner == 'coffee':
+        (cx, cy), k = COFFEE_AT, COFFEE_SCALE
+        return (cx + (x - cx) * k, cy + (y - cy) * k)
+    ax, ay = OBJECTS[owner]['at']
+    return (ax + x, ay + y)
+
+
+def scaled(g, k, cx, cy):
+    """A canvas on which art keeps its written coordinates but comes out k
+    times its size about the point (cx, cy): for things drawn at the wrong
+    size relative to their neighbours."""
+    vx, vy = vanishing_point()
+    d = ((cx - vx) * (1 - k) / k, (cy - vy) * (1 - k) / k)
+    return g.at(*d).depth(WALL_DIST / k)
+
+
 # The page's animated glows (.g-*), each x y w h. Two sit over light sources on
 # the walls, one over the laptop and one over the window; those two are relative
 # to the object they belong to.
@@ -128,7 +160,7 @@ def geometry(masks):
         x0, y0, x1, y1 = masks[key].getbbox()
         # an object on the rack stands nearer than the wall it was written on:
         # its zone and light scale about the vanishing point with it
-        k = WALL_DIST / LUGGAGE_Z[1] if o.get('on_rack') else 1.0
+        k = WALL_DIST / LUGGAGE_Z[o['on_rack']] if o.get('on_rack') else 1.0
         vx, vy = vanishing_point()
         sx, sy = (lambda v: vx + (v - vx) * k), (lambda v: vy + (v - vy) * k)
         objects[key] = dict(
@@ -147,6 +179,7 @@ def geometry(masks):
             ax, ay = (wx, wy) if gl[0] == 'window' else OBJECTS[gl[0]]['at']
             gl = (ax + gl[1], ay + gl[2], gl[3], gl[4])
         glows[key] = gl
+    marks = {key: mark(key) for key in MARKS}
     (bx0, by0), (bx1, by1) = P(-ROOM_HALF_WIDTH, ROOM_CEILING, WALL_DIST), P(ROOM_HALF_WIDTH, 0, WALL_DIST)
     vx, vy = vanishing_point()
     return dict(
@@ -155,6 +188,7 @@ def geometry(masks):
         window=dict(x=wx, y=wy, w=ww, h=wh, r=WINDOW_RADIUS),
         camera=dict(x=wx + CAM_GAP[0], y=wy + CAM_GAP[1]),
         glows=glows,
+        marks=marks,
         objects=objects,
     )
 
@@ -433,8 +467,8 @@ def shell(g, rnd):
 
 # ------------------------------------------------------------------ Luggage rack
 def rack(g, rnd, over_rack=True):
-    # route map (the journey object)
-    o = place(g, 'journey', (173, 67))
+    # the railway's line display: a decoy, not an object
+    o = g
     o.shadow(172, 86, 136, 6, 0.6)
     o.rect(173, 67, 134, 20, (60, 66, 100))
     o.rect(173, 67, 134, 1, (120, 130, 170))
@@ -463,10 +497,10 @@ def rack(g, rnd, over_rack=True):
     # It is also flattened: bags laid on a rack are lower than they are wide.
     D = WALL_DIST
     lug = g.flatten(LUGGAGE_FLAT, 92).at(0, -3).depth(LUGGAGE_Z[-1])
-    bx, rl = lug.at(24, 0), lug.at(22, 0)
+    bx = lug.at(24, 0)
     um = g.flatten(LUGGAGE_FLAT, 92).at(2, -3).depth(LUGGAGE_Z[1])
     # x0, x1, height as written, colour, silhouette tag
-    pieces = ((28, 52, 6, (226, 222, 210), None), (52, 88, 20, (176, 138, 98), None), (96, 151, 24, (60, 140, 138), None),
+    pieces = ((52, 88, 20, (176, 138, 98), None), (96, 151, 24, (60, 140, 138), None),
               (326, 394, 34, (150, 96, 62), 'stack'), (400, 448, 4, (44, 50, 84), None))
     for x0, x1, h, c, tag in pieces:
         xa, xb = (x0 - 240) / WALL_SCALE, (x1 - 240) / WALL_SCALE
@@ -500,13 +534,6 @@ def rack(g, rnd, over_rack=True):
     bx.rect(53, 80, 6, 1, (120, 60, 60))
     bx.rect(53, 82, 4, 1, (90, 90, 110))
     bx.shade(60, 72, 4, 20, 0.8)
-    # rolled-up drawings
-    rl.rect(6, 86, 24, 6, (226, 222, 210))
-    rl.rect(6, 86, 24, 1, (250, 248, 240))
-    rl.rect(6, 90, 24, 2, (170, 166, 160))
-    rl.ellipse(27, 86, 5, 6, (190, 186, 178))
-    rl.px(29, 88, (90, 88, 96))
-    rl.rect(14, 86, 2, 6, (200, 70, 70))
     # holdall
     c = (60, 140, 138)
     lug.rrect(96, 68, 55, 24, 7, c)
@@ -950,6 +977,54 @@ BACK_ROLL = [
 BACK_ROLL_SHADES = [0.9, 1.04, 1.22, 1.38, 1.26]
 
 
+def table_map(g, T):
+    """The journey object: a paper map lying half open on the table between
+    the laptop and the cup. The far half is still rolled into a tube along its
+    back edge; the near corner on the right has curled up and shows the paper's
+    back. T(u, v) is a point on the table top, u across, v from back to front."""
+    o = g.at(0, 0, 'journey')
+    paper = (232, 222, 196)
+    # the flat sheet, a little askew
+    A, B, C, D = T(0.47, 0.14), T(0.77, 0.11), T(0.78, 0.35), T(0.48, 0.38)
+    o.poly([A, B, C, D], paper)
+    g.line([(D[0], D[1] + 1), (C[0], C[1] + 1)], mul(WOOD, 0.55))  # its shadow on the wood
+
+    def at(u, v):
+        top = lerp(A, B, u)
+        bot = lerp(D, C, u)
+        return ri(lerp(top, bot, v))
+
+    # printed: a river, a park, streets, the line and its stations
+    o.poly([at(0.0, 0.38), at(0.45, 0.3), at(1.0, 0.42), at(1.0, 0.54), at(0.5, 0.42), at(0.0, 0.5)], (150, 186, 210))
+    o.poly([at(0.62, 0.62), at(0.92, 0.6), at(0.94, 0.86), at(0.64, 0.88)], (166, 200, 148))
+    for u in (0.25, 0.5, 0.76):
+        o.line([at(u, 0.06), at(u + 0.02, 0.95)], (210, 200, 176))
+    for v in (0.22, 0.7):
+        o.line([at(0.03, v), at(0.97, v)], (210, 200, 176))
+    route = [at(0.1, 0.12), at(0.32, 0.3), at(0.4, 0.55), at(0.66, 0.5), at(0.72, 0.76), at(0.9, 0.9)]
+    o.line(route, (204, 60, 66), width=2)
+    for k, (sx, sy) in enumerate(route):
+        o.px(sx, sy, (250, 244, 226))
+    for sx, sy in (route[2], route[4]):  # circled, and circled again
+        o.line([(sx - 3, sy - 1), (sx + 2, sy - 2), (sx + 3, sy + 1), (sx, sy + 2), (sx - 3, sy + 1), (sx - 2, sy - 2)], (196, 36, 48))
+    # a crease from being folded, and a coffee ring
+    o.line([at(0.0, 0.72), at(1.0, 0.68)], mul(paper, 0.86))
+    rx, ry = at(0.22, 0.8)
+    o.line([(rx - 3, ry), (rx - 1, ry - 1), (rx + 2, ry - 1), (rx + 3, ry), (rx + 1, ry + 1), (rx - 2, ry + 1), (rx - 3, ry)], (176, 140, 100))
+    # the near right corner curling up off the table: the paper's back, and
+    # the light along its lip
+    curl = [at(0.72, 1.0), C, (C[0] - 2, C[1] - 7), (at(0.8, 0.86)[0], at(0.8, 0.86)[1] - 2)]
+    o.poly([ri(c) for c in curl], mul(paper, 0.8))
+    o.line([ri(curl[2]), ri(curl[3])], (252, 248, 232))
+    # the rest, rolled into a tube along the back edge, with a rubber band
+    for dy, c in ((0, (168, 158, 138)), (-1, (196, 186, 162)), (-2, (222, 214, 192)), (-3, (240, 234, 212)), (-4, (248, 242, 224)), (-5, (232, 224, 202)), (-6, (206, 196, 172))):
+        o.line([(A[0] - 1, A[1] + dy), (B[0] + 1, B[1] + dy)], c)
+    o.ellipse(B[0] + 1, B[1] - 3, 3, 4, (214, 204, 180))
+    o.ellipse(B[0] + 1, B[1] - 3, 1, 2, (176, 164, 140))
+    mx, my = lerp(A, B, 0.35)
+    o.rect(round(mx), round(my) - 6, 2, 7, (190, 60, 62))
+
+
 def bench(g, s):
     """A bench along a side wall, s = -1 on the left and +1 on the right, from
     the window wall to beyond the edge of the scene: a base, a cushion with a
@@ -1073,6 +1148,8 @@ def table(g, rnd):
     g.rect(118, 382, 245, 1, mul(WOOD, 0.36))
     for x in range(124, 360, 12):
         g.px(x, 378, mul(WOOD, 0.9))
+    T = lambda u, v: lerp(lerp(BL, BR, u), lerp(FL, FR, u), v)
+    table_map(g, T)
     # ---- laptop (the projects object)
     o = place(g, 'projects', (148, 288))
     o.shadow(152, 350, 96, 20, 0.5)
@@ -1125,40 +1202,51 @@ def table(g, rnd):
     o.light(150, 336, 100, 40, (90, 150, 255), 0.5)
     o.light(146, 286, 76, 60, (80, 120, 255), 0.25)
     # ---- coffee
-    g.shadow(256, 354, 62, 14, 0.5, ell=True)
-    g.ellipse(258, 351, 58, 13, (232, 230, 244))
-    g.ellipse(258, 351, 58, 11, (248, 246, 255))
-    g.ellipse(266, 353, 42, 7, (196, 194, 220))
-    g.line([(262, 357), (273, 360)], (190, 196, 214))
-    g.rect(261, 356, 3, 2, (220, 224, 238))
+    # the cup stands in front of the map; it is cut out of the map's sprite
+    cg = scaled(g, COFFEE_SCALE, *COFFEE_AT).at(0, 0, '_cup')
+    cg.shadow(256, 354, 62, 14, 0.5, ell=True)
+    cg.ellipse(258, 351, 58, 13, (232, 230, 244))
+    cg.ellipse(258, 351, 58, 11, (248, 246, 255))
+    cg.ellipse(266, 353, 42, 7, (196, 194, 220))
+    cg.line([(262, 357), (273, 360)], (190, 196, 214))
+    cg.rect(261, 356, 3, 2, (220, 224, 238))
     # handle
     hc = (232, 230, 246)
-    g.rect(301, 337, 7, 2, hc)
-    g.rect(307, 338, 3, 9, hc)
-    g.rect(301, 346, 7, 2, hc)
-    g.px(309, 338, (190, 188, 214))
-    g.px(309, 346, (190, 188, 214))
-    g.rect(301, 348, 6, 1, (176, 174, 204))
+    cg.rect(301, 337, 7, 2, hc)
+    cg.rect(307, 338, 3, 9, hc)
+    cg.rect(301, 346, 7, 2, hc)
+    cg.px(309, 338, (190, 188, 214))
+    cg.px(309, 346, (190, 188, 214))
+    cg.rect(301, 348, 6, 1, (176, 174, 204))
     # cup body
     body = (240, 238, 250)
-    g.rect(272, 333, 30, 20, body)
-    g.ellipse(272, 344, 30, 14, body)
-    g.rect(272, 333, 4, 20, (198, 196, 224))
-    g.rect(276, 333, 2, 22, (222, 220, 240))
-    g.rect(297, 333, 5, 19, (206, 204, 230))
-    g.rect(292, 335, 2, 12, (255, 255, 255))
-    g.rect(273, 346, 28, 2, (150, 120, 206))
-    g.rect(273, 346, 3, 2, (120, 96, 176))
-    g.line([(275, 355), (280, 357), (294, 357), (299, 355)], (176, 174, 204))
-    g.ellipse(271, 328, 32, 10, (252, 250, 255))
-    g.ellipse(273, 329, 28, 8, (150, 96, 70))
-    g.ellipse(274, 330, 26, 6, (116, 66, 48))
-    g.ellipse(279, 331, 13, 3, (196, 130, 84))
-    g.px(284, 331, (236, 190, 140))
-    g.px(293, 333, (150, 96, 70))
+    cg.rect(272, 333, 30, 20, body)
+    cg.ellipse(272, 344, 30, 14, body)
+    cg.rect(272, 333, 4, 20, (198, 196, 224))
+    cg.rect(276, 333, 2, 22, (222, 220, 240))
+    cg.rect(297, 333, 5, 19, (206, 204, 230))
+    cg.rect(292, 335, 2, 12, (255, 255, 255))
+    cg.rect(273, 346, 28, 2, (150, 120, 206))
+    cg.rect(273, 346, 3, 2, (120, 96, 176))
+    cg.line([(275, 355), (280, 357), (294, 357), (299, 355)], (176, 174, 204))
+    cg.ellipse(271, 328, 32, 10, (252, 250, 255))
+    cg.ellipse(273, 329, 28, 8, (150, 96, 70))
+    cg.ellipse(274, 330, 26, 6, (116, 66, 48))
+    cg.ellipse(279, 331, 13, 3, (196, 130, 84))
+    cg.px(284, 331, (236, 190, 140))
+    cg.px(293, 333, (150, 96, 70))
+    cup = g.masks.pop('_cup')
+    g.masks['journey'] = ImageChops.multiply(g.masks['journey'], ImageChops.invert(cup))
     # ---- ticket (the about object)
     o = place(g, 'about', (316, 344))
     o.shadow(318, 349, 32, 15, 0.6)
+    # the business card tucked behind it, one corner showing
+    C_ = [(310, 341), (334, 339), (337, 350), (313, 352)]
+    o.poly(C_, (236, 236, 242))
+    o.line([C_[0], C_[1]], (255, 255, 255))
+    o.line([C_[0], C_[3]], (190, 190, 204))
+    o.fline([(312.5, 342.6), (322, 341.9)], (60, 60, 80))
+    o.fline([(313, 344.6), (320, 344.1)], (140, 140, 160))
     T = [(316, 346), (344, 344), (348, 358), (320, 361)]
     o.poly(T, (240, 228, 198))
     o.line([T[0], T[1]], (255, 250, 232))
@@ -1171,11 +1259,13 @@ def table(g, rnd):
     o.rect(341, 349, 4, 4, (60, 56, 76))
     o.px(342, 350, (240, 228, 198))
     o.px(344, 352, (240, 228, 198))
-    # ---- pen
-    g.line([(254, 366), (267, 363)], (40, 60, 120))
-    g.line([(254, 367), (267, 364)], (24, 36, 80))
-    g.px(268, 363, BRASS)
-    g.px(258, 365, BRASS)
+    # ---- pen, about 14 cm against the laptop, left of it
+    g.line([(124, 370), (150, 364)], (40, 60, 120), width=2)
+    g.line([(124, 371), (150, 365)], (24, 36, 80))
+    g.line([(125, 369), (143, 365)], (90, 110, 170))
+    g.line([(150, 364), (153, 363)], (200, 200, 214))
+    g.line([(128, 368), (135, 366)], BRASS)
+    g.px(124, 370, BRASS)
 
 
 # ------------------------------------------------------------------ Foreground

@@ -846,43 +846,43 @@ Updated in the same commit as each step. `review` means built and waiting
 for the Chrome check; `partial` means started ahead of its turn while fixing
 something else.
 
-| Stage | Step | Status  | Notes                                                                                                                                                            |
-| ----- | ---- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 0     | 0.1  | done    |                                                                                                                                                                  |
-| 0     | 0.2  | done    |                                                                                                                                                                  |
-| 0     | 0.3  | done    |                                                                                                                                                                  |
-| 0     | 0.4  | done    |                                                                                                                                                                  |
-| 0     | 0.5  | done    |                                                                                                                                                                  |
-| 0     | 0.6  | done    |                                                                                                                                                                  |
-| 0     | 0.7  | skipped | decided against at the stage 0 gate                                                                                                                              |
-| 1     | 1.0  | done    |                                                                                                                                                                  |
-| 1     | 1.1  | done    | block-in, plus side walls as sleeper partitions and their baked vignette                                                                                         |
-| 1     | 1.2  | done    | benches as swept cross-sections with soft edges                                                                                                                  |
-| 1     | 1.3  | review  | side-wall fittings in the strips the scene shows: reading lamp with a lit hood, net pocket with a timetable; the rest of each side wall is behind the foreground |
-| 1     | 1.4  | review  | two racks, luggage standing on them with sides; the briefcase lifts whole behind the rail                                                                        |
-| 1     | 1.5  | review  | ceiling cove at the wall, vents within the strip of ceiling in view, light on the ceiling                                                                        |
-| 1     | 1.6  | review  | the table hinged to the wall: struts under it to plates on the wall, and the wall under it in shadow                                                             |
-| 2     | 2.1  | pending |                                                                                                                                                                  |
-| 2     | 2.2  | pending |                                                                                                                                                                  |
-| 2     | 2.3  | pending |                                                                                                                                                                  |
-| 3     | 3.1  | pending |                                                                                                                                                                  |
-| 3     | 3.2  | pending |                                                                                                                                                                  |
-| 3     | 3.3  | pending |                                                                                                                                                                  |
-| 3     | 3.4  | pending |                                                                                                                                                                  |
-| 3     | 3.5  | pending |                                                                                                                                                                  |
-| 3     | 3.6  | pending |                                                                                                                                                                  |
-| 4     | 4.1  | pending |                                                                                                                                                                  |
-| 4     | 4.2  | pending |                                                                                                                                                                  |
-| 4     | 4.3  | pending |                                                                                                                                                                  |
-| 4     | 4.4  | pending |                                                                                                                                                                  |
-| 5     | 5.1  | pending |                                                                                                                                                                  |
-| 5     | 5.2  | pending |                                                                                                                                                                  |
-| 5     | 5.3  | pending |                                                                                                                                                                  |
-| 5     | 5.4  | pending |                                                                                                                                                                  |
-| 5     | 5.5  | pending |                                                                                                                                                                  |
-| 5     | 5.6  | pending |                                                                                                                                                                  |
-| 6     | 6    | pending |                                                                                                                                                                  |
-| 7     | 7    | pending |                                                                                                                                                                  |
+| Stage | Step | Status  | Notes                                                                                                                                                                                                                                      |
+| ----- | ---- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 0     | 0.1  | done    |                                                                                                                                                                                                                                            |
+| 0     | 0.2  | done    |                                                                                                                                                                                                                                            |
+| 0     | 0.3  | done    |                                                                                                                                                                                                                                            |
+| 0     | 0.4  | done    |                                                                                                                                                                                                                                            |
+| 0     | 0.5  | done    |                                                                                                                                                                                                                                            |
+| 0     | 0.6  | done    |                                                                                                                                                                                                                                            |
+| 0     | 0.7  | skipped | decided against at the stage 0 gate                                                                                                                                                                                                        |
+| 1     | 1.0  | done    |                                                                                                                                                                                                                                            |
+| 1     | 1.1  | done    | block-in, plus side walls as sleeper partitions and their baked vignette                                                                                                                                                                   |
+| 1     | 1.2  | done    | benches as swept cross-sections with soft edges                                                                                                                                                                                            |
+| 1     | 1.3  | done    | side-wall fittings in the strips the scene shows: reading lamp with a lit hood, net pocket with a timetable; the rest of each side wall is behind the foreground                                                                           |
+| 1     | 1.4  | done    | two racks, luggage standing on them with sides; the briefcase lifts whole behind the rail                                                                                                                                                  |
+| 1     | 1.5  | done    | ceiling cove at the wall, vents within the strip of ceiling in view, light on the ceiling                                                                                                                                                  |
+| 1     | 1.6  | done    | the table hinged to the wall: struts under it to plates on the wall, and the wall under it in shadow                                                                                                                                       |
+| 2     | 2.1  | done    | cup and saucer drawn at 0.62 about the saucer's foot; pen lengthened to about 14 cm; steam and cursor positions generated                                                                                                                  |
+| 2     | 2.2  | done    | journey is a map along the back of the table, mostly rolled into a tube with a rubber band, the open strip askew, creased, a coffee ring, its near corner curling up; the cup stays where it was, in front of it, and is cut out of the map's sprite; the pen moves to the left of the laptop; the line display is a decoy with no hotspot; the rack keeps its box |
+| 2     | 2.3  | done    | business card behind the ticket, peeking out on the table side; ticket moved in from the edge; reserved: notebook at the table's front-left corner, hobby object in place of the holdall                                                   |
+| 3     | 3.1  | pending |                                                                                                                                                                                                                                            |
+| 3     | 3.2  | pending |                                                                                                                                                                                                                                            |
+| 3     | 3.3  | pending |                                                                                                                                                                                                                                            |
+| 3     | 3.4  | pending |                                                                                                                                                                                                                                            |
+| 3     | 3.5  | pending |                                                                                                                                                                                                                                            |
+| 3     | 3.6  | pending |                                                                                                                                                                                                                                            |
+| 4     | 4.1  | pending |                                                                                                                                                                                                                                            |
+| 4     | 4.2  | pending |                                                                                                                                                                                                                                            |
+| 4     | 4.3  | pending |                                                                                                                                                                                                                                            |
+| 4     | 4.4  | pending |                                                                                                                                                                                                                                            |
+| 5     | 5.1  | pending |                                                                                                                                                                                                                                            |
+| 5     | 5.2  | pending |                                                                                                                                                                                                                                            |
+| 5     | 5.3  | pending |                                                                                                                                                                                                                                            |
+| 5     | 5.4  | pending |                                                                                                                                                                                                                                            |
+| 5     | 5.5  | pending |                                                                                                                                                                                                                                            |
+| 5     | 5.6  | pending |                                                                                                                                                                                                                                            |
+| 6     | 6    | pending |                                                                                                                                                                                                                                            |
+| 7     | 7    | pending |                                                                                                                                                                                                                                            |
 
 ### Where things stand
 
@@ -909,7 +909,8 @@ Done so far in stage 1, beyond what the step table names:
   thing in front (`front` in the generated geometry). The briefcase lifts whole
   behind the rack's rail this way.
 
-Next: the stage 1 gate, then stage 2.
+Stage 1 passed its gate and is merged. Stage 2 passed its gate and is merged.
+Stage 3 is next, starting with the value plan (3.1).
 
 ## Keep in sync
 

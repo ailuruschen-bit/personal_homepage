@@ -8,6 +8,12 @@
 .cam {
   transform-origin: 50% 43.71%;
 }
+.steam {
+  left: 58.9292%; top: 69.775%;
+}
+.cur {
+  left: 40.8333%; top: 69.1667%;
+}
 .g-lamp {
   left: 61.25%; top: 18.3333%; width: 37.5%; height: 37.5%;
 }
