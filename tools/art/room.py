@@ -75,7 +75,8 @@ ROOM_CEILING = 2.30
 # above the window. Shallow enough to reach from the seat below.
 RACK_DEPTH = 0.26
 RACK_INNER = 0.46  # each rack runs from here to the side wall
-LUGGAGE_Z = WALL_DIST - 0.21  # the front of the luggage: it stands this far from the camera
+LUGGAGE_Z = WALL_DIST - RACK_DEPTH - 0.01  # the luggage's front: it overhangs the front rail a little
+LUGGAGE_FLAT = 0.68  # luggage lies flat on the rack: this much of the height it was written at
 
 
 def vanishing_point():
@@ -171,22 +172,32 @@ class Off:
     not, because they are not part of an object's outline. build.py turns the masks
     into the objects' sprites and bounding boxes."""
 
-    def __init__(self, cv, dx=0, dy=0, tag=None, masks=None, k=1.0):
-        self.cv, self.dx, self.dy, self.tag, self.k = cv, dx, dy, tag, k
+    def __init__(self, cv, dx=0, dy=0, tag=None, masks=None, k=1.0, flat=(1.0, 0)):
+        self.cv, self.dx, self.dy, self.tag, self.k, self.flat = cv, dx, dy, tag, k, flat
         self.masks = {} if masks is None else masks
 
     def at(self, dx, dy, tag=None):
         """The same canvas shifted by (dx, dy), recording into silhouette `tag`."""
-        return Off(self.cv, self.dx + dx, self.dy + dy, tag, self.masks, self.k)
+        return Off(self.cv, self.dx + dx, self.dy + dy, tag, self.masks, self.k, self.flat)
 
     def depth(self, z):
         """The same canvas for art standing z metres from the camera instead of
         on the window wall: everything is scaled about the vanishing point."""
-        return Off(self.cv, self.dx, self.dy, self.tag, self.masks, WALL_DIST / z)
+        return Off(self.cv, self.dx, self.dy, self.tag, self.masks, WALL_DIST / z, self.flat)
+
+    def flatten(self, f, foot):
+        """The same canvas with art squashed to f of its height toward the line
+        y = foot it stands on, in the coordinates the art was written in."""
+        return Off(self.cv, self.dx, self.dy, self.tag, self.masks, self.k, (f, foot))
+
+    @property
+    def plain(self):
+        return self.k == 1.0 and self.flat[0] == 1.0
 
     # ---- scene coordinates to canvas pixels
     def _xy(self, x, y):
-        x, y = x + self.dx, y + self.dy
+        f, foot = self.flat
+        x, y = x + self.dx, foot + (y - foot) * f + self.dy
         if self.k != 1.0:
             vx, vy = vanishing_point()
             x, y = vx + (x - vx) * self.k, vy + (y - vy) * self.k
@@ -194,14 +205,14 @@ class Off:
 
     def _r(self, x, y, w, h):
         """A rectangle as canvas x, y, w, h; whole pixels once scaled."""
-        if self.k == 1.0:
+        if self.plain:
             return (x + self.dx + OX, y + self.dy, w, h)
         (x0, y0), (x1, y1) = self._xy(x, y), self._xy(x + w, y + h)
         x0, y0, x1, y1 = round(x0), round(y0), round(x1), round(y1)
         return (x0, y0, max(1, x1 - x0) if w > 0 else 0, max(1, y1 - y0) if h > 0 else 0)
 
     def _p(self, pts):
-        if self.k == 1.0:
+        if self.plain:
             return [self._xy(x, y) for x, y in pts]
         return [tuple(round(v) for v in self._xy(x, y)) for x, y in pts]
 
@@ -441,13 +452,35 @@ def rack(g, rnd):
     # foot at y = 92; it is drawn LUGGAGE_Z from the camera instead, standing on
     # the rack, so it is scaled about the vanishing point and lifted to the
     # rack's level. From below, its underside shows between its front and the wall.
+    # It is also flattened: bags laid on a rack are lower than they are wide.
     D = WALL_DIST
-    lug = g.at(0, -3).depth(LUGGAGE_Z)
+    lug = g.flatten(LUGGAGE_FLAT, 92).at(0, -3).depth(LUGGAGE_Z)
     bx, rl, um = lug.at(24, 0), lug.at(22, 0), lug.at(2, 0)
-    for x0, x1, c in ((28, 52, (226, 222, 210)), (52, 88, (176, 138, 98)), (96, 151, (60, 140, 138)),
-                      (326, 394, (150, 96, 62)), (400, 448, (44, 50, 84))):
+    # x0, x1, height as written, colour, silhouette tag
+    pieces = ((28, 52, 6, (226, 222, 210), None), (52, 88, 20, (176, 138, 98), None), (96, 151, 24, (60, 140, 138), None),
+              (326, 394, 34, (150, 96, 62), 'stack'), (400, 448, 4, (44, 50, 84), None))
+    for x0, x1, h, c, tag in pieces:
         xa, xb = (x0 - 240) / WALL_SCALE, (x1 - 240) / WALL_SCALE
         quad(g, [(xa, RACK_Y, D), (xb, RACK_Y, D), (xb, RACK_Y, LUGGAGE_Z), (xa, RACK_Y, LUGGAGE_Z)], mul(c, 0.34))
+    # the racks go in before the luggage's visible faces: the luggage overhangs
+    # the front rail, so nothing of the rack crosses it, and an object's sprite
+    # is the object alone
+    rack_frame(g, -1)
+    rack_frame(g, 1)
+    # each piece's side that faces the middle of the compartment, running back
+    # to the wall: its body colour in shade, a lit top edge, and a band or two
+    # carried round from the front
+    for x0, x1, h, c, tag in pieces:
+        xs = (x1 if x1 < 240 else x0)
+        X, top = (xs - 240) / WALL_SCALE, RACK_Y + h * LUGGAGE_FLAT / WALL_SCALE
+        t = g.at(0, 0, tag) if tag else g
+        quad(t, [(X, RACK_Y, D), (X, top, D), (X, top, LUGGAGE_Z), (X, RACK_Y, LUGGAGE_Z)], mul(c, 0.6))
+        t.line([ri(P(X, top, D)), ri(P(X, top, LUGGAGE_Z))], mul(c, 0.95))
+        t.line([ri(P(X, RACK_Y + 0.004, D)), ri(P(X, RACK_Y + 0.004, LUGGAGE_Z))], mul(c, 0.4))
+        if h >= 20:
+            for f in (0.3, 0.7):
+                z = LUGGAGE_Z + (D - LUGGAGE_Z) * f
+                quad(t, [(X, RACK_Y, z), (X, top, z), (X, top, z + 0.025), (X, RACK_Y, z + 0.025)], mul(c, 0.42))
     # cardboard box
     bx.rect(28, 72, 36, 20, (176, 138, 98))
     bx.rect(28, 72, 36, 2, (210, 174, 130))
@@ -480,7 +513,7 @@ def rack(g, rnd):
     lug.rect(147, 80, 3, 1, (150, 60, 60))
     lug.px(148, 77, (40, 40, 56))
     # briefcase (the stack object)
-    o = place(g.depth(LUGGAGE_Z), 'stack', (318, 55))
+    o = place(g.flatten(LUGGAGE_FLAT, 92).depth(LUGGAGE_Z), 'stack', (318, 55))
     lb = (150, 96, 62)
     o.rect(318, 58, 68, 34, lb)
     o.rect(318, 58, 68, 3, mul(lb, 1.3))
@@ -516,8 +549,6 @@ def rack(g, rnd):
     um.rect(412, 88, 2, 4, (150, 60, 70))
     um.rect(394, 89, 4, 2, (160, 166, 190))
     um.line([(440, 89), (446, 89), (447, 86), (445, 84)], BRASS)
-    rack_frame(g, -1)
-    rack_frame(g, 1)
 
 
 def rack_frame(g, s):
