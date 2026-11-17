@@ -594,6 +594,58 @@ the screen at reading size, and the door. These are new drawings for
 into the manifest. They are drawn here and wired up when the scroll narrative
 is built.
 
+## Deferred
+
+Things set aside on purpose, to come back to after the artwork is redrawn.
+Each needs its own Chrome check before it is adopted.
+
+### D-01 Darkening the scene around a focused object
+
+**Removed for now.** Until F-003 the page dimmed everything but the focused
+object with a radial overlay (`.spot`), which is what made focus read as a
+spotlight. Extending that dimming over the side extensions flickered in Chrome
+in every variant tried, and the central dimming was taken out with it so that
+the room and its sides stay the same tone. Focus is currently the object's
+lift, the pointer light and the warm `.beam`, with nothing darkened.
+
+The full record, including the six variants that failed, is F-002 and F-003 in
+[09 Fix log](09-fix-log.md). What is known:
+
+- Overlays wider than the scene, gradients painted inside the side extensions,
+  flat opacity strips beside the scene and live `brightness()` filters on the
+  side artwork all flickered or cost pointer latency in Chrome.
+- Fading the central dimmer out toward its edges avoided the step in tone but
+  left a dark halo.
+
+What has not been tried, in the order worth trying:
+
+1. **Pre-rendered artwork.** Have `room.py` render a second, darkened version
+   of the room and its sides, and cross-fade one image element over the other
+   on focus. One opacity change on elements that already exist at that size,
+   no gradient and no per-frame repaint. It dims uniformly rather than around
+   the object, so it pairs with the existing `.beam` for the spotlight.
+2. **One image for the whole width.** If the room and its side extensions were
+   a single 720-wide element, an overlay the size of that element would not be
+   "wider than the scene". This changes the scene's structure and so belongs
+   with the scroll narrative work in [10](10-scroll-narrative.md).
+
+Do this after stage 3: the value plan there decides how dark "dimmed" should
+be, and the artwork it would darken is still changing.
+
+### D-02 The periodic glint on focusable objects
+
+**Removed in F-003.** The `.pop` filter animation that made objects glint every
+few seconds caused a flash when an early skip landed in the hub. It was the
+hint that an object can be picked up. If that hint is missed, bake a small
+highlight into each sprite or animate opacity on a separate, tiny element
+rather than filtering the sprite.
+
+### D-03 A separate foreground layer
+
+Stage 6 draws the foreground into `room.webp`. Making it its own layer for
+parallax is deferred for the same reason as D-01: it is a new moving layer
+over the carriage.
+
 ## Rollback
 
 Every step is one commit on `art/redraw`, and `main` only moves at a gate, so:
@@ -606,45 +658,70 @@ Every step is one commit on `art/redraw`, and `main` only moves at a gate, so:
 
 ## Progress
 
-Updated in the same commit as each step.
+Updated in the same commit as each step. `review` means built and waiting
+for the Chrome check; `partial` means started ahead of its turn while fixing
+something else.
 
-| Stage | Step | Status  |
-| ----- | ---- | ------- |
-| 0     | 0.1  | done    |
-| 0     | 0.2  | done    |
-| 0     | 0.3  | done    |
-| 0     | 0.4  | done    |
-| 0     | 0.5  | done    |
-| 0     | 0.6  | done    |
-| 0     | 0.7  | skipped |
-| 1     | 1.0  | done    |
-| 1     | 1.1  | done    |
-| 1     | 1.2  | done    |
-| 1     | 1.3  | pending |
-| 1     | 1.4  | review  |
-| 1     | 1.5  | pending |
-| 1     | 1.6  | pending |
-| 2     | 2.1  | pending |
-| 2     | 2.2  | pending |
-| 2     | 2.3  | pending |
-| 3     | 3.1  | pending |
-| 3     | 3.2  | pending |
-| 3     | 3.3  | pending |
-| 3     | 3.4  | pending |
-| 3     | 3.5  | pending |
-| 3     | 3.6  | pending |
-| 4     | 4.1  | pending |
-| 4     | 4.2  | pending |
-| 4     | 4.3  | pending |
-| 4     | 4.4  | pending |
-| 5     | 5.1  | pending |
-| 5     | 5.2  | pending |
-| 5     | 5.3  | pending |
-| 5     | 5.4  | pending |
-| 5     | 5.5  | pending |
-| 5     | 5.6  | pending |
-| 6     | 6    | pending |
-| 7     | 7    | pending |
+| Stage | Step | Status  | Notes                                                                           |
+| ----- | ---- | ------- | ------------------------------------------------------------------------------- |
+| 0     | 0.1  | done    |                                                                                 |
+| 0     | 0.2  | done    |                                                                                 |
+| 0     | 0.3  | done    |                                                                                 |
+| 0     | 0.4  | done    |                                                                                 |
+| 0     | 0.5  | done    |                                                                                 |
+| 0     | 0.6  | done    |                                                                                 |
+| 0     | 0.7  | skipped | decided against at the stage 0 gate                                             |
+| 1     | 1.0  | done    |                                                                                 |
+| 1     | 1.1  | done    | block-in, plus side walls as sleeper partitions and their baked vignette        |
+| 1     | 1.2  | done    | benches as swept cross-sections with soft edges                                 |
+| 1     | 1.3  | partial | folded berths, straps, reading lamp and net pocket are blocked in; not finished |
+| 1     | 1.4  | review  | two racks, luggage standing on them with sides; awaiting the Chrome check       |
+| 1     | 1.5  | partial | ceiling plane, seams and the light on the ceiling are in; cove and vents remain |
+| 1     | 1.6  | pending |                                                                                 |
+| 2     | 2.1  | pending |                                                                                 |
+| 2     | 2.2  | pending |                                                                                 |
+| 2     | 2.3  | pending |                                                                                 |
+| 3     | 3.1  | pending |                                                                                 |
+| 3     | 3.2  | pending |                                                                                 |
+| 3     | 3.3  | pending |                                                                                 |
+| 3     | 3.4  | pending |                                                                                 |
+| 3     | 3.5  | pending |                                                                                 |
+| 3     | 3.6  | pending |                                                                                 |
+| 4     | 4.1  | pending |                                                                                 |
+| 4     | 4.2  | pending |                                                                                 |
+| 4     | 4.3  | pending |                                                                                 |
+| 4     | 4.4  | pending |                                                                                 |
+| 5     | 5.1  | pending |                                                                                 |
+| 5     | 5.2  | pending |                                                                                 |
+| 5     | 5.3  | pending |                                                                                 |
+| 5     | 5.4  | pending |                                                                                 |
+| 5     | 5.5  | pending |                                                                                 |
+| 5     | 5.6  | pending |                                                                                 |
+| 6     | 6    | pending |                                                                                 |
+| 7     | 7    | pending |                                                                                 |
+
+### Where things stand
+
+Stage 0 is merged to `main`. Stage 1 is in progress on `art/redraw` and has not
+been merged: its gate is after 1.6.
+
+Done so far in stage 1, beyond what the step table names:
+
+- The compartment is a model in metres (`P()` in `room.py`); every receding
+  surface is projected from it.
+- The side walls carry folded upper berths, and the side extensions have the
+  page's vignette baked into the artwork (F-002 in [09](09-fix-log.md)).
+- The benches are cross-sections swept along their length, so an edge is
+  softened or hardened by moving points in a table.
+- There are two luggage racks, 13 cm deep, either side of the line display.
+  Luggage stands on them at its own depth, with undersides and inner sides. The
+  canvas wrapper's `depth()` scales art written for the window wall to stand
+  nearer the camera.
+- An object that something stands in front of gets a second sprite for the
+  thing in front (`front` in the generated geometry). The briefcase lifts whole
+  behind the rack's rail this way.
+
+Next: finish 1.3 and 1.5, then 1.6 and the stage 1 gate.
 
 ## Keep in sync
 
