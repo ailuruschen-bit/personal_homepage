@@ -1152,6 +1152,9 @@ FOREGROUND = os.environ.get('FOREGROUND', 'velvet')
 FG_CURTAIN = {'velvet': mul(SEAT, 0.84), 'teal': (58, 110, 96)}
 
 
+# Size of the curtain's diamond quilting, in units of the cloth
+FG_QUILT = 26
+
 # A 3 on the pilaster's plate, as (row, column) from the glyph's top-left
 FG_NUMBER = ((47, 0), (47, 1), (47, 2), (48, 2), (49, 2), (50, 1), (50, 2), (51, 2), (52, 2), (53, 2), (53, 1), (53, 0))
 
@@ -1199,14 +1202,15 @@ def foreground_rgb(style):
             # crossing, laid out across the cloth so that it gathers into the
             # folds with it
             cu = f * 56.0
+            P_ = FG_QUILT
             m = np.full(len(cols), 1.0, np.float32)
-            d1, d2 = (cu + row) % 14, (cu - row) % 14
+            d1, d2 = (cu + row) % P_, (cu - row) % P_
             m[(d1 < 1) | (d2 < 1)] = 0.62
-            btn = (np.abs(d1 - 7) < 0.5) & (np.abs(d2 - 7) < 0.5)
+            btn = (np.abs(d1 - P_ / 2) < 0.5) & (np.abs(d2 - P_ / 2) < 0.5)
             m[btn] = 0.45
             out[row, cols] = curtain[None, :] * (k * m)[:, None]
             if row > y_top:
-                up = (np.abs(((cu + row - 1) % 14) - 7) < 0.5) & (np.abs(((cu - row + 1) % 14) - 7) < 0.5)
+                up = (np.abs(((cu + row - 1) % P_) - P_ / 2) < 0.5) & (np.abs(((cu - row + 1) % P_) - P_ / 2) < 0.5)
                 out[row - 1, cols[up]] = curtain * 1.25 * k[up, None]
             # piping down the leading edge, as along the cushions' front
             out[row, cols[f < 0.035]] = curtain * 0.4
