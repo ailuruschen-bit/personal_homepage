@@ -287,7 +287,6 @@
 .hub .look {
   will-change: transform;
 }
-.spot,
 .beam {
   position: absolute;
   inset: 0;
@@ -298,37 +297,7 @@
   --rx: 20%;
   --ry: 20%;
 }
-.spot {
-  background: radial-gradient(
-    ellipse var(--rx) var(--ry) at var(--sx) var(--sy),
-    rgba(5, 4, 14, 0) 0 70%,
-    rgba(5, 4, 14, 0.2) 120%,
-    rgba(5, 4, 14, 0.4) 220%
-  );
-}
-/* The dimming over each side extension: a flat colour whose opacity focus.ts
-   keeps equal to .spot's. It is flat on purpose. .spot reaches its full 0.4 by
-   220% of the light's radius, which is before the scene's left and right edges
-   for every object, so a flat 0.4 beside it continues it with no step. Painting
-   .spot's gradient here instead, or widening .spot, flickered in Chrome
-   (docs/09, F-002): these two never repaint, only their opacity changes. */
-.dimside {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 25%;
-  pointer-events: none;
-  opacity: 0;
-  background: rgba(5, 4, 14, 0.4);
-}
-.dimside.l {
-  right: 100%;
-}
-.dimside.r {
-  left: 100%;
-}
 .beam {
-  mix-blend-mode: screen;
   background: radial-gradient(
     ellipse var(--rx) var(--ry) at var(--sx) var(--sy),
     rgba(255, 236, 200, 0.26),
@@ -346,7 +315,6 @@
   margin: -4.5vmax 0 0 -4.5vmax;
   pointer-events: none;
   opacity: 0;
-  mix-blend-mode: screen;
   will-change: transform;
   transition: opacity 0.08s;
 }
@@ -562,7 +530,7 @@
      over black and white dots reads well enough. */
   opacity: 0.5;
   will-change: transform;
-  /* Jump to a new offset every 80ms so the grain appears to crawl */
+  /* Move the texture on a compositor layer instead of repainting the viewport. */
   animation: grain 0.64s steps(1) infinite;
 }
 @keyframes grain {
@@ -590,6 +558,10 @@
   87.5% {
     transform: translate(-83px, 139px);
   }
+}
+.grain-suspended .grain {
+  animation: none;
+  will-change: auto;
 }
 @media (prefers-reduced-motion: reduce) {
   .grain {
@@ -965,7 +937,7 @@
 }
 /* Periodic glint. While focused, the rule below takes over the filter. */
 .hub .pop {
-  animation: glint 5s ease-in-out infinite;
+  animation: none;
 }
 .hub .pop.on {
   animation: none;

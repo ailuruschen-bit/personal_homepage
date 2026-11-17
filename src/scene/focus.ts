@@ -24,7 +24,6 @@ const TAU = {
   pull: 0.07,
   poolMove: 0.045,
   poolShape: 0.04,
-  dim: 0.12,
 } as const;
 
 const smoothing = (dt: number, tau: number) => 1 - Math.exp(-dt / tau);
@@ -48,7 +47,7 @@ export class FocusEngine {
   private lookTransform = '';
   private lastPhase: Phase | null = null;
   /** Pool of light resting on the object */
-  private pool = { x: 240, y: 240, rx: FREE_RADIUS, ry: FREE_RADIUS, alpha: 0, dim: 0 };
+  private pool = { x: 240, y: 240, rx: FREE_RADIUS, ry: FREE_RADIUS, alpha: 0 };
   /** Scene position of the pointer light, the point the pool grows out of */
   private lightAt: ScenePoint = { X: 240, Y: 240 };
   private distanceRef = new Map<string, number>();
@@ -292,19 +291,13 @@ export class FocusEngine {
     p.rx += (target.rx - p.rx) * shape;
     p.ry += (target.ry - p.ry) * shape;
     p.alpha += (target.alpha - p.alpha) * shape;
-    p.dim += ((light ? 1 : 0) - p.dim) * smoothing(dt, TAU.dim);
-
     this.els.beam.style.opacity = p.alpha.toFixed(3);
-    this.els.spot.style.opacity = p.dim.toFixed(3);
-    for (const el of this.els.sideSpots) el.style.opacity = p.dim.toFixed(3);
-    if (p.alpha < 0.004 && p.dim < 0.004) return;
+    if (p.alpha < 0.004) return;
 
-    for (const el of [this.els.spot, this.els.beam]) {
-      el.style.setProperty('--sx', `${(p.x / 4.8).toFixed(2)}%`);
-      el.style.setProperty('--sy', `${(p.y / 4.8).toFixed(2)}%`);
-      el.style.setProperty('--rx', `${(p.rx / 4.8).toFixed(2)}%`);
-      el.style.setProperty('--ry', `${(p.ry / 4.8).toFixed(2)}%`);
-    }
+    this.els.beam.style.setProperty('--sx', `${(p.x / 4.8).toFixed(2)}%`);
+    this.els.beam.style.setProperty('--sy', `${(p.y / 4.8).toFixed(2)}%`);
+    this.els.beam.style.setProperty('--rx', `${(p.rx / 4.8).toFixed(2)}%`);
+    this.els.beam.style.setProperty('--ry', `${(p.ry / 4.8).toFixed(2)}%`);
   }
 }
 

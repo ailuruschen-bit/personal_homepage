@@ -37,6 +37,22 @@ export function mountScene(root: HTMLElement, { onEnter, skipOpening }: SceneOpt
   focus.syncFrame();
   focus.start();
 
+  // Drop the grain's moving compositor layer before Chrome hides the tab, then
+  // let the visible carriage paint twice before starting that layer again.
+  let grainResume = 0;
+  const onVisibilityChange = () => {
+    cancelAnimationFrame(grainResume);
+    if (document.hidden) {
+      root.classList.add('grain-suspended');
+    } else {
+      grainResume = requestAnimationFrame(() => {
+        grainResume = requestAnimationFrame(() => root.classList.remove('grain-suspended'));
+      });
+    }
+  };
+  document.addEventListener('visibilitychange', onVisibilityChange);
+  onVisibilityChange();
+
   let pointerType = 'mouse';
 
   const enter = (target: string | null) => {
@@ -98,6 +114,9 @@ export function mountScene(root: HTMLElement, { onEnter, skipOpening }: SceneOpt
 
   return {
     destroy() {
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      cancelAnimationFrame(grainResume);
+      root.classList.remove('grain-suspended');
       focus.stop();
       opening.dispose();
       document.removeEventListener('keydown', onKeyDown);

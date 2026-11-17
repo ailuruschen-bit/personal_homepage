@@ -151,8 +151,8 @@ export function layerSwitches(root: HTMLElement) {
     ['x-glow', 'glows', '.x-glow .glow{display:none}'],
     [
       'x-vig',
-      'vignette, focus dim and light',
-      '.x-vig .vig,.x-vig .spot,.x-vig .beam{display:none}',
+      'vignette and focus light',
+      '.x-vig .vig,.x-vig .beam{display:none}',
     ],
     ['x-grain', 'film grain', '.x-grain .grain{display:none}'],
   ];
