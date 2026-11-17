@@ -1094,7 +1094,7 @@ def bench(g, s):
 
     # headrest covers: one per seat, draped over the roll so they follow its
     # curve, with a hem along the bottom
-    cloth = (204, 198, 222)
+    cloth = (178, 172, 198)  # held below the wall in value (L-06)
     drape = [(BACK_FACE, BACK_TOP - 0.25), (BACK_FACE, BACK_TOP - 0.225)] + [(x - 0.004, y + 0.004) for x, y in BACK_ROLL]
     drape[2] = (BACK_FACE - 0.004, BACK_TOP - 0.05)
     tones = [0.7, 0.9] + [0.96, 1.04, 1.12, 1.2, 1.14]
@@ -1235,7 +1235,7 @@ def table(g, rnd):
     cg.ellipse(279, 331, 13, 3, (196, 130, 84))
     cg.px(284, 331, (236, 190, 140))
     cg.px(293, 333, (150, 96, 70))
-    cup = g.masks.pop('_cup')
+    cup = g.masks['_cup']
     g.masks['journey'] = ImageChops.multiply(g.masks['journey'], ImageChops.invert(cup))
     # ---- ticket (the about object)
     o = place(g, 'about', (316, 344))
@@ -1427,6 +1427,43 @@ def foreground(g, style=None):
         cv.sh.paste(255, (x0, 0, x0 + 120, H))
 
 
+# The value plan (docs/13, L-06): each depth plane keeps to its own band of
+# values, judged on the luminance view. The window wall is the lightest plane
+# and the coolest; the benches sit a step below it; the foreground (the side
+# images) is the darkest and is already drawn that way. The brightest values are
+# kept for the window and the light sources, which only clip if pushed.
+# Gains on the rendered picture: (multiplier, per-channel tint).
+VALUE_PLAN = {
+    'far': (1.16, (0.96, 1.0, 1.06)),
+    'bench': (0.86, (1.0, 1.0, 1.0)),
+}
+FAR_WALL = (24, 26, 456)  # the window wall's left, top and right, in scene units
+FAR_FADE = (326, 400)  # below the table the wall goes into shade: the lift fades out
+
+
+def value_plan(a, near, objects, k):
+    """near: silhouettes of the benches, the table and the cup, which stand in
+    front of the wall; objects: the table's interactive objects."""
+    h, w = a.shape[:2]
+    up = lambda m: np.asarray(m.resize((w, h), Image.NEAREST)) > 127
+    bench = up(near[0])
+    front = np.zeros((h, w), bool)
+    for m in near + objects:
+        front |= up(m)
+    x0, y0, x1 = FAR_WALL
+    ys = (np.arange(h, dtype=np.float32) + 0.5) / k
+    fade = np.clip((FAR_FADE[1] - ys) / (FAR_FADE[1] - FAR_FADE[0]), 0, 1)[:, None]
+    far = np.zeros((h, w), np.float32)
+    far[y0 * k :, (OX + x0) * k : (OX + x1) * k] = 1
+    far = far * fade * ~front
+    gain = np.ones((h, w, 3), np.float32)
+    g_, tint = VALUE_PLAN['far']
+    gain += far[..., None] * (g_ * np.array(tint, np.float32) - 1)
+    g_, tint = VALUE_PLAN['bench']
+    gain[bench] = g_ * np.array(tint, np.float32)
+    a[..., :3] = np.clip(a[..., :3] * gain, 0, 255).astype(np.uint8)
+
+
 def build_room(seed=21, over_rack=True):
     """The carriage as one RGBA image at output resolution, and the silhouette
     mask of every interactive object at 1x, keyed by object id. A key ending in
@@ -1446,9 +1483,10 @@ def build_room(seed=21, over_rack=True):
     floor_and_ceiling(g)
     side_wall(g, -1)
     side_wall(g, 1)
-    bench(g, -1)
-    bench(g, 1)
-    table(g, rng('table'))
+    # the benches record a silhouette for the value plan below
+    bench(g.at(0, 0, '_bench'), -1)
+    bench(g.at(0, 0, '_bench'), 1)
+    table(g.at(0, 0, '_table'), rng('table'))
     # Overall lighting: the ceiling strip washing the walls, cold light from outside
     g.light(-120, 40, 720, 50, (255, 214, 160), 0.26)
     wx, wy, ww, wh = WINDOW
@@ -1484,6 +1522,8 @@ def build_room(seed=21, over_rack=True):
     )
     k = px.SCALE
     a = np.asarray(im).copy()
+    near = [g.masks.pop(t) for t in ('_bench', '_table', '_cup')]
+    value_plan(a, near, [g.masks[t] for t in ('projects', 'about', 'journey')], k)
     # The page lays a vignette over the 480 scene (scene.css .vig) and must not
     # be made to cover the side extensions as well: overlays wider than the
     # scene, and gradients painted inside the extensions, both flickered in
