@@ -73,10 +73,10 @@ ROOM_HALF_WIDTH = 1.2  # the window wall runs 2.4 m between the side walls
 ROOM_CEILING = 2.30
 # The luggage racks: one over each bench end, either side of the line display
 # above the window. Shallow enough to reach from the seat below.
-RACK_DEPTH = 0.26
+RACK_DEPTH = 0.13
 RACK_INNER = 0.46  # each rack runs from here to the side wall
 LUGGAGE_Z = WALL_DIST - RACK_DEPTH - 0.01  # the luggage's front: it overhangs the front rail a little
-LUGGAGE_FLAT = 0.5  # luggage lies flat on the rack: this much of the height it was written at
+LUGGAGE_FLAT = 1.0  # height of the luggage relative to how it was written; 1 is unchanged
 
 
 def vanishing_point():
