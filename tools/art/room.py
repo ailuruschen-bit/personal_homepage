@@ -825,6 +825,18 @@ def structure(g):
         receding(g, s * HW, DADO, s * HW, C, mul(WALL, 0.78))
         receding(g, s * HW, 0, s * HW, DADO, mul(WALL_LO, 0.78))
     receding(g, -HW, 0, HW, 0, (46, 48, 76))
+    # where the ceiling meets the window wall: a cove, three bands each a
+    # step lighter, so the corner is a curve rather than a crease
+    for z0, z1, k in ((D, D - 0.03, 0.62), (D - 0.03, D - 0.06, 0.78), (D - 0.06, D - 0.1, 0.9)):
+        receding(g, -HW, C, HW, C, mul(CEIL, k), z0, z1)
+    # ventilation grilles on the ceiling either side of the light. Only the
+    # ceiling within about 25 cm of the wall is in the picture, so that is
+    # where they go
+    for x0, x1 in ((-0.9, -0.5), (0.5, 0.9)):
+        receding(g, x0, C, x1, C, (34, 36, 58), 1.92, 1.80)
+        for z in (1.9, 1.87, 1.84, 1.81):
+            g.line([ri(P(x0 + 0.02, C, z)), ri(P(x1 - 0.02, C, z))], (22, 24, 40))
+        g.line([ri(P(x0, C, 1.80)), ri(P(x1, C, 1.80))], mul(CEIL, 1.3))
     # the ceiling light: a strip running down the middle of the ceiling toward
     # the camera, in a housing
     receding(g, -0.2, C, 0.2, C, (38, 40, 62), D - 0.04)
@@ -864,19 +876,37 @@ def side_wall(g, s):
         bx, by = on(z - 0.022, y0 + 0.1, t)
         g.rect(bx - 1, by - 1, 3, 3, BRASS)
     g.line([on(1.78, 1.66, t), on(1.62, 1.66, t)], BRASS, width=2)
+    # The strip of wall between the backrest and the berth, by the window, is
+    # what the scene shows of each side wall: a fitting on each, drawn as a
+    # small object with a face, an edge and a shadow
+    w = lambda z, y, d=0.0: P(s * (HW - d), y, z)
+    poly = lambda pts, c: g.poly([ri(w(*q)) for q in pts], c)
     if s > 0:
-        # reading lamp under the berth, by the window
-        pts = [P(HW - 0.04, y, z) for z, y in ((1.88, 1.27), (1.88, 1.34), (1.74, 1.34), (1.74, 1.27))]
-        g.lpoly([ri(q) for q in pts], (255, 190, 110), 0.8, body=(255, 232, 180))
-        lx, ly = on(1.81, 1.3)
-        g.light(lx - 40, ly - 22, 70, 60, (255, 170, 90), 0.3)
+        # reading lamp: a brass wall plate, a hood with its open underside lit,
+        # and the light it throws on the wall and the backrest below
+        poly([(1.92, 1.25), (1.92, 1.37), (1.70, 1.37), (1.70, 1.25)], (64, 52, 40))
+        poly([(1.91, 1.26), (1.91, 1.36), (1.71, 1.36), (1.71, 1.26)], BRASS)
+        poly([(1.88, 1.3, 0.05), (1.88, 1.35, 0.05), (1.74, 1.35, 0.05), (1.74, 1.3, 0.05)], (58, 52, 70))
+        poly([(1.88, 1.35, 0.05), (1.88, 1.35, 0.0), (1.74, 1.35, 0.0), (1.74, 1.35, 0.05)], (90, 82, 104))
+        g.lpoly([ri(w(*q)) for q in ((1.88, 1.3, 0.05), (1.88, 1.3, 0.0), (1.74, 1.3, 0.0), (1.74, 1.3, 0.05))],
+                (255, 196, 120), 0.9, body=(255, 236, 190))
+        for z0, z1, y in ((1.86, 1.76, 1.24), (1.9, 1.72, 1.2)):
+            g.lpoly([ri(w(z0, y)), ri(w(z0, y + 0.02)), ri(w(z1, y + 0.02)), ri(w(z1, y))], (255, 170, 90), 0.18, body=mul(WALL, 0.9))
+        lx, ly = w(1.81, 1.22)
+        g.light(int(lx) - 34, int(ly) - 10, 60, 70, (255, 170, 90), 0.34)
     else:
-        # net pocket with a folded paper in it
-        net = lambda z, y: P(-(HW - 0.03), y, z)
-        g.poly([ri(net(1.82, 1.24)), ri(net(1.82, 1.4)), ri(net(1.6, 1.4)), ri(net(1.6, 1.24))], (226, 222, 210))
-        g.poly([ri(net(1.86, 1.2)), ri(net(1.86, 1.33)), ri(net(1.5, 1.33)), ri(net(1.5, 1.2))], (40, 44, 72))
-        g.line([ri(net(1.86, 1.33)), ri(net(1.5, 1.33))], STEEL)
-
+        # net pocket: a frame on the wall, the net drawn as a lattice over the
+        # dark wall behind it, and a folded timetable standing out of it
+        poly([(1.88, 1.18), (1.88, 1.36), (1.56, 1.36), (1.56, 1.18)], (36, 40, 66))
+        for k in range(1, 9):
+            z = 1.88 - k * 0.04
+            g.line([ri(w(z, 1.18, 0.02)), ri(w(z + 0.04, 1.33, 0.02))], (88, 96, 132))
+            g.line([ri(w(z + 0.04, 1.18, 0.02)), ri(w(z, 1.33, 0.02))], (70, 78, 112))
+        poly([(1.80, 1.30, 0.01), (1.80, 1.43, 0.01), (1.66, 1.43, 0.01), (1.66, 1.30, 0.01)], (226, 220, 200))
+        for y in (1.405, 1.385, 1.365):
+            g.line([ri(w(1.78, y, 0.012)), ri(w(1.69, y, 0.012))], (150, 120, 120))
+        g.line([ri(w(1.88, 1.335, 0.02)), ri(w(1.56, 1.335, 0.02))], STEEL, width=2)
+        g.line([ri(w(1.88, 1.18, 0.02)), ri(w(1.56, 1.18, 0.02))], mul(STEEL, 0.7))
 
 def floor_and_ceiling(g):
     """Seams that run toward the camera and across it, so the floor and ceiling
@@ -1011,6 +1041,15 @@ def table(g, rnd):
     g.poly([(224, 418), (256, 418), (262, 426), (218, 426)], (54, 60, 94))
     g.line([(224, 418), (256, 418)], (120, 130, 168))
     g.shadow(120, 384, 240, 14, 0.42)
+    # The table is hinged to the wall under the window. Under it, a steel strut
+    # runs from a plate on the wall up to the underside of the top on each side,
+    # and the wall under the table is in its shadow
+    g.shadow(130, 383, 220, 30, 0.55)
+    for x, d in ((176, 1), (304, -1)):
+        g.rect(x - 4, 404, 8, 6, (44, 50, 80))
+        g.rect(x - 4, 404, 8, 1, (96, 104, 140))
+        g.line([(x, 406), (x + 14 * d, 384)], (60, 66, 100), width=2)
+        g.line([(x - d, 405), (x + 14 * d - d, 384)], (112, 120, 158))
     # table top
     g.poly([BL, BR, FR, FL], WOOD)
     for k in range(1, 7):
