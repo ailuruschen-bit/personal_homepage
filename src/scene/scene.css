@@ -287,6 +287,7 @@
 .hub .look {
   will-change: transform;
 }
+.spot,
 .beam {
   position: absolute;
   inset: 0;
@@ -296,6 +297,17 @@
   --sy: 50%;
   --rx: 20%;
   --ry: 20%;
+}
+/* Dims the scene around the focused object. It covers the 480 scene only and
+   must stay that way (docs/09, F-002 and F-003): the side images are a dark
+   foreground drawn so that its edge is where the room ends (docs/13, D-01a). */
+.spot {
+  background: radial-gradient(
+    ellipse var(--rx) var(--ry) at var(--sx) var(--sy),
+    rgba(5, 4, 14, 0) 0 70%,
+    rgba(5, 4, 14, 0.2) 120%,
+    rgba(5, 4, 14, 0.4) 320%
+  );
 }
 .beam {
   background: radial-gradient(

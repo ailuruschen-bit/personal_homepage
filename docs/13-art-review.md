@@ -601,7 +601,10 @@ Each needs its own Chrome check before it is adopted.
 
 ### D-01 Darkening the scene around a focused object
 
-**Removed for now.** Until F-003 the page dimmed everything but the focused
+**Restored** with the side images redrawn as a foreground (D-01a), using the
+door frame and curtain variant. What follows is the history.
+
+**Removed for a while.** Until F-003 the page dimmed everything but the focused
 object with a radial overlay (`.spot`), which is what made focus read as a
 spotlight. Extending that dimming over the side extensions flickered in Chrome
 in every variant tried, and the central dimming was taken out with it so that

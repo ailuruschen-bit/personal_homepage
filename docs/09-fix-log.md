@@ -60,10 +60,20 @@ done after F-002, during the side-wall tone matching on `art/redraw`.
    animation frames. The user accepted the resulting Chrome fluidity and found
    no remaining flashes in the tested interactions.
 
+### Follow-up: the central dimming is back
+
+The central `.spot` was restored after the side images were redrawn as a dark
+foreground (docs/13, D-01a), so the dimming stops where the room ends rather
+than in the middle of a side wall. Only `.spot` came back, exactly as before
+F-003 with its gradient reaching full strength at 320% of the light's radius.
+`.dimside`, the `.pop` glint and `screen` blending on `.ml` and `.beam` stay
+out. The user had verified the central dimming on its own in Chrome before
+this; the combination with the new foreground still wants the usual check.
+
 ### Current rules and limits
 
-- Do not silently reintroduce `.spot`, `.dimside`, `.pop` glint, or live side-wall
-  filters. The present focus treatment uses object lift, the pointer light and
+- Do not reintroduce `.dimside`, `.pop` glint, or live side-wall filters, and
+  do not widen `.spot` beyond the scene. The present focus treatment uses object lift, the pointer light and
   `.beam`, with no scene-wide darkening.
 - Keep the grain's transform animation and the visibility lifecycle in sync.
   Replacing it with full-viewport `background-position` animation traded the

@@ -8,6 +8,7 @@ export interface SceneEls {
   look: HTMLElement;
   ow: HTMLElement;
   hero: HTMLElement;
+  spot: HTMLElement;
   beam: HTMLElement;
   cap: HTMLElement;
   ml: HTMLElement;
@@ -83,8 +84,9 @@ export function buildScene(root: HTMLElement): SceneEls {
     <div class="steam"></div><div class="steam s2"></div><div class="steam s3"></div>
     <div class="cur"></div>
     <div class="vig"></div>
-    <div class="beam" id="beam"></div>
-    <!-- Light sources above the focus light -->
+    <div class="spot" id="spot"></div><div class="beam" id="beam"></div>
+    <!-- Light sources again above the dimming layer, so the neon and the lamp
+         are not dimmed along with everything else while an object is focused -->
     <div class="glow g-lamp"></div><div class="glow g-neon"></div><div class="glow g-out"></div>
     ${zones}
   </div></div></div></div>
@@ -113,6 +115,7 @@ export function buildScene(root: HTMLElement): SceneEls {
     look: $('look'),
     ow: $('ow'),
     hero: $('hero'),
+    spot: $('spot'),
     beam: $('beam'),
     cap: $('cap'),
     ml: $('ml'),
