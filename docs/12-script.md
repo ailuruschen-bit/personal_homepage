@@ -108,7 +108,7 @@ a professional's relief at being handed the answer.
 
 ## Scene 4 — 卷起来的线路图 (journey)
 
-**Camera:** carry, off the left-hand backrest, where it hangs half unrolled.
+**Camera:** carry, off the table, where it lies half open beside the laptop.
 **Scroll:** unrolls it the rest of the way. Stations
 appear in order as it opens; each is `[经历]`.
 

@@ -30,7 +30,7 @@ export const CAMERA = { x: 240, y: 209.808 };
 export const OBJECTS: Record<string, ObjectGeometry> = {
   cover: { zone: [142, 116, 338, 272], light: { x: 240, y: 194, rx: 108, ry: 84 } },
   projects: { zone: [137, 279, 252, 376], light: { x: 195, y: 328, rx: 62, ry: 52 }, box: { x: 148, y: 288, w: 94, h: 81 }, sprite: '/assets/obj-projects.webp' },
-  about: { zone: [296, 335, 348, 369], light: { x: 322, y: 352, rx: 30, ry: 20 }, box: { x: 300, y: 338, w: 39, h: 23 }, sprite: '/assets/obj-about.webp' },
+  about: { zone: [308, 344, 360, 378], light: { x: 334, y: 361, rx: 30, ry: 20 }, box: { x: 312, y: 347, w: 39, h: 23 }, sprite: '/assets/obj-about.webp' },
   stack: { zone: [318.7565, 36.95, 409.9482, 92.9085], light: { x: 364.3523, y: 67.0018, rx: 49.7409, ry: 29.0155 }, box: { x: 325, y: 46, w: 75, h: 44 }, sprite: '/assets/obj-stack.webp', front: { x: 322, y: 77, w: 85, h: 17, sprite: '/assets/obj-stack-front.webp' } },
-  journey: { zone: [0, 215, 52, 304], light: { x: 26, y: 259, rx: 24, ry: 40 }, box: { x: 6, y: 221, w: 40, h: 77 }, sprite: '/assets/obj-journey.webp' },
+  journey: { zone: [230, 336, 296, 378], light: { x: 263, y: 357, rx: 31, ry: 18 }, box: { x: 236, y: 342, w: 55, h: 30 }, sprite: '/assets/obj-journey.webp' },
 };

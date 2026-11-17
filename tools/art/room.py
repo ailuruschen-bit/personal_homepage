@@ -38,11 +38,11 @@ AMBER = (255, 206, 110)
 # object moves its focus target with it.
 OBJECTS = {
     'projects': dict(at=(148, 288), zone=(-11, -9, 104, 88), light=(47, 40, 62, 52)),
-    'about': dict(at=(306, 343), zone=(-10, -8, 42, 26), light=(16, 9, 30, 20)),
+    'about': dict(at=(318, 352), zone=(-10, -8, 42, 26), light=(16, 9, 30, 20)),
     'stack': dict(at=(326, 52), zone=(-10, -9, 78, 45), light=(34, 20, 48, 28), on_rack=1),
-    # the map, flung half unrolled over the left-hand backrest; the line
-    # display on the wall is the railway's, and only a decoy
-    'journey': dict(at=(6, 221), zone=(-6, -6, 46, 83), light=(20, 38, 24, 40)),
+    # the map, half open on the table; the line display on the wall is the
+    # railway's, and only a decoy
+    'journey': dict(at=(236, 342), zone=(-6, -6, 60, 36), light=(27, 15, 31, 18)),
 }
 
 # The window opening (x y w h) and its corner radius. The page lays .win over it:
@@ -103,7 +103,7 @@ def P(X, Y, Z):
 
 # The cup and saucer were drawn too large for the laptop beside them: they are
 # drawn at COFFEE_SCALE about the middle of the saucer's foot.
-COFFEE_AT = (281, 356)
+COFFEE_AT = (313, 333)
 COFFEE_SCALE = 0.62
 
 # Small animated things the page lays over the art, each x y relative to what
@@ -977,67 +977,52 @@ BACK_ROLL = [
 BACK_ROLL_SHADES = [0.9, 1.04, 1.22, 1.38, 1.26]
 
 
-def journey_map(g):
-    """The journey object: a paper map flung over the top of the left-hand
-    backrest by the window, half unrolled. The roll lies on the backrest's top;
-    the open sheet hangs down its face, askew, creased, one corner folded over
-    and a coffee ring on it. Drawn on the backrest's plane, so it hangs in the
-    room's perspective. It sits at the height of the window, where a wide
-    screen's framing still shows it."""
+def table_map(g, T):
+    """The journey object: a paper map lying half open on the table between
+    the laptop and the cup. The far half is still rolled into a tube along its
+    back edge; the near corner on the right has curled up and shows the paper's
+    back. T(u, v) is a point on the table top, u across, v from back to front."""
     o = g.at(0, 0, 'journey')
-    X = -(BACK_FACE - 0.006)
-    q = lambda z, y: ri(P(X, y, z))
-    # the sheet's corners (z, y): top edge along the roll, bottom edge sagging
-    # lower at the near side, and the far bottom corner folded up
-    tl, tr = (1.93, BACK_TOP - 0.004), (1.63, BACK_TOP - 0.01)
-    br, bl = (1.61, BACK_TOP - 0.29), (1.80, BACK_TOP - 0.24)
-    fold = (1.89, BACK_TOP - 0.17)
-    sheet = [tl, tr, br, bl, fold]
     paper = (232, 222, 196)
-    o.poly([q(*c) for c in sheet], paper)
-    # the corner folded over: the paper's back, a shade darker, with its crease
-    flap = [bl, fold, (1.86, BACK_TOP - 0.13)]
-    o.poly([q(*c) for c in flap], mul(paper, 0.82))
-    o.line([q(*bl), q(*fold)], mul(paper, 0.62))
+    # the flat sheet, a little askew
+    A, B, C, D = T(0.487, 0.5), T(0.69, 0.46), T(0.708, 0.95), T(0.507, 0.98)
+    o.poly([A, B, C, D], paper)
+    g.line([(D[0], D[1] + 1), (C[0], C[1] + 1)], mul(WOOD, 0.55))  # its shadow on the wood
 
     def at(u, v):
-        """A point on the sheet: u across from far (0) to near (1), v down."""
-        top = (tl[0] + (tr[0] - tl[0]) * u, tl[1] + (tr[1] - tl[1]) * u)
-        bot = (bl[0] + (br[0] - bl[0]) * u, bl[1] + (br[1] - bl[1]) * u)
-        return q(top[0] + (bot[0] - top[0]) * v, top[1] + (bot[1] - top[1]) * v)
+        top = lerp(A, B, u)
+        bot = lerp(D, C, u)
+        return ri(lerp(top, bot, v))
 
-    # printed: a river across it, a park, streets, and the line with stations
-    o.poly([at(0.0, 0.48), at(0.4, 0.4), at(1.0, 0.55), at(1.0, 0.66), at(0.45, 0.52), at(0.0, 0.6)], (150, 186, 210))
-    o.poly([at(0.58, 0.1), at(0.86, 0.08), at(0.9, 0.3), at(0.62, 0.32)], (166, 200, 148))
-    for u in (0.22, 0.47, 0.74):
-        o.line([at(u, 0.04), at(u + 0.03, 0.9)], (210, 200, 176))
-    for v in (0.24, 0.72):
-        o.line([at(0.03, v), at(0.97, v + 0.03)], (210, 200, 176))
-    route = [at(0.08, 0.12), at(0.3, 0.3), at(0.36, 0.5), at(0.66, 0.6), at(0.7, 0.78), at(0.92, 0.88)]
+    # printed: a river, a park, streets, the line and its stations
+    o.poly([at(0.0, 0.38), at(0.45, 0.3), at(1.0, 0.42), at(1.0, 0.54), at(0.5, 0.42), at(0.0, 0.5)], (150, 186, 210))
+    o.poly([at(0.62, 0.62), at(0.92, 0.6), at(0.94, 0.86), at(0.64, 0.88)], (166, 200, 148))
+    for u in (0.25, 0.5, 0.76):
+        o.line([at(u, 0.06), at(u + 0.02, 0.95)], (210, 200, 176))
+    for v in (0.22, 0.7):
+        o.line([at(0.03, v), at(0.97, v)], (210, 200, 176))
+    route = [at(0.1, 0.12), at(0.32, 0.3), at(0.4, 0.55), at(0.66, 0.5), at(0.72, 0.76), at(0.9, 0.9)]
     o.line(route, (204, 60, 66), width=2)
     for k, (sx, sy) in enumerate(route):
-        o.rect(sx - 1, sy - 1, 3, 3, (250, 244, 226))
-        o.px(sx, sy, (204, 60, 66) if k in (2, 4) else (60, 70, 96))
+        o.px(sx, sy, (250, 244, 226))
     for sx, sy in (route[2], route[4]):  # circled, and circled again
-        o.line([(sx - 4, sy - 2), (sx + 3, sy - 3), (sx + 4, sy + 1), (sx, sy + 3), (sx - 4, sy + 1), (sx - 3, sy - 3)], (196, 36, 48))
-        o.line([(sx - 3, sy - 3), (sx + 4, sy - 2)], (196, 36, 48))
-    # handled paper: two creases from being folded, a coffee ring, a torn notch
-    o.line([at(0.0, 0.33), at(1.0, 0.36)], mul(paper, 0.86))
-    o.line([at(0.5, 0.0), at(0.53, 0.95)], mul(paper, 0.88))
-    cx, cy = at(0.25, 0.72)
-    o.line([(cx - 3, cy), (cx - 2, cy - 2), (cx + 1, cy - 2), (cx + 3, cy), (cx + 1, cy + 2), (cx - 2, cy + 2), (cx - 3, cy)], (176, 140, 100))
-    nx, ny = at(1.0, 0.18)
-    o.rect(nx - 1, ny, 2, 2, mul(SEAT, 0.8))
-    # the near edge catches the light, and casts a little shadow on the backrest
-    o.line([q(*tr), q(*br)], (252, 248, 232))
-    g.line([ri(P(X - 0.004, tr[1] - 0.01, tr[0] - 0.012)), ri(P(X - 0.004, br[1], br[0] - 0.012))], mul(SEAT, 0.42))
-    # the rest of it, still rolled, lying along the top of the backrest
-    for dy, c in ((0.0, (172, 162, 142)), (0.012, (214, 204, 180)), (0.024, (242, 236, 214)), (0.034, (206, 196, 172))):
-        o.line([ri(P(-(BACK_FACE + 0.02), BACK_TOP + dy, 1.95)), ri(P(-(BACK_FACE + 0.02), BACK_TOP + dy, 1.66))], c, width=2)
-    ex, ey = ri(P(-(BACK_FACE + 0.02), BACK_TOP + 0.018, 1.66))
-    o.ellipse(ex - 2, ey - 3, 5, 6, (214, 204, 180))
-    o.px(ex, ey - 1, (120, 110, 96))
-    o.line([ri(P(-(BACK_FACE + 0.02), BACK_TOP - 0.002, 1.82)), ri(P(-(BACK_FACE + 0.02), BACK_TOP + 0.038, 1.82))], (190, 60, 62), width=2)
+        o.line([(sx - 3, sy - 1), (sx + 2, sy - 2), (sx + 3, sy + 1), (sx, sy + 2), (sx - 3, sy + 1), (sx - 2, sy - 2)], (196, 36, 48))
+    # a crease from being folded, and a coffee ring
+    o.line([at(0.0, 0.72), at(1.0, 0.68)], mul(paper, 0.86))
+    rx, ry = at(0.22, 0.8)
+    o.line([(rx - 3, ry), (rx - 1, ry - 1), (rx + 2, ry - 1), (rx + 3, ry), (rx + 1, ry + 1), (rx - 2, ry + 1), (rx - 3, ry)], (176, 140, 100))
+    # the near right corner curling up off the table: the paper's back, and
+    # the light along its lip
+    curl = [at(0.72, 1.0), C, (C[0] - 2, C[1] - 7), (at(0.8, 0.86)[0], at(0.8, 0.86)[1] - 2)]
+    o.poly([ri(c) for c in curl], mul(paper, 0.8))
+    o.line([ri(curl[2]), ri(curl[3])], (252, 248, 232))
+    # the rest, rolled into a tube along the back edge, with a rubber band
+    for dy, c in ((0, (168, 158, 138)), (-1, (204, 194, 170)), (-2, (232, 226, 204)), (-3, (246, 240, 220)), (-4, (214, 204, 180))):
+        o.line([(A[0] - 1, A[1] + dy), (B[0] + 1, B[1] + dy)], c)
+    o.ellipse(B[0], B[1] - 5, 4, 6, (214, 204, 180))
+    o.px(B[0] + 2, B[1] - 2, (120, 110, 96))
+    mx, my = lerp(A, B, 0.35)
+    o.rect(round(mx), round(my) - 5, 2, 6, (190, 60, 62))
 
 
 def bench(g, s):
@@ -1163,6 +1148,8 @@ def table(g, rnd):
     g.rect(118, 382, 245, 1, mul(WOOD, 0.36))
     for x in range(124, 360, 12):
         g.px(x, 378, mul(WOOD, 0.9))
+    T = lambda u, v: lerp(lerp(BL, BR, u), lerp(FL, FR, u), v)
+    table_map(g, T)
     # ---- laptop (the projects object)
     o = place(g, 'projects', (148, 288))
     o.shadow(152, 350, 96, 20, 0.5)
@@ -1269,13 +1256,13 @@ def table(g, rnd):
     o.rect(341, 349, 4, 4, (60, 56, 76))
     o.px(342, 350, (240, 228, 198))
     o.px(344, 352, (240, 228, 198))
-    # ---- pen, about 14 cm against the laptop
-    g.line([(242, 369), (270, 362)], (40, 60, 120), width=2)
-    g.line([(242, 370), (270, 363)], (24, 36, 80))
-    g.line([(243, 368), (262, 363)], (90, 110, 170))
-    g.line([(270, 362), (273, 361)], (200, 200, 214))
-    g.line([(246, 366), (253, 364)], BRASS)
-    g.px(242, 369, BRASS)
+    # ---- pen, about 14 cm against the laptop, left of it
+    g.line([(124, 370), (150, 364)], (40, 60, 120), width=2)
+    g.line([(124, 371), (150, 365)], (24, 36, 80))
+    g.line([(125, 369), (143, 365)], (90, 110, 170))
+    g.line([(150, 364), (153, 363)], (200, 200, 214))
+    g.line([(128, 368), (135, 366)], BRASS)
+    g.px(124, 370, BRASS)
 
 
 # ------------------------------------------------------------------ Foreground
@@ -1458,7 +1445,6 @@ def build_room(seed=21, over_rack=True):
     side_wall(g, 1)
     bench(g, -1)
     bench(g, 1)
-    journey_map(g)
     table(g, rng('table'))
     # Overall lighting: the ceiling strip washing the walls, cold light from outside
     g.light(-120, 40, 720, 50, (255, 214, 160), 0.26)
