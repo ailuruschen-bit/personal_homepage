@@ -739,24 +739,48 @@ timecode and the recording badge.
   after it.
 - A page change rather than an art change, small and static.
 
-#### Recommendation
+#### Decision
 
-**C.** It is the only option that hides the line at its full height and keeps
-the walls, and it is something a sleeper compartment actually has. B is as
-complete but pays for it with the side walls; it remains worth having as a
-second layer at the very edge of a wide screen — a jamb outside, the curtain
-inside it, which is what a sleeper's doorway looks like — but not instead of C.
+**Replace the two side images with a foreground.** `room-l.webp` and
+`room-r.webp` stop being a continuation of the room and become something that
+stands in front of it: the door frame, a curtain, or both. The seam is then the
+boundary between the room's image and the foreground's image, which is exactly
+where the dimming stops, so the line needs no further covering: a near, dark
+object beside a lit room is expected to differ in tone from it.
 
-A is the right instinct, to put the seam where the room has an edge, but the
-room only has an edge there above the seats, so on its own it does half the
-job. With C in place it is no longer needed for the seam, and stays open as a
+This is option B in its plainest form, with C's curtain available as what the
+foreground is made of. It is chosen over the narrow curtain inside the room
+because it changes nothing inside the scene: no new geometry, no object placed
+to the unit, two images redrawn.
+
+What it means:
+
+- The room inside the scene is untouched, including the 24-unit strips of side
+  wall next to the corners. Those are the side-wall detail that stays.
+- The side walls drawn in the extensions go: the folded berths, straps,
+  reading lamp and net pocket. Step 1.3 shrinks to finishing the strips that
+  are inside the scene.
+- The foreground's inner edge is a straight vertical at the image boundary. A
+  door jamb has such an edge. A curtain does not, so a curtain needs either a
+  jamb or a track post at its inner edge, or a hem that hangs straight there.
+- Keep it dark and low in contrast. It is never dimmed, so the darker it is,
+  the less its tone can disagree with the dimmed room beside it.
+- It is the foreground stage 6 asks for (S-08), still inside the room's own
+  layer, so it does not move against the room. Moving it separately stays
+  deferred as D-03.
+- On a 4:3 window the extensions are off screen, so nothing changes there.
+
+What the foreground is — door frame, curtain, or a frame with a curtain
+gathered against it — is still to be chosen. A frame with a curtain is the
+fullest: the frame gives the straight edge and the story's door, the curtain
+gives colour and folds.
+
+A, the corner moved onto the seam, is not needed for this and stays open as a
 question about the compartment's width.
 
 #### When
 
-Any time from now. Under C the side extensions stay what they are, so step 1.3
-goes ahead unchanged, and the curtains are also the foreground that stage 6
-asks for (S-08). Only B would change what 1.3 draws.
+Before step 1.3, since it removes most of what 1.3 would have drawn.
 
 #### What to do, in order
 
@@ -764,9 +788,9 @@ asks for (S-08). Only B would change what 1.3 draws.
    removed. Check Chrome first with the artwork unchanged: the seam will show,
    but there should be no flicker. If there is, stop — the premise of this
    section is wrong.
-2. Draw the chosen option in `room.py`. The seam's position comes from the
-   generated geometry (`SIDE` and the scene's width), so the jamb or curtain
-   can be placed from those rather than by hand.
+2. Draw the foreground in `room.py` in place of what the side extensions hold
+   now. The two images keep their size and position, so nothing on the page
+   changes.
 3. Check at 16:9 and wider, focusing each object in turn, the window most of
    all: its light is the largest and leaves the least dimming at the edges.
 4. Record the outcome in [09](09-fix-log.md) either way.
@@ -878,9 +902,10 @@ Done so far in stage 1, beyond what the step table names:
   thing in front (`front` in the generated geometry). The briefcase lifts whole
   behind the rack's rail this way.
 
-Next: 1.3, 1.5, 1.6 and the stage 1 gate; and, once the original dimming has
-been checked in Chrome on its own, the berth curtains of
-[D-01a](#d-01a-bring-the-dimming-back-by-designing-the-seam-away).
+Next: restore the original dimming and check it in Chrome on its own; replace
+the side images with a foreground, per
+[D-01a](#d-01a-bring-the-dimming-back-by-designing-the-seam-away); then what is
+left of 1.3, and 1.5, 1.6 and the stage 1 gate.
 
 ## Keep in sync
 
