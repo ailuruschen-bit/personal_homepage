@@ -89,16 +89,12 @@ step change.
 
 ## The spotlight pool
 
-Two stacked elements do the lighting, both full-scene overlays positioned by
-four custom properties:
-
-- `.spot` — a dark layer with a hole. Raising its opacity dims everything
-  except the focused object.
-- `.beam` — a warm pool of light drawn into the same hole.
+`.beam` is a warm, full-scene light overlay positioned by four custom
+properties. The earlier dark `.spot` and side dimming were removed after Chrome
+flicker and latency checks; see [F-003](09-fix-log.md#f-003-chrome-focus-shading-flicker-and-slow-pointer-light).
 
 `updatePool` eases five numbers toward a target: centre `x`/`y`, radii
-`rx`/`ry`, and `alpha`, plus `dim` for `.spot`. The target comes from the
-focused hotspot's `light` entry.
+`rx`/`ry`, and `alpha`. The target comes from the focused hotspot's `light` entry.
 
 Two details are worth keeping:
 
@@ -109,8 +105,8 @@ Two details are worth keeping:
   under the pointer light at `FREE_RADIUS`, so the snap animation expands from
   where the cursor was rather than appearing from nowhere.
 
-The loop skips writing the custom properties entirely once both opacities are
-below 0.004, which is the common case while browsing without focus.
+The loop skips writing the custom properties once the beam's opacity is below
+0.004, which is the common case while browsing without focus.
 
 Note the `/ 4.8` in those writes: it converts scene units to a percentage of
 the 480-unit square.
@@ -174,4 +170,3 @@ is tabbable. `pointer-events` is only enabled on them in the hub.
 | `TAU.camera`        | 0.34  | Slower framing and outside-layer easing              |
 | `TAU.parallax`      | 0.09  | Laggier parallax                                     |
 | `TAU.poolMove`      | 0.045 | The pool chases the object more slowly               |
-| `TAU.dim`           | 0.12  | The dimming layer fades more slowly                  |

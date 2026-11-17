@@ -19,9 +19,67 @@ anything that is now load-bearing because of it.
 
 ---
 
+## F-003 Chrome: focus shading flicker and slow pointer light
+
+**Fixed for the current scene; manual Chrome checks passed.** The exact browser
+compositing failure was not established with a performance trace. This work was
+done after F-002, during the side-wall tone matching on `art/redraw`.
+
+### Symptoms
+
+- Adding focus dimming to the side extensions made colour patches flash when
+  switching objects. Even variants stable during focus could flash for one frame
+  when an early opening skip settled into the hub or a background tab became
+  visible again.
+- A later no-flash variant moved the grain by repainting its background every
+  80 ms. It kept the texture but made the pointer light and opening noticeably
+  less fluid in Chrome than in Safari.
+
+### Controlled checks, in order
+
+1. Builds **G** (`public/_bisect/g/`) and **H** (`public/_bisect/h/`) gave the
+   same side-wall tone with, respectively, two flat opacity strips and shadows
+   extending from the central dimmer. Both stopped steady-state colour flashing,
+   but still flashed at skip landing and on tab return.
+2. Moving the flat strips into `.ext` pseudo-elements made flashing worse,
+   including during ordinary focus changes; this was reverted.
+3. Removing the side strips stopped focus-change flashes. Skip landing and tab
+   return still flashed, so the side strips were not their only trigger.
+4. Disabling the periodic `.pop` filter glint stopped the skip-landing flash.
+5. Holding the film grain still stopped the tab-return flash, but visibly hurt
+   its texture. Animating `background-position` restored motion without that
+   flash, at the cost of conspicuous Chrome input and opening latency.
+6. Filtering the existing side artwork with `brightness()` brought back focus
+   flashes and slowed the pointer. Fading the central dimmer to transparent at
+   its edges produced an objectionable dark halo. Both were reverted.
+7. Removing central focus dimming as well as the side strips kept the object
+   lift and warm `.beam` but eliminated the tone boundary. Removing `screen`
+   blending from `.ml` and `.beam` improved pointer response somewhat.
+8. The grain returned to transform animation. `visibilitychange` now removes
+   that moving layer while the tab is hidden and restarts it after two visible
+   animation frames. The user accepted the resulting Chrome fluidity and found
+   no remaining flashes in the tested interactions.
+
+### Current rules and limits
+
+- Do not silently reintroduce `.spot`, `.dimside`, `.pop` glint, or live side-wall
+  filters. The present focus treatment uses object lift, the pointer light and
+  `.beam`, with no scene-wide darkening.
+- Keep the grain's transform animation and the visibility lifecycle in sync.
+  Replacing it with full-viewport `background-position` animation traded the
+  flash for perceptible Chrome latency. Keep `screen` blending off the pointer
+  light and beam unless it is measured and manually checked again.
+- A darker focused state is still an open design option, not an impossible
+  effect. Pre-rendered artwork is a candidate, but has not been tested. Check
+  focus changes, early skip landing, tab return, pointer latency, and opening
+  smoothness in a visible desktop Chrome window before adopting it.
+
+---
+
 ## F-002 Chrome: flicker after shading the side panels
 
-**Fixed by going back; the exact trigger was not isolated.** Chrome only.
+**The vignette fix remains; the focus-dimming part was superseded by F-003.**
+Chrome only. The exact original trigger was not isolated.
 
 ### Symptoms
 
@@ -50,12 +108,13 @@ without touching them:
 
 - the vignette over the side extensions is **baked into the artwork** by
   `room.py`, using `.vig`'s gradient exactly;
-- the focus dimming over them is two more elements of exactly the kind `.spot`
-  already is (`.spot.side`), each only as large as the extension it covers.
+- focus dimming over the extensions was initially implemented as separate
+  `.spot.side` elements. F-003 records why all focus dimming was later removed.
 
 ### Load-bearing afterwards
 
-- No overlay inside `.scene` larger than the scene.
+- No overlay inside `.scene` larger than the scene. The current focus treatment
+  has no `.spot` or side dimming elements.
 - No gradients painted in pseudo-elements of `.ext`.
 - `.vig` keeps `ellipse at 50% 42%` with no explicit size.
 

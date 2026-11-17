@@ -47,7 +47,7 @@ carriage layer fails to paint, you do not get a gap — you get the city.
 | `.look`  | `will-change: transform`                                      | hub only (`.ow, .hub .look`)           |
 | `.cam`   | transform animation                                           | during `intro`, `back`, `peek`         |
 | `.sway`  | infinite transform animation                                  | except in `idle` / `back` / `settling` |
-| `.grain` | `will-change: transform` plus a stepped animation             | always                                 |
+| `.grain` | `will-change: transform` plus a stepped animation             | while visible; suspended in hidden tabs |
 | `.pop`   | transform and filter changes                                  | left to the browser, deliberately      |
 
 Three of those choices are worth explaining.
@@ -121,6 +121,12 @@ implicated in the Chrome issue below.
 forces the browser to flatten everything below it into a single backdrop
 texture before blending, every frame. Plain alpha over black and white dots
 reads almost the same and costs nothing.
+
+**No `screen` blending on `.ml` or `.beam`.** Removing it improved pointer
+response in the Chrome checks recorded in [F-003](09-fix-log.md#f-003-chrome-focus-shading-flicker-and-slow-pointer-light).
+The moving grain layer is also suspended while the tab is hidden and restarted
+after two visible frames. This avoided tab-return flashing without the
+full-viewport repaints caused by animating `background-position`.
 
 **`overflow: clip`, not `hidden`, on `.stage`.** A `hidden` container is still
 scrollable programmatically: focusing an off-screen hotspot button, or any
