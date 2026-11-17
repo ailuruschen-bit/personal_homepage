@@ -1149,7 +1149,7 @@ def table(g, rnd):
 FOREGROUND = os.environ.get('FOREGROUND', 'velvet')
 
 # Curtain colours: the benches' red, or the window curtains' green
-FG_CURTAIN = {'velvet': SEAT, 'teal': (58, 110, 96)}
+FG_CURTAIN = {'velvet': mul(SEAT, 0.84), 'teal': (58, 110, 96)}
 
 
 # A 3 on the pilaster's plate, as (row, column) from the glyph's top-left
@@ -1193,9 +1193,27 @@ def foreground_rgb(style):
         k = 0.5 + 0.72 * wave**1.3
         k *= 1 - 0.45 * np.clip(1 - f / 0.14, 0, 1)  # in the pilaster's shadow
         k *= 1 - 0.35 * np.clip((f - 0.82) / 0.18, 0, 1)  # turning away at the edge
-        c = curtain[None, :] * k[:, None]
-        sheen = np.clip((wave - 0.9) / 0.1, 0, 1)[:, None] * 0.22  # velvet catches light on the crests
-        out[row, cols] = c * (1 - sheen) + f32((255, 196, 206)) * sheen * 0.8
+        if style == 'velvet':
+            # the benches' upholstery: the same red in the same tones as their
+            # backrests, and their diamond quilting with a button at each
+            # crossing, laid out across the cloth so that it gathers into the
+            # folds with it
+            cu = f * 56.0
+            m = np.full(len(cols), 1.0, np.float32)
+            d1, d2 = (cu + row) % 14, (cu - row) % 14
+            m[(d1 < 1) | (d2 < 1)] = 0.62
+            btn = (np.abs(d1 - 7) < 0.5) & (np.abs(d2 - 7) < 0.5)
+            m[btn] = 0.45
+            out[row, cols] = curtain[None, :] * (k * m)[:, None]
+            if row > y_top:
+                up = (np.abs(((cu + row - 1) % 14) - 7) < 0.5) & (np.abs(((cu - row + 1) % 14) - 7) < 0.5)
+                out[row - 1, cols[up]] = curtain * 1.25 * k[up, None]
+            # piping down the leading edge, as along the cushions' front
+            out[row, cols[f < 0.035]] = curtain * 0.4
+        else:
+            c = curtain[None, :] * k[:, None]
+            sheen = np.clip((wave - 0.9) / 0.1, 0, 1)[:, None] * 0.22  # velvet catches light on the crests
+            out[row, cols] = c * (1 - sheen) + f32((255, 196, 206)) * sheen * 0.8
     # tie-back: a brass rope across the folds, and its tassel at the outer end
     rope = [0.62, 0.86, 1.08, 1.22, 1.12, 0.92, 0.7]
     for r, k in enumerate(rope):
@@ -1204,8 +1222,10 @@ def foreground_rgb(style):
         w = 2 + min(4, (r - 262) // 5)
         x0 = u_in + tie - 1
         out[r, x0 - w // 2 : x0 + w // 2 + 1] = f32(BRASS) * (0.9 if r % 3 else 0.6)
-    # pelmet over the rod: velvet with brass piping and a scalloped edge
-    pel = curtain * 0.92
+    # pelmet over the rod, with brass piping and a scalloped edge. Over the
+    # velvet it is the headrest covers' pale cloth, laid over the red the way
+    # they are laid over the backrests
+    pel = f32((204, 198, 222)) * 0.9 if style == 'velvet' else curtain * 0.92
     out[34:46, 22:] = pel
     for c in range(22, U, 4):
         out[34:46, c] = pel * 0.78
