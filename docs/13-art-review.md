@@ -617,20 +617,161 @@ The full record, including the six variants that failed, is F-002 and F-003 in
 - Fading the central dimmer out toward its edges avoided the step in tone but
   left a dark halo.
 
-What has not been tried, in the order worth trying:
+The ways forward are D-01a, which leaves the page alone, and D-01b, which does
+not.
 
-1. **Pre-rendered artwork.** Have `room.py` render a second, darkened version
-   of the room and its sides, and cross-fade one image element over the other
-   on focus. One opacity change on elements that already exist at that size,
-   no gradient and no per-frame repaint. It dims uniformly rather than around
-   the object, so it pairs with the existing `.beam` for the spotlight.
+### D-01a Bring the dimming back by designing the seam away
+
+**Proposed; nothing here is built.** The original focus lighting was good
+everywhere except at one place, and that place is a line, not an effect. So
+instead of changing how the page dims, change what the picture has on that
+line, and put the original `.spot` back untouched. Everything below is artwork
+only, which is the kind of change that has never flickered.
+
+#### What the seam is
+
+`.spot` covers the 480 scene and nothing else, so the dimming stops at the
+scene's left and right edges: two vertical lines on screen, at x = 0 and
+x = 480, the full height of the picture. The side extensions beyond them are
+never dimmed.
+
+Where those lines fall in the room as it is drawn now:
+
+- The corner between the window wall and each side wall is at x = 24 and 456,
+  so the seam is 24 units **outside** the corner, on the side wall, 1.8 m from
+  the camera.
+- Lower down the same line crosses the backrest, the cushion and the base of
+  each bench.
+- The extensions are only on screen when the viewport is wider than about
+  1.43 : 1. A 16:9 window shows roughly 57 units of each; a 4:3 window shows
+  none, and has no seam.
+
+One fact decides which ideas can work: **a vertical line on screen is not a
+vertical line in the room.** It is the trace of a plane through the camera. A
+real edge follows it only if that edge lies in that plane or is close enough to
+the camera to be flat-on. So there are two honest ways to hide it: make
+something end exactly there, or put something in front of it.
+
+#### The options
+
+**A. The corner on the seam, backrests let into the walls.** _(The idea this
+section started from.)_ Widen the compartment so the window wall is exactly the
+scene: half-width 240 / 180 = 1.33 m instead of 1.2. The corner then sits on
+the seam, and the side walls lie wholly in the extensions. Make the backrests
+thin and recessed into the partitions so they go with the walls.
+
+- Solves the seam on the wall completely, from the ceiling down to the top of
+  the cushion (y = 359): a change of tone at a corner is what corners do.
+- Does not solve it below that. The cushion and the base run toward the camera
+  and cross the line for the remaining 120 units; nothing about a bench ends
+  there.
+- Costs the 24-unit strips of side wall that are in the scene today, which are
+  most of the depth a 4:3 window sees.
+- Needs a partner for the lower part: C or D below, or a dark blanket and bag on
+  each seat where the line crosses.
+
+**B. Look in through the doorway.** The camera is already standing just inside
+the door. Put the door frame in the picture: two jambs close to the camera,
+their inner edges exactly on the seam, filling the side extensions. A door
+0.9 m wide, 0.68 m from the camera, projects to x = 0 and 480.
+
+- Solves it completely and at full height: the jamb is a near, flat-on object,
+  so its edge is a true vertical on screen, and it is nearly black, so whether
+  it is dimmed or not cannot be seen.
+- Gives the picture the foreground it lacks (S-08) with no extra layer.
+- Fits the story: the detective has just come through this door, and the
+  occupant comes back through it.
+- Costs everything now drawn in the extensions — the berths, straps, lamp and
+  net pocket would be behind the jambs — and the side walls would show only as
+  the same 24-unit strips.
+
+**C. Curtains on the seam.** Hang a heavy curtain at each line: the door
+curtain a sleeper compartment has, drawn back to both sides, close to the
+camera, from above the frame to the floor, about 20 units wide and straddling
+the seam.
+
+- Solves it by interruption rather than by hiding: the two tones are no longer
+  next to each other, and a curtain's folds are alternating light and dark
+  bands already, so a change of tone across it reads as fabric.
+- Keeps the side walls and their berths visible beyond the curtains on wide
+  screens.
+- Works at full height, because a hanging curtain is vertical.
+- Weaker than B if the curtain is drawn too narrow or too flat. It has to be a
+  real object with folds, not a strip.
+
+**D. Let the sides fall into shadow.** Put back what the artwork did
+originally: the extensions darken steeply toward the edges. The explanation in
+the room is that the light is all at the window end — the neon, the lamp, the
+ceiling strip by the wall — and the door end is unlit.
+
+- The cheapest: a few lines in `room.py`, already written once.
+- Hides the seam only as far as both sides of it are near black. Bright things
+  that cross the line, the headrest covers above all, would have to be toned
+  down or moved.
+- Costs the side walls: on a wide screen they would be shapes in the dark. This
+  is how the picture looked before the redraw, and "the walls have disappeared"
+  was the complaint that followed when it happened by accident.
+
+**E. A tape frame.** Do not show anything beyond the scene. On a wide window,
+pillarbox the hub and use the bars for what
+[11](11-premise-and-voice.md#what-carries-it) already wants on screen: the
+timecode and the recording badge.
+
+- Removes the seam by removing what is beside it. No artwork needed.
+- Costs the full-bleed picture on wide screens, which is where the scene looks
+  its best, and the opening is full-bleed, so the bars would have to arrive
+  after it.
+- A page change rather than an art change, small and static.
+
+#### Recommendation
+
+**B, with C as the alternative if losing the side walls is too much.** Both
+hide the line at its full height with one object, and neither depends on what
+crosses it. A is the right instinct — put the seam where the room has an edge —
+but the room only has an edge there above the seats, so on its own it does half
+the job; it is worth doing together with B or C only if the wider compartment
+is wanted for its own sake.
+
+B and C can also be combined: a jamb at the very edge and a curtain inside it,
+which is what a sleeper's doorway looks like.
+
+#### When
+
+Before step 1.3, not after stage 3. The choice decides what the side extensions
+are: under B they are door jambs and the side-wall fittings 1.3 would finish are
+never seen; under C and D they stay. It also settles the foreground (S-08,
+stage 6) if B or C is chosen.
+
+#### What to do, in order
+
+1. Restore `.spot` exactly as it was before F-003, and nothing else that F-003
+   removed. Check Chrome first with the artwork unchanged: the seam will show,
+   but there should be no flicker. If there is, stop — the premise of this
+   section is wrong.
+2. Draw the chosen option in `room.py`. The seam's position comes from the
+   generated geometry (`SIDE` and the scene's width), so the jamb or curtain
+   can be placed from those rather than by hand.
+3. Check at 16:9 and wider, focusing each object in turn, the window most of
+   all: its light is the largest and leaves the least dimming at the edges.
+4. Record the outcome in [09](09-fix-log.md) either way.
+
+### D-01b Dimming from the page instead
+
+The alternative to D-01a: change the mechanism rather than the picture. Neither
+of these has been tried, and both are page changes that need the full Chrome
+check.
+
+1. **A dimming that follows the room.** Have `room.py` render a dark overlay
+   whose shape is the architecture: full strength over the window wall right up
+   to its corners, where a change of tone is natural, and fading out along the
+   benches and the floor well before they reach the scene's edge. The earlier
+   attempt to fade the dimmer at its edges left a halo because it faded across
+   the wall, a continuous surface; this fades only along surfaces that run
+   toward the camera. One static image, one opacity.
 2. **One image for the whole width.** If the room and its side extensions were
    a single 720-wide element, an overlay the size of that element would not be
    "wider than the scene". This changes the scene's structure and so belongs
    with the scroll narrative work in [10](10-scroll-narrative.md).
-
-Do this after stage 3: the value plan there decides how dark "dimmed" should
-be, and the artwork it would darken is still changing.
 
 ### D-02 The periodic glint on focusable objects
 
@@ -721,7 +862,9 @@ Done so far in stage 1, beyond what the step table names:
   thing in front (`front` in the generated geometry). The briefcase lifts whole
   behind the rack's rail this way.
 
-Next: finish 1.3 and 1.5, then 1.6 and the stage 1 gate.
+Next: choose among the options in [D-01a](#d-01a-bring-the-dimming-back-by-designing-the-seam-away),
+because the choice decides what step 1.3 draws. Then 1.3, 1.5, 1.6 and the
+stage 1 gate.
 
 ## Keep in sync
 
