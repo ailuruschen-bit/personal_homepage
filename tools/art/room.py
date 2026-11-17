@@ -1146,82 +1146,113 @@ def table(g, rnd):
 # stops: a near, dark object beside a lit room is expected to differ in tone.
 # See docs/13, D-01a. Which foreground is drawn is FOREGROUND, or the
 # FOREGROUND environment variable when trying variants.
-FOREGROUND = os.environ.get('FOREGROUND', 'frame-curtain')
+FOREGROUND = os.environ.get('FOREGROUND', 'velvet')
 
-FG_PALETTE = [
-    (20, 18, 32),  # 0 corridor beyond
-    (12, 10, 20),  # 1 corridor seam, dark
-    (30, 28, 46),  # 2 corridor seam, light
-    (36, 32, 50),  # 3 jamb, front
-    (24, 22, 34),  # 4 jamb, groove
-    (64, 58, 84),  # 5 jamb, face toward the room
-    (96, 88, 120),  # 6 jamb, lit edge
-    (30, 27, 42),  # 7 lintel or valance
-    (52, 48, 70),  # 8 its lit lower edge
-    (150, 118, 62),  # 9 rod
-    (214, 170, 88),  # 10 rod highlight
-    (180, 140, 70),  # 11 tie-back
-    (110, 86, 46),  # 12 handrail
-] + [mul((44, 82, 78), k) for k in (0.42, 0.56, 0.7, 0.84, 0.98, 1.14)]  # 13-18 curtain folds
-FOLD0, FOLDS = 13, 6
+# Curtain colours: the benches' red, or the window curtains' green
+FG_CURTAIN = {'velvet': SEAT, 'teal': (58, 110, 96)}
 
 
-def foreground_map(style):
-    """The foreground as palette indices, 480 rows by 120 columns. Column u is u
-    units out from the edge of the scene, so the left image is this mirrored."""
+# A 3 on the pilaster's plate, as (row, column) from the glyph's top-left
+FG_NUMBER = ((47, 0), (47, 1), (47, 2), (48, 2), (49, 2), (50, 1), (50, 2), (51, 2), (52, 2), (53, 2), (53, 1), (53, 0))
+
+
+def foreground_rgb(style):
+    """The foreground as an RGB array, 480 rows by 120 columns. Column u is u
+    units out from the edge of the scene, so the left image is this mirrored.
+
+    It is built from the interior's own materials so that it reads as the end
+    of the same carriage: a pilaster in the wall panelling, edged in brass, with
+    the dado rail and ribbed lower panel of the walls; a cornice across the top;
+    and beyond it a curtain on a brass rod under a pelmet, tied back with a
+    brass rope and tassel."""
     H_, U = 480, 120
-    a = np.zeros((H_, U), np.uint8)
-    u = np.arange(U, dtype=np.float32) + 0.5
-    y = np.arange(H_, dtype=np.float32).reshape(H_, 1) + 0.5
-    # the corridor beyond: panel seams and a handrail
-    for c in (60, 96):
-        a[:, c] = 1
-        a[:, c + 1] = 2
-    jamb = 14 if style in ('frame', 'frame-curtain') else 0
-    a[296:300, jamb:] = 12
-    a[295, jamb:] = 2
-    if jamb:
-        # the door frame: a lintel across the top and the jamb on the scene's edge,
-        # whose face toward the room catches the room's light
-        a[:30, :] = 7
-        a[28:30, :] = 8
-        a[30:, :jamb] = 3
-        a[30:, 8] = 4
-        a[30:, :3] = 5
-        a[30:, :1] = 6
-    else:
-        a[:18, :] = 7
-        a[16:18, :] = 8
+    f32 = lambda c: np.array(c, np.float32)
+    out = np.zeros((H_, U, 3), np.float32)
+    uu, yy = np.meshgrid(np.arange(U), np.arange(H_))
+    LIFT = 1.18  # the foreground is out of the room's lights: lift its colours
 
-    if style in ('frame-curtain', 'curtain'):
-        # a curtain on a rod, gathered against the frame (or, with no frame, with
-        # its straight leading edge on the scene's edge) and tied back
-        u_in = jamb
-        top, tie, bottom = (58, 40, 66) if jamb else (70, 52, 80)
-        rod_y = 32 if jamb else 18
-        a[rod_y : rod_y + 3, u_in : u_in + top + 10] = 9
-        a[rod_y, u_in : u_in + top + 10] = 10
-        y0 = rod_y + 3
-        for row in range(y0, H_):
-            if row < 250:
-                t = (row - y0) / (250 - y0)
-                uo = top + (tie - top) * (t * t)
-            else:
-                t = (row - 250) / (H_ - 250)
-                uo = tie + (bottom - tie) * np.sqrt(t)
-            uo = u_in + uo
-            cols = np.arange(u_in, min(U, int(uo)))
-            f = (cols + 0.5 - u_in) / (uo - u_in)
-            wave = 0.5 + 0.5 * np.cos(2 * np.pi * (f * 5.0 + 0.15))
-            # darker against the frame and toward the outer edge
-            k = wave * 0.85 + 0.15 - 0.25 * np.clip(1 - f * 6, 0, 1) - 0.3 * np.clip((f - 0.8) * 5, 0, 1)
-            a[row, cols] = FOLD0 + np.clip(np.round(k * (FOLDS - 1)), 0, FOLDS - 1).astype(np.uint8)
-        # rings on the rod, and the tie-back pinching the folds
-        for c in range(u_in + 2, u_in + top, 6):
-            a[rod_y + 3 : rod_y + 5, c : c + 2] = 9
-        a[246:254, u_in : u_in + tie] = 11
-        a[246, u_in : u_in + tie] = 10
-    return a
+    # beyond the curtain: the corridor, dim, with a handrail
+    out[:] = f32(WALL_LO) * 0.62
+    out[300:304] = f32(BRASS) * 0.5
+    out[300] = f32(BRASS) * 0.75
+
+    # the curtain
+    curtain = f32(FG_CURTAIN[style]) * LIFT
+    u_in, top, tie, bottom, y_top = 22, 60, 44, 70, 48
+    for row in range(y_top, H_):
+        if row < 258:
+            t = (row - y_top) / (258 - y_top)
+            uo = top + (tie - top) * t * t
+        else:
+            t = (row - 258) / (H_ - 258)
+            uo = tie + (bottom - tie) * np.sqrt(t)
+        uo = u_in + uo
+        cols = np.arange(u_in, min(U, int(round(uo))))
+        f = (cols + 0.5 - u_in) / (uo - u_in)
+        wave = 0.5 + 0.5 * np.cos(2 * np.pi * (f * 4.5 + 0.1))
+        k = 0.5 + 0.72 * wave**1.3
+        k *= 1 - 0.45 * np.clip(1 - f / 0.14, 0, 1)  # in the pilaster's shadow
+        k *= 1 - 0.35 * np.clip((f - 0.82) / 0.18, 0, 1)  # turning away at the edge
+        c = curtain[None, :] * k[:, None]
+        sheen = np.clip((wave - 0.9) / 0.1, 0, 1)[:, None] * 0.22  # velvet catches light on the crests
+        out[row, cols] = c * (1 - sheen) + f32((255, 196, 206)) * sheen * 0.8
+    # tie-back: a brass rope across the folds, and its tassel at the outer end
+    rope = [0.62, 0.86, 1.08, 1.22, 1.12, 0.92, 0.7]
+    for r, k in enumerate(rope):
+        out[255 + r, u_in : u_in + tie + 3] = f32(BRASS) * k
+    for r in range(262, 294):
+        w = 2 + min(4, (r - 262) // 5)
+        x0 = u_in + tie - 1
+        out[r, x0 - w // 2 : x0 + w // 2 + 1] = f32(BRASS) * (0.9 if r % 3 else 0.6)
+    # pelmet over the rod: velvet with brass piping and a scalloped edge
+    pel = curtain * 0.92
+    out[34:46, 22:] = pel
+    for c in range(22, U, 4):
+        out[34:46, c] = pel * 0.78
+    out[46, 22:] = f32(BRASS) * 1.1
+    out[47, 22:] = f32(BRASS) * 0.75
+    for c0 in range(22, U, 12):
+        for d in range(min(12, U - c0)):
+            depth = int(round(4 * np.sin(np.pi * (d + 0.5) / 12)))
+            out[48 : 48 + depth, c0 + d : c0 + d + 1] = pel * 0.85
+            if depth:
+                out[48 + depth - 1, c0 + d] = pel * 0.6
+
+    # the pilaster: wall panelling with the walls' diamond pattern, edged in brass
+    P = 22
+    wall = f32(WALL) * LIFT
+    a, b = (uu + yy) % 12, (uu - yy) % 12
+    pat = np.where((a == 0) | (b == 0), 0.9, np.where((a == 6) & (b == 6), 1.06, 1.0)).astype(np.float32)
+    out[:, :P] = wall * pat[:, :P, None]
+    out[:, 2:4] *= 1.22  # the face turning toward the room catches its light
+    out[:, 17:19] *= 0.8
+    out[:, 19:22] *= 0.55
+    for x in (7, 14):
+        for y in range(70, 290, 26):
+            out[y, x] = wall * 1.35
+            out[y + 1, x] = wall * 0.6
+    # dado rail and the ribbed lower panel, as on the walls
+    out[288:296, :P] = f32((70, 80, 118)) * LIFT
+    out[288, :P] = f32((128, 138, 176)) * LIFT
+    out[294:296, :P] = f32((36, 42, 70)) * LIFT
+    low = f32(WALL_LO) * LIFT
+    out[296:, :P] = low
+    for x in range(2, P - 3, 3):
+        out[296:, x] *= 0.84
+        out[296:, x + 1] *= 1.08
+    out[296:, 17:22] *= 0.7
+    # brass edge on the scene side, and a brass number plate
+    out[:, 0] = f32(BRASS) * 1.12
+    out[:, 1] = f32(BRASS) * 0.72
+    out[44:58, 5:17] = f32(BRASS) * 0.85
+    out[44, 5:17] = f32(BRASS) * 1.15
+    out[46:56, 7:15] = f32((40, 30, 24))
+
+    # cornice across the top, as on the walls
+    out[:34] = f32((50, 54, 84)) * LIFT
+    out[30] = f32((96, 102, 140)) * LIFT
+    out[32:34] = f32((30, 32, 54)) * LIFT
+    return np.clip(out, 0, 255).astype(np.uint8)
 
 
 def foreground(g, style=None):
@@ -1229,15 +1260,18 @@ def foreground(g, style=None):
     there by what was drawn before. The room's invisible lights are left alone:
     they reach into the room through the render's blur, and clearing them here
     would change the room as well as the foreground."""
-    a = foreground_map(style or FOREGROUND)
+    a = foreground_rgb(style or FOREGROUND)
     cv = g.cv
-    for side, img in ((-1, a[:, ::-1]), (1, a)):
+    for side, img in ((-1, a[:, ::-1].copy()), (1, a)):
         x0 = 0 if side < 0 else OX + 480
-        for i, c in enumerate(FG_PALETTE):
-            m = Image.fromarray(np.where(img == i, 255, 0).astype(np.uint8), 'L')
-            cv.mask(x0, 0, m, c)
-        box = (x0, 0, x0 + 120, H)
-        cv.sh.paste(255, box)
+        # the carriage number on the plate, written after mirroring so that it
+        # reads the right way round on both sides
+        c0 = 9 if side > 0 else 120 - 12
+        for y, x in FG_NUMBER:
+            img[y, c0 + x] = (255, 214, 140)
+        cv.im.paste(Image.fromarray(np.ascontiguousarray(img), 'RGB').convert('RGBA'), (x0, 0))
+        cv.em.paste((0, 0, 0), (x0, 0, x0 + 120, H))
+        cv.sh.paste(255, (x0, 0, x0 + 120, H))
 
 
 def build_room(seed=21, over_rack=True):
@@ -1307,7 +1341,9 @@ def build_room(seed=21, over_rack=True):
     sx, sy = (xs + 0.5) / k - OX, (ys + 0.5) / k
     t = np.sqrt(((sx - 240) / (240 * 2**0.5)) ** 2 + ((sy - 201.6) / (278.4 * 2**0.5)) ** 2)
     va = (0.5 * np.clip((t - 0.38) / (0.82 - 0.38), 0, 1))[..., None]
-    va = np.where((sx < 0) | (sx >= 480), 1, 0)[..., None] * va
+    # half strength over the foreground: it is near the camera, and the change
+    # of tone at the room's edge is now an object's edge
+    va = np.where((sx < 0) | (sx >= 480), 0.5, 0)[..., None] * va
     a[..., :3] = (a[..., :3] * (1 - va) + np.array([5, 4, 14], np.float32) * va).astype(np.uint8)
     a[..., 3] = 255
     # Punch out the window opening
