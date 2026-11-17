@@ -4,6 +4,7 @@ Drawn on a 720x480 canvas covering scene x in [-120, 600), then cut into the
 central 480 plus a 120-wide extension on each side. The window wall is drawn
 face-on; everything that recedes is built from the perspective model below.
 """
+import os
 import random
 
 import numpy as np
@@ -1138,6 +1139,107 @@ def table(g, rnd):
     g.px(258, 365, BRASS)
 
 
+# ------------------------------------------------------------------ Foreground
+# room-l.webp and room-r.webp are not a continuation of the room. They are a
+# foreground standing in front of it, so that the page's focus dimming, which
+# covers the 480 scene and stops at its edges, stops exactly where the room
+# stops: a near, dark object beside a lit room is expected to differ in tone.
+# See docs/13, D-01a. Which foreground is drawn is FOREGROUND, or the
+# FOREGROUND environment variable when trying variants.
+FOREGROUND = os.environ.get('FOREGROUND', 'frame-curtain')
+
+FG_PALETTE = [
+    (20, 18, 32),  # 0 corridor beyond
+    (12, 10, 20),  # 1 corridor seam, dark
+    (30, 28, 46),  # 2 corridor seam, light
+    (36, 32, 50),  # 3 jamb, front
+    (24, 22, 34),  # 4 jamb, groove
+    (64, 58, 84),  # 5 jamb, face toward the room
+    (96, 88, 120),  # 6 jamb, lit edge
+    (30, 27, 42),  # 7 lintel or valance
+    (52, 48, 70),  # 8 its lit lower edge
+    (150, 118, 62),  # 9 rod
+    (214, 170, 88),  # 10 rod highlight
+    (180, 140, 70),  # 11 tie-back
+    (110, 86, 46),  # 12 handrail
+] + [mul((44, 82, 78), k) for k in (0.42, 0.56, 0.7, 0.84, 0.98, 1.14)]  # 13-18 curtain folds
+FOLD0, FOLDS = 13, 6
+
+
+def foreground_map(style):
+    """The foreground as palette indices, 480 rows by 120 columns. Column u is u
+    units out from the edge of the scene, so the left image is this mirrored."""
+    H_, U = 480, 120
+    a = np.zeros((H_, U), np.uint8)
+    u = np.arange(U, dtype=np.float32) + 0.5
+    y = np.arange(H_, dtype=np.float32).reshape(H_, 1) + 0.5
+    # the corridor beyond: panel seams and a handrail
+    for c in (60, 96):
+        a[:, c] = 1
+        a[:, c + 1] = 2
+    jamb = 14 if style in ('frame', 'frame-curtain') else 0
+    a[296:300, jamb:] = 12
+    a[295, jamb:] = 2
+    if jamb:
+        # the door frame: a lintel across the top and the jamb on the scene's edge,
+        # whose face toward the room catches the room's light
+        a[:30, :] = 7
+        a[28:30, :] = 8
+        a[30:, :jamb] = 3
+        a[30:, 8] = 4
+        a[30:, :3] = 5
+        a[30:, :1] = 6
+    else:
+        a[:18, :] = 7
+        a[16:18, :] = 8
+
+    if style in ('frame-curtain', 'curtain'):
+        # a curtain on a rod, gathered against the frame (or, with no frame, with
+        # its straight leading edge on the scene's edge) and tied back
+        u_in = jamb
+        top, tie, bottom = (58, 40, 66) if jamb else (70, 52, 80)
+        rod_y = 32 if jamb else 18
+        a[rod_y : rod_y + 3, u_in : u_in + top + 10] = 9
+        a[rod_y, u_in : u_in + top + 10] = 10
+        y0 = rod_y + 3
+        for row in range(y0, H_):
+            if row < 250:
+                t = (row - y0) / (250 - y0)
+                uo = top + (tie - top) * (t * t)
+            else:
+                t = (row - 250) / (H_ - 250)
+                uo = tie + (bottom - tie) * np.sqrt(t)
+            uo = u_in + uo
+            cols = np.arange(u_in, min(U, int(uo)))
+            f = (cols + 0.5 - u_in) / (uo - u_in)
+            wave = 0.5 + 0.5 * np.cos(2 * np.pi * (f * 5.0 + 0.15))
+            # darker against the frame and toward the outer edge
+            k = wave * 0.85 + 0.15 - 0.25 * np.clip(1 - f * 6, 0, 1) - 0.3 * np.clip((f - 0.8) * 5, 0, 1)
+            a[row, cols] = FOLD0 + np.clip(np.round(k * (FOLDS - 1)), 0, FOLDS - 1).astype(np.uint8)
+        # rings on the rod, and the tie-back pinching the folds
+        for c in range(u_in + 2, u_in + top, 6):
+            a[rod_y + 3 : rod_y + 5, c : c + 2] = 9
+        a[246:254, u_in : u_in + tie] = 11
+        a[246, u_in : u_in + tie] = 10
+    return a
+
+
+def foreground(g, style=None):
+    """Paint the foreground over both side extensions and clear any shadow or
+    invisible light left there by what was drawn before, so it is lit only by
+    the room's ambient light."""
+    a = foreground_map(style or FOREGROUND)
+    cv = g.cv
+    for side, img in ((-1, a[:, ::-1]), (1, a)):
+        x0 = 0 if side < 0 else OX + 480
+        for i, c in enumerate(FG_PALETTE):
+            m = Image.fromarray(np.where(img == i, 255, 0).astype(np.uint8), 'L')
+            cv.mask(x0, 0, m, c)
+        box = (x0, 0, x0 + 120, H)
+        cv.sh.paste(255, box)
+        cv.lt.paste((0, 0, 0), box)
+
+
 def build_room(seed=21, over_rack=True):
     """The carriage as one RGBA image at output resolution, and the silhouette
     mask of every interactive object at 1x, keyed by object id. A key ending in
@@ -1172,6 +1274,8 @@ def build_room(seed=21, over_rack=True):
     g.light(-20, 380, 180, 90, (255, 120, 170), 0.14)
     g.light(330, 380, 180, 90, (255, 190, 120), 0.16)
     g.light(140, 430, 200, 60, (120, 150, 255), 0.18)
+
+    foreground(g)
 
     amb = np.ones((H, W, 3), np.float32)
     yy = np.arange(H, dtype=np.float32).reshape(H, 1, 1)
