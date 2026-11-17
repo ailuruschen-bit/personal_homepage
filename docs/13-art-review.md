@@ -619,9 +619,9 @@ Updated in the same commit as each step.
 | 0     | 0.7  | skipped |
 | 1     | 1.0  | done    |
 | 1     | 1.1  | done    |
-| 1     | 1.2  | review  |
+| 1     | 1.2  | done    |
 | 1     | 1.3  | pending |
-| 1     | 1.4  | pending |
+| 1     | 1.4  | review  |
 | 1     | 1.5  | pending |
 | 1     | 1.6  | pending |
 | 2     | 2.1  | pending |

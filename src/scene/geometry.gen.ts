@@ -29,6 +29,6 @@ export const OBJECTS: Record<string, ObjectGeometry> = {
   cover: { zone: [142, 116, 338, 272], light: { x: 240, y: 194, rx: 108, ry: 84 } },
   projects: { zone: [137, 279, 252, 376], light: { x: 195, y: 328, rx: 62, ry: 52 }, box: { x: 148, y: 288, w: 94, h: 81 }, sprite: '/assets/obj-projects.webp' },
   about: { zone: [306, 336, 358, 370], light: { x: 332, y: 353, rx: 30, ry: 20 }, box: { x: 316, y: 344, w: 33, h: 18 }, sprite: '/assets/obj-about.webp' },
-  stack: { zone: [308, 46, 396, 100], light: { x: 352, y: 75, rx: 48, ry: 28 }, box: { x: 318, y: 55, w: 68, h: 37 }, sprite: '/assets/obj-stack.webp' },
+  stack: { zone: [324.9162, 23.4303, 423.2402, 83.7655], light: { x: 374.0782, y: 55.8326, rx: 53.6313, ry: 31.2849 }, box: { x: 336, y: 33, w: 76, h: 42 }, sprite: '/assets/obj-stack.webp' },
   journey: { zone: [166, 60, 300, 94], light: { x: 240, y: 77, rx: 78, ry: 18 }, box: { x: 173, y: 67, w: 134, h: 20 }, sprite: '/assets/obj-journey.webp' },
 };

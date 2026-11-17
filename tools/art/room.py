@@ -38,7 +38,7 @@ AMBER = (255, 206, 110)
 OBJECTS = {
     'projects': dict(at=(148, 288), zone=(-11, -9, 104, 88), light=(47, 40, 62, 52)),
     'about': dict(at=(316, 344), zone=(-10, -8, 42, 26), light=(16, 9, 30, 20)),
-    'stack': dict(at=(318, 55), zone=(-10, -9, 78, 45), light=(34, 20, 48, 28)),
+    'stack': dict(at=(326, 52), zone=(-10, -9, 78, 45), light=(34, 20, 48, 28), on_rack=True),
     'journey': dict(at=(173, 67), zone=(-7, -7, 127, 27), light=(67, 10, 78, 18)),
 }
 
@@ -71,6 +71,11 @@ WALL_DIST = 2.0  # metres from the camera to the window wall
 FOCAL = WALL_SCALE * WALL_DIST
 ROOM_HALF_WIDTH = 1.2  # the window wall runs 2.4 m between the side walls
 ROOM_CEILING = 2.30
+# The luggage racks: one over each bench end, either side of the line display
+# above the window. Shallow enough to reach from the seat below.
+RACK_DEPTH = 0.26
+RACK_INNER = 0.46  # each rack runs from here to the side wall
+LUGGAGE_Z = WALL_DIST - 0.21  # the front of the luggage: it stands this far from the camera
 
 
 def vanishing_point():
@@ -116,9 +121,14 @@ def geometry(masks):
         ax, ay = o['at']
         z, li = o['zone'], o['light']
         x0, y0, x1, y1 = masks[key].getbbox()
+        # an object on the rack stands nearer than the wall it was written on:
+        # its zone and light scale about the vanishing point with it
+        k = WALL_DIST / LUGGAGE_Z if o.get('on_rack') else 1.0
+        vx, vy = vanishing_point()
+        sx, sy = (lambda v: vx + (v - vx) * k), (lambda v: vy + (v - vy) * k)
         objects[key] = dict(
-            zone=(ax + z[0], ay + z[1], ax + z[2], ay + z[3]),
-            light=(ax + li[0], ay + li[1], li[2], li[3]),
+            zone=(sx(ax + z[0]), sy(ay + z[1]), sx(ax + z[2]), sy(ay + z[3])),
+            light=(sx(ax + li[0]), sy(ay + li[1]), li[2] * k, li[3] * k),
             box=(x0 - OX, y0, x1 - x0, y1 - y0),
             sprite=f'/assets/obj-{key}.webp',
         )
@@ -150,24 +160,50 @@ def hole_mask():
 
 
 class Off:
-    """Canvas wrapper with an offset, so everything below is written in scene
-    coordinates.
+    """Canvas wrapper, so everything below is written in scene coordinates.
+
+    It carries a shift, and optionally a depth: art written as if it were on the
+    window wall is scaled about the vanishing point to stand nearer the camera
+    instead (see depth()).
 
     It can also carry a tag. While a tag is set, every solid or lit shape drawn is
     recorded in that tag's silhouette mask as well; shadows, light and texture are
     not, because they are not part of an object's outline. build.py turns the masks
     into the objects' sprites and bounding boxes."""
 
-    def __init__(self, cv, dx=OX, dy=0, tag=None, masks=None):
-        self.cv, self.dx, self.dy, self.tag = cv, dx, dy, tag
+    def __init__(self, cv, dx=0, dy=0, tag=None, masks=None, k=1.0):
+        self.cv, self.dx, self.dy, self.tag, self.k = cv, dx, dy, tag, k
         self.masks = {} if masks is None else masks
 
     def at(self, dx, dy, tag=None):
         """The same canvas shifted by (dx, dy), recording into silhouette `tag`."""
-        return Off(self.cv, self.dx + dx, self.dy + dy, tag, self.masks)
+        return Off(self.cv, self.dx + dx, self.dy + dy, tag, self.masks, self.k)
+
+    def depth(self, z):
+        """The same canvas for art standing z metres from the camera instead of
+        on the window wall: everything is scaled about the vanishing point."""
+        return Off(self.cv, self.dx, self.dy, self.tag, self.masks, WALL_DIST / z)
+
+    # ---- scene coordinates to canvas pixels
+    def _xy(self, x, y):
+        x, y = x + self.dx, y + self.dy
+        if self.k != 1.0:
+            vx, vy = vanishing_point()
+            x, y = vx + (x - vx) * self.k, vy + (y - vy) * self.k
+        return (x + OX, y)
+
+    def _r(self, x, y, w, h):
+        """A rectangle as canvas x, y, w, h; whole pixels once scaled."""
+        if self.k == 1.0:
+            return (x + self.dx + OX, y + self.dy, w, h)
+        (x0, y0), (x1, y1) = self._xy(x, y), self._xy(x + w, y + h)
+        x0, y0, x1, y1 = round(x0), round(y0), round(x1), round(y1)
+        return (x0, y0, max(1, x1 - x0) if w > 0 else 0, max(1, y1 - y0) if h > 0 else 0)
 
     def _p(self, pts):
-        return [(x + self.dx, y + self.dy) for x, y in pts]
+        if self.k == 1.0:
+            return [self._xy(x, y) for x, y in pts]
+        return [tuple(round(v) for v in self._xy(x, y)) for x, y in pts]
 
     def _m(self):
         """Drawing handle on this tag's silhouette mask; None when untagged."""
@@ -178,7 +214,8 @@ class Off:
         return ImageDraw.Draw(self.masks[self.tag])
 
     def _box(self, x, y, w, h):
-        return [x + self.dx, y + self.dy, x + self.dx + w - 1, y + self.dy + h - 1]
+        x, y, w, h = self._r(x, y, w, h)
+        return [x, y, x + w - 1, y + h - 1]
 
     def _mrect(self, x, y, w, h):
         m = self._m()
@@ -188,18 +225,18 @@ class Off:
     def _mline(self, pts, width):
         m = self._m()
         if m:
-            m.line([(round(x), round(y)) for x, y in self._p(pts)], fill=255, width=max(1, round(width)))
+            m.line([(round(x), round(y)) for x, y in self._p(pts)], fill=255, width=max(1, round(width * self.k)))
 
     def rect(self, x, y, w, h, c):
-        self.cv.rect(x + self.dx, y + self.dy, w, h, c)
+        self.cv.rect(*self._r(x, y, w, h), c)
         self._mrect(x, y, w, h)
 
     def px(self, x, y, c):
-        self.cv.px(x + self.dx, y + self.dy, c)
+        self.cv.rect(*self._r(x, y, 1, 1), c)
         self._mrect(x, y, 1, 1)
 
     def line(self, pts, c, width=1):
-        self.cv.line(self._p(pts), c, width)
+        self.cv.line(self._p(pts), c, max(1, round(width * self.k)))
         self._mline(pts, width)
 
     def poly(self, pts, c):
@@ -209,36 +246,37 @@ class Off:
             m.polygon(self._p(pts), fill=255)
 
     def ellipse(self, x, y, w, h, c):
-        self.cv.ellipse(x + self.dx, y + self.dy, w, h, c)
+        self.cv.ellipse(*self._r(x, y, w, h), c)
         m = self._m()
         if m:
             m.ellipse(self._box(x, y, w, h), fill=255)
 
     def rrect(self, x, y, w, h, r, c):
-        self.cv.rrect(x + self.dx, y + self.dy, w, h, r, c)
+        self.cv.rrect(*self._r(x, y, w, h), round(r * self.k), c)
         m = self._m()
         if m:
-            m.rounded_rectangle(self._box(x, y, w, h), r, fill=255)
+            m.rounded_rectangle(self._box(x, y, w, h), round(r * self.k), fill=255)
 
     def mask(self, x, y, m, c):
-        self.cv.mask(x + self.dx, y + self.dy, m, c)
+        cx, cy = (round(v) for v in self._xy(x, y))
+        self.cv.mask(cx, cy, m, c)
         if self._m():
-            self.masks[self.tag].paste(255, (x + self.dx, y + self.dy), m)
+            self.masks[self.tag].paste(255, (cx, cy), m)
 
     def lrect(self, x, y, w, h, c, k=1.0, body=None):
-        self.cv.lrect(x + self.dx, y + self.dy, w, h, c, k, body)
+        self.cv.lrect(*self._r(x, y, w, h), c, k, body)
         self._mrect(x, y, w, h)
 
     def lpx(self, x, y, c, k=1.0):
-        self.cv.lpx(x + self.dx, y + self.dy, c, k)
+        self.cv.lrect(*self._r(x, y, 1, 1), c, k)
         self._mrect(x, y, 1, 1)
 
     def lline(self, pts, c, k=1.0, width=1, body=None):
-        self.cv.lline(self._p(pts), c, k, width, body)
+        self.cv.lline(self._p(pts), c, k, max(1, round(width * self.k)), body)
         self._mline(pts, width)
 
     def fline(self, pts, c, k=0.0, width=1, body=None):
-        self.cv.fline(self._p(pts), c, k, width, body)
+        self.cv.fline([self._xy(x, y) for x, y in pts], c, k, width * self.k, body)
         self._mline(pts, width)
 
     def lpoly(self, pts, c, k=1.0, body=None):
@@ -250,23 +288,23 @@ class Off:
             m.polygon(p, fill=255)
 
     def lellipse(self, x, y, w, h, c, k=1.0, body=None):
-        self.cv.lellipse(x + self.dx, y + self.dy, w, h, c, k, body)
+        self.cv.lellipse(*self._r(x, y, w, h), c, k, body)
         m = self._m()
         if m:
             m.ellipse(self._box(x, y, w, h), fill=255)
 
     # ---- not part of any outline
     def light(self, x, y, w, h, c, k=1.0):
-        self.cv.light(x + self.dx, y + self.dy, w, h, c, k)
+        self.cv.light(*self._r(x, y, w, h), c, k)
 
     def shadow(self, x, y, w, h, k=0.5, ell=False):
-        self.cv.shadow(x + self.dx, y + self.dy, w, h, k, ell)
+        self.cv.shadow(*self._r(x, y, w, h), k, ell)
 
     def shade(self, x, y, w, h, k):
-        parts.shade(self.cv, x + self.dx, y + self.dy, w, h, k)
+        parts.shade(self.cv, *self._r(x, y, w, h), k)
 
     def speckle(self, x, y, w, h, amount, rnd, density=0.12):
-        self.cv.speckle(x + self.dx, y + self.dy, w, h, amount, rnd, density)
+        self.cv.speckle(*self._r(x, y, w, h), amount, rnd, density)
 
 
 def place(g, key, drawn_at):
@@ -299,13 +337,6 @@ def shell(g, rnd):
         g.rect(x, 0, 1, 48, mul(CEIL, 0.7))
         g.rect(x + 1, 0, 1, 48, mul(CEIL, 1.15))
     g.speckle(L, 0, Wd, 48, 0.08, rnd, 0.2)
-    for x0, w in ((-116, 100), (40, 400), (496, 100)):
-        g.rect(x0 - 4, 27, w + 8, 12, (38, 40, 62))
-        g.rect(x0 - 4, 27, w + 8, 1, (84, 88, 120))
-        g.lrect(x0, 30, w, 6, (255, 222, 164), 0.85, body=(255, 240, 208))
-        g.lrect(x0, 35, w, 1, (255, 196, 120), 0.7, body=(240, 200, 150))
-        for x in range(x0 + 49, x0 + w, 50):
-            g.rect(x, 29, 2, 8, (38, 40, 62))
     # ventilation grilles
     for x0 in (-60, 150, 300, 470):
         g.rect(x0, 8, 30, 10, (40, 42, 66))
@@ -406,40 +437,50 @@ def rack(g, rnd):
     for x in (175, 304):
         o.px(x, 69, (150, 158, 190))
         o.px(x, 84, (150, 158, 190))
-    # luggage, sitting on y = 92
+    # Luggage. Each piece was written as if it stood on the window wall with its
+    # foot at y = 92; it is drawn LUGGAGE_Z from the camera instead, standing on
+    # the rack, so it is scaled about the vanishing point and lifted to the
+    # rack's level. From below, its underside shows between its front and the wall.
+    D = WALL_DIST
+    lug = g.at(0, -3).depth(LUGGAGE_Z)
+    bx, rl, um = lug.at(24, 0), lug.at(22, 0), lug.at(2, 0)
+    for x0, x1, c in ((28, 52, (226, 222, 210)), (52, 88, (176, 138, 98)), (96, 151, (60, 140, 138)),
+                      (326, 394, (150, 96, 62)), (400, 448, (44, 50, 84))):
+        xa, xb = (x0 - 240) / WALL_SCALE, (x1 - 240) / WALL_SCALE
+        quad(g, [(xa, RACK_Y, D), (xb, RACK_Y, D), (xb, RACK_Y, LUGGAGE_Z), (xa, RACK_Y, LUGGAGE_Z)], mul(c, 0.34))
     # cardboard box
-    g.rect(28, 72, 36, 20, (176, 138, 98))
-    g.rect(28, 72, 36, 2, (210, 174, 130))
-    g.rect(28, 90, 36, 2, (120, 90, 66))
-    g.rect(43, 72, 6, 20, (206, 186, 150))
-    g.rect(52, 78, 9, 6, (236, 230, 214))
-    g.rect(53, 80, 6, 1, (120, 60, 60))
-    g.rect(53, 82, 4, 1, (90, 90, 110))
-    g.shade(60, 72, 4, 20, 0.8)
+    bx.rect(28, 72, 36, 20, (176, 138, 98))
+    bx.rect(28, 72, 36, 2, (210, 174, 130))
+    bx.rect(28, 90, 36, 2, (120, 90, 66))
+    bx.rect(43, 72, 6, 20, (206, 186, 150))
+    bx.rect(52, 78, 9, 6, (236, 230, 214))
+    bx.rect(53, 80, 6, 1, (120, 60, 60))
+    bx.rect(53, 82, 4, 1, (90, 90, 110))
+    bx.shade(60, 72, 4, 20, 0.8)
     # rolled-up drawings
-    g.rect(6, 86, 24, 6, (226, 222, 210))
-    g.rect(6, 86, 24, 1, (250, 248, 240))
-    g.rect(6, 90, 24, 2, (170, 166, 160))
-    g.ellipse(27, 86, 5, 6, (190, 186, 178))
-    g.px(29, 88, (90, 88, 96))
-    g.rect(14, 86, 2, 6, (200, 70, 70))
+    rl.rect(6, 86, 24, 6, (226, 222, 210))
+    rl.rect(6, 86, 24, 1, (250, 248, 240))
+    rl.rect(6, 90, 24, 2, (170, 166, 160))
+    rl.ellipse(27, 86, 5, 6, (190, 186, 178))
+    rl.px(29, 88, (90, 88, 96))
+    rl.rect(14, 86, 2, 6, (200, 70, 70))
     # holdall
     c = (60, 140, 138)
-    g.rrect(96, 68, 55, 24, 7, c)
-    g.rrect(98, 69, 51, 8, 4, mul(c, 1.28))
-    g.rect(100, 84, 47, 7, mul(c, 0.74))
-    g.rect(98, 77, 51, 1, mul(c, 0.6))
+    lug.rrect(96, 68, 55, 24, 7, c)
+    lug.rrect(98, 69, 51, 8, 4, mul(c, 1.28))
+    lug.rect(100, 84, 47, 7, mul(c, 0.74))
+    lug.rect(98, 77, 51, 1, mul(c, 0.6))
     for x in (110, 134):
-        g.rect(x, 68, 4, 24, mul(c, 0.62))
-        g.rect(x, 68, 1, 24, mul(c, 0.9))
-        g.rect(x, 79, 4, 3, BRASS)
-    g.line([(113, 68), (116, 63), (133, 63), (136, 68)], mul(c, 0.5))
-    g.line([(114, 68), (117, 64), (132, 64), (135, 68)], mul(c, 0.8))
-    g.rect(146, 78, 5, 9, (236, 226, 200))
-    g.rect(147, 80, 3, 1, (150, 60, 60))
-    g.px(148, 77, (40, 40, 56))
+        lug.rect(x, 68, 4, 24, mul(c, 0.62))
+        lug.rect(x, 68, 1, 24, mul(c, 0.9))
+        lug.rect(x, 79, 4, 3, BRASS)
+    lug.line([(113, 68), (116, 63), (133, 63), (136, 68)], mul(c, 0.5))
+    lug.line([(114, 68), (117, 64), (132, 64), (135, 68)], mul(c, 0.8))
+    lug.rect(146, 78, 5, 9, (236, 226, 200))
+    lug.rect(147, 80, 3, 1, (150, 60, 60))
+    lug.px(148, 77, (40, 40, 56))
     # briefcase (the stack object)
-    o = place(g, 'stack', (318, 55))
+    o = place(g.depth(LUGGAGE_Z), 'stack', (318, 55))
     lb = (150, 96, 62)
     o.rect(318, 58, 68, 34, lb)
     o.rect(318, 58, 68, 3, mul(lb, 1.3))
@@ -470,11 +511,40 @@ def rack(g, rnd):
     o.rect(354, 78, 10, 7, (214, 70, 70))
     o.rect(354, 80, 10, 2, (240, 232, 220))
     # umbrella
-    g.rect(398, 88, 42, 4, (44, 50, 84))
-    g.rect(398, 88, 42, 1, (84, 92, 136))
-    g.rect(412, 88, 2, 4, (150, 60, 70))
-    g.rect(394, 89, 4, 2, (160, 166, 190))
-    g.line([(440, 89), (446, 89), (447, 86), (445, 84)], BRASS)
+    um.rect(398, 88, 42, 4, (44, 50, 84))
+    um.rect(398, 88, 42, 1, (84, 92, 136))
+    um.rect(412, 88, 2, 4, (150, 60, 70))
+    um.rect(394, 89, 4, 2, (160, 166, 190))
+    um.line([(440, 89), (446, 89), (447, 86), (445, 84)], BRASS)
+    rack_frame(g, -1)
+    rack_frame(g, 1)
+
+
+def rack_frame(g, s):
+    """One luggage rack, seen from below: slats running out from the wall, a
+    front rail with a lip that the luggage stands behind, and a bracket at each
+    end. s = -1 for the left-hand rack, +1 for the right."""
+    HW, D = ROOM_HALF_WIDTH, WALL_DIST
+    zf = D - RACK_DEPTH
+    dark, mid, lite = (64, 72, 106), STEEL, (176, 186, 214)
+    at = lambda x, z, y=RACK_Y: ri(P(s * x, y, z))
+    # slats, and the wire that ties them halfway out
+    x = RACK_INNER
+    while x < HW - 0.01:
+        g.line([at(x, D), at(x, zf)], mul(mid, 0.82))
+        x += 0.055
+    g.line([at(RACK_INNER, (D + zf) / 2), at(HW, (D + zf) / 2)], mul(mid, 0.7))
+    g.line([at(RACK_INNER, D), at(HW, D)], dark)
+    # the front rail: a low lip the luggage stands behind
+    quad(g, [(s * RACK_INNER, RACK_Y - 0.008, zf), (s * HW, RACK_Y - 0.008, zf), (s * HW, RACK_Y + 0.014, zf), (s * RACK_INNER, RACK_Y + 0.014, zf)], mid)
+    g.line([at(RACK_INNER, zf, RACK_Y + 0.014), at(HW, zf, RACK_Y + 0.014)], lite)
+    g.line([at(RACK_INNER, zf, RACK_Y - 0.008), at(HW, zf, RACK_Y - 0.008)], dark)
+    # the inner end: a side rail, and a bracket down to the wall
+    g.line([at(RACK_INNER, D), at(RACK_INNER, zf)], mid, width=2)
+    g.line([at(RACK_INNER, D, RACK_Y - 0.17), at(RACK_INNER, zf)], dark, width=2)
+    g.line([at(RACK_INNER, D, RACK_Y - 0.17), at(RACK_INNER, D)], dark, width=2)
+    bx, by = at(RACK_INNER, zf)
+    g.rect(bx - 1, by - 1, 3, 3, lite)
 
 
 # ------------------------------------------------------------------ Window and curtains
@@ -672,7 +742,6 @@ def walls(g, rnd):
 # window wall, and the rack meets the wall where the luggage already sits.
 DADO = EYE - (296 - vanishing_point()[1]) / WALL_SCALE
 RACK_Y = EYE + (vanishing_point()[1] - 89) / WALL_SCALE
-RACK_DEPTH = 0.34
 SEAT_H = 0.45  # cushion top
 SEAT_INNER = 0.60  # front edge of the cushion, from the centre line
 BACK_FACE = 1.05  # the backrest's face; the side wall is at ROOM_HALF_WIDTH
@@ -701,12 +770,13 @@ def structure(g):
         receding(g, s * HW, DADO, s * HW, C, mul(WALL, 0.78))
         receding(g, s * HW, 0, s * HW, DADO, mul(WALL_LO, 0.78))
     receding(g, -HW, 0, HW, 0, (46, 48, 76))
-    # the rack, seen from below: rails across the compartment at four depths
-    # and its ends along the side walls
-    for i, z in enumerate((D - 0.01, D - RACK_DEPTH * 0.34, D - RACK_DEPTH * 0.67, D - RACK_DEPTH)):
-        g.line([ri(P(-HW, RACK_Y, z)), ri(P(HW, RACK_Y, z))], STEEL, width=3 if i == 3 else 1)
-    for s in (-1, 1):
-        g.line([ri(P(s * HW, RACK_Y, D)), ri(P(s * HW, RACK_Y, D - RACK_DEPTH))], STEEL, width=2)
+    # the ceiling light: a strip running down the middle of the ceiling toward
+    # the camera, in a housing
+    receding(g, -0.2, C, 0.2, C, (38, 40, 62), D - 0.04)
+    g.lpoly([ri(P(x, C, z)) for x, z in ((-0.15, D - 0.07), (0.15, D - 0.07), (0.15, Z_NEAR), (-0.15, Z_NEAR))],
+            (255, 222, 164), 0.85, body=(255, 240, 208))
+    for z in (1.78, 1.6, 1.44, 1.3):
+        g.line([ri(P(-0.2, C, z)), ri(P(0.2, C, z))], (38, 40, 62))
 
 
 BERTH = (1.42, 1.90, 0.06)  # folded upper berth: bottom, top, thickness off the wall
