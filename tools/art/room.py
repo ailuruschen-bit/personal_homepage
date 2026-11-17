@@ -73,9 +73,9 @@ ROOM_HALF_WIDTH = 1.2  # the window wall runs 2.4 m between the side walls
 ROOM_CEILING = 2.30
 # The luggage racks: one over each bench end, either side of the line display
 # above the window. Shallow enough to reach from the seat below.
-RACK_DEPTH = 0.13
+RACK_DEPTH = {-1: 0.13, 1: 0.06}  # left rack, right rack: the right one only holds the briefcase, upright
 RACK_INNER = 0.46  # each rack runs from here to the side wall
-LUGGAGE_Z = WALL_DIST - RACK_DEPTH - 0.01  # the luggage's front: it overhangs the front rail a little
+LUGGAGE_Z = {s: WALL_DIST - d - 0.01 for s, d in RACK_DEPTH.items()}  # the luggage's front on each rack: just past its rail
 LUGGAGE_FLAT = 1.0  # height of the luggage relative to how it was written; 1 is unchanged
 
 
@@ -124,7 +124,7 @@ def geometry(masks):
         x0, y0, x1, y1 = masks[key].getbbox()
         # an object on the rack stands nearer than the wall it was written on:
         # its zone and light scale about the vanishing point with it
-        k = WALL_DIST / LUGGAGE_Z if o.get('on_rack') else 1.0
+        k = WALL_DIST / LUGGAGE_Z[1] if o.get('on_rack') else 1.0
         vx, vy = vanishing_point()
         sx, sy = (lambda v: vx + (v - vx) * k), (lambda v: vy + (v - vy) * k)
         objects[key] = dict(
@@ -454,14 +454,16 @@ def rack(g, rnd):
     # rack's level. From below, its underside shows between its front and the wall.
     # It is also flattened: bags laid on a rack are lower than they are wide.
     D = WALL_DIST
-    lug = g.flatten(LUGGAGE_FLAT, 92).at(0, -3).depth(LUGGAGE_Z)
-    bx, rl, um = lug.at(24, 0), lug.at(22, 0), lug.at(2, 0)
+    lug = g.flatten(LUGGAGE_FLAT, 92).at(0, -3).depth(LUGGAGE_Z[-1])
+    bx, rl = lug.at(24, 0), lug.at(22, 0)
+    um = g.flatten(LUGGAGE_FLAT, 92).at(2, -3).depth(LUGGAGE_Z[1])
     # x0, x1, height as written, colour, silhouette tag
     pieces = ((28, 52, 6, (226, 222, 210), None), (52, 88, 20, (176, 138, 98), None), (96, 151, 24, (60, 140, 138), None),
               (326, 394, 34, (150, 96, 62), 'stack'), (400, 448, 4, (44, 50, 84), None))
     for x0, x1, h, c, tag in pieces:
         xa, xb = (x0 - 240) / WALL_SCALE, (x1 - 240) / WALL_SCALE
-        quad(g, [(xa, RACK_Y, D), (xb, RACK_Y, D), (xb, RACK_Y, LUGGAGE_Z), (xa, RACK_Y, LUGGAGE_Z)], mul(c, 0.34))
+        zl = LUGGAGE_Z[-1 if x1 < 240 else 1]
+        quad(g, [(xa, RACK_Y, D), (xb, RACK_Y, D), (xb, RACK_Y, zl), (xa, RACK_Y, zl)], mul(c, 0.34))
     # the racks go in before the luggage's visible faces: the luggage overhangs
     # the front rail, so nothing of the rack crosses it, and an object's sprite
     # is the object alone
@@ -472,14 +474,15 @@ def rack(g, rnd):
     # carried round from the front
     for x0, x1, h, c, tag in pieces:
         xs = (x1 if x1 < 240 else x0)
+        zl = LUGGAGE_Z[-1 if x1 < 240 else 1]
         X, top = (xs - 240) / WALL_SCALE, RACK_Y + h * LUGGAGE_FLAT / WALL_SCALE
         t = g.at(0, 0, tag) if tag else g
-        quad(t, [(X, RACK_Y, D), (X, top, D), (X, top, LUGGAGE_Z), (X, RACK_Y, LUGGAGE_Z)], mul(c, 0.6))
-        t.line([ri(P(X, top, D)), ri(P(X, top, LUGGAGE_Z))], mul(c, 0.95))
-        t.line([ri(P(X, RACK_Y + 0.004, D)), ri(P(X, RACK_Y + 0.004, LUGGAGE_Z))], mul(c, 0.4))
+        quad(t, [(X, RACK_Y, D), (X, top, D), (X, top, zl), (X, RACK_Y, zl)], mul(c, 0.6))
+        t.line([ri(P(X, top, D)), ri(P(X, top, zl))], mul(c, 0.95))
+        t.line([ri(P(X, RACK_Y + 0.004, D)), ri(P(X, RACK_Y + 0.004, zl))], mul(c, 0.4))
         if h >= 20:
             for f in (0.3, 0.7):
-                z = LUGGAGE_Z + (D - LUGGAGE_Z) * f
+                z = zl + (D - zl) * f
                 quad(t, [(X, RACK_Y, z), (X, top, z), (X, top, z + 0.025), (X, RACK_Y, z + 0.025)], mul(c, 0.42))
     # cardboard box
     bx.rect(28, 72, 36, 20, (176, 138, 98))
@@ -513,7 +516,7 @@ def rack(g, rnd):
     lug.rect(147, 80, 3, 1, (150, 60, 60))
     lug.px(148, 77, (40, 40, 56))
     # briefcase (the stack object)
-    o = place(g.flatten(LUGGAGE_FLAT, 92).depth(LUGGAGE_Z), 'stack', (318, 55))
+    o = place(g.flatten(LUGGAGE_FLAT, 92).depth(LUGGAGE_Z[1]), 'stack', (318, 55))
     lb = (150, 96, 62)
     o.rect(318, 58, 68, 34, lb)
     o.rect(318, 58, 68, 3, mul(lb, 1.3))
@@ -556,7 +559,7 @@ def rack_frame(g, s):
     front rail with a lip that the luggage stands behind, and a bracket at each
     end. s = -1 for the left-hand rack, +1 for the right."""
     HW, D = ROOM_HALF_WIDTH, WALL_DIST
-    zf = D - RACK_DEPTH
+    zf = D - RACK_DEPTH[s]
     dark, mid, lite = (64, 72, 106), STEEL, (176, 186, 214)
     at = lambda x, z, y=RACK_Y: ri(P(s * x, y, z))
     # slats, and the wire that ties them halfway out
