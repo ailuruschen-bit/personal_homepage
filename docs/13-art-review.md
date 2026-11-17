@@ -862,9 +862,9 @@ something else.
 | 1     | 1.4  | done    | two racks, luggage standing on them with sides; the briefcase lifts whole behind the rail                                                                                                                                                  |
 | 1     | 1.5  | done    | ceiling cove at the wall, vents within the strip of ceiling in view, light on the ceiling                                                                                                                                                  |
 | 1     | 1.6  | done    | the table hinged to the wall: struts under it to plates on the wall, and the wall under it in shadow                                                                                                                                       |
-| 2     | 2.1  | review  | cup and saucer drawn at 0.62 about the saucer's foot; pen lengthened to about 14 cm; steam and cursor positions generated                                                                                                                  |
-| 2     | 2.2  | review  | journey is a map along the back of the table, mostly rolled into a tube with a rubber band, the open strip askew, creased, a coffee ring, its near corner curling up; the cup stays where it was, in front of it, and is cut out of the map's sprite; the pen moves to the left of the laptop; the line display is a decoy with no hotspot; the rack keeps its box |
-| 2     | 2.3  | review  | business card behind the ticket, peeking out on the table side; ticket moved in from the edge; reserved: notebook at the table's front-left corner, hobby object in place of the holdall                                                   |
+| 2     | 2.1  | done    | cup and saucer drawn at 0.62 about the saucer's foot; pen lengthened to about 14 cm; steam and cursor positions generated                                                                                                                  |
+| 2     | 2.2  | done    | journey is a map along the back of the table, mostly rolled into a tube with a rubber band, the open strip askew, creased, a coffee ring, its near corner curling up; the cup stays where it was, in front of it, and is cut out of the map's sprite; the pen moves to the left of the laptop; the line display is a decoy with no hotspot; the rack keeps its box |
+| 2     | 2.3  | done    | business card behind the ticket, peeking out on the table side; ticket moved in from the edge; reserved: notebook at the table's front-left corner, hobby object in place of the holdall                                                   |
 | 3     | 3.1  | pending |                                                                                                                                                                                                                                            |
 | 3     | 3.2  | pending |                                                                                                                                                                                                                                            |
 | 3     | 3.3  | pending |                                                                                                                                                                                                                                            |
@@ -909,8 +909,8 @@ Done so far in stage 1, beyond what the step table names:
   thing in front (`front` in the generated geometry). The briefcase lifts whole
   behind the rack's rail this way.
 
-Stage 1 passed its gate and is merged. Stage 2 is built and waiting at its
-gate.
+Stage 1 passed its gate and is merged. Stage 2 passed its gate and is merged.
+Stage 3 is next, starting with the value plan (3.1).
 
 ## Keep in sync
 
