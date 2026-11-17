@@ -52,7 +52,16 @@ def composite(assets):
         out.alpha_composite(layer.crop((0, 0, W, layer.height)), (0, H - layer.height - 60))
     for name, x in (('room-l', 0), ('room', SIDE * K), ('room-r', (SIDE + 480) * K)):
         out.alpha_composite(Image.open(os.path.join(assets, f'{name}.webp')).convert('RGBA'), (x, 0))
-    return out
+    # The page lays a vignette over the 480 scene (scene.css .vig); the side
+    # extensions have the same one baked in. Apply it here so the preview shows
+    # what the page shows instead of a false step at the room's edge.
+    a = np.asarray(out).astype(np.float32)
+    ys, xs = np.mgrid[0:H, 0:W].astype(np.float32)
+    sx, sy = (xs + 0.5) / K - SIDE, (ys + 0.5) / K
+    t = np.sqrt(((sx - 240) / (240 * 2**0.5)) ** 2 + ((sy - 201.6) / (278.4 * 2**0.5)) ** 2)
+    va = 0.5 * np.clip((t - 0.38) / 0.44, 0, 1) * ((sx >= 0) & (sx < 480))
+    a[..., :3] = a[..., :3] * (1 - va[..., None]) + np.array([5, 4, 14], np.float32) * va[..., None]
+    return Image.fromarray(a.astype(np.uint8), 'RGBA')
 
 
 def geometry():
