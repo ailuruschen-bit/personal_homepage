@@ -76,7 +76,7 @@ ROOM_CEILING = 2.30
 RACK_DEPTH = 0.26
 RACK_INNER = 0.46  # each rack runs from here to the side wall
 LUGGAGE_Z = WALL_DIST - RACK_DEPTH - 0.01  # the luggage's front: it overhangs the front rail a little
-LUGGAGE_FLAT = 0.68  # luggage lies flat on the rack: this much of the height it was written at
+LUGGAGE_FLAT = 0.5  # luggage lies flat on the rack: this much of the height it was written at
 
 
 def vanishing_point():
