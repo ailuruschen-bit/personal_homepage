@@ -298,6 +298,9 @@
   --rx: 20%;
   --ry: 20%;
 }
+/* Dims the scene around the focused object. It covers the 480 scene only and
+   must stay that way (docs/09, F-002 and F-003): the side images are a dark
+   foreground drawn so that its edge is where the room ends (docs/13, D-01a). */
 .spot {
   background: radial-gradient(
     ellipse var(--rx) var(--ry) at var(--sx) var(--sy),
@@ -307,7 +310,6 @@
   );
 }
 .beam {
-  mix-blend-mode: screen;
   background: radial-gradient(
     ellipse var(--rx) var(--ry) at var(--sx) var(--sy),
     rgba(255, 236, 200, 0.26),
@@ -325,7 +327,6 @@
   margin: -4.5vmax 0 0 -4.5vmax;
   pointer-events: none;
   opacity: 0;
-  mix-blend-mode: screen;
   will-change: transform;
   transition: opacity 0.08s;
 }
@@ -541,7 +542,7 @@
      over black and white dots reads well enough. */
   opacity: 0.5;
   will-change: transform;
-  /* Jump to a new offset every 80ms so the grain appears to crawl */
+  /* Move the texture on a compositor layer instead of repainting the viewport. */
   animation: grain 0.64s steps(1) infinite;
 }
 @keyframes grain {
@@ -569,6 +570,10 @@
   87.5% {
     transform: translate(-83px, 139px);
   }
+}
+.grain-suspended .grain {
+  animation: none;
+  will-change: auto;
 }
 @media (prefers-reduced-motion: reduce) {
   .grain {
@@ -942,9 +947,15 @@
   inset: 0;
   background-size: 100% 100%;
 }
+/* Static, above the sprites: see dom.ts */
+.pop-front {
+  position: absolute;
+  pointer-events: none;
+  background-size: 100% 100%;
+}
 /* Periodic glint. While focused, the rule below takes over the filter. */
 .hub .pop {
-  animation: glint 5s ease-in-out infinite;
+  animation: none;
 }
 .hub .pop.on {
   animation: none;

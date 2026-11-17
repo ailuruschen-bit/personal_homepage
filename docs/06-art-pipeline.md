@@ -198,6 +198,19 @@ and glow follow. The objects drawn before this existed keep their original
 coordinates and are shifted by `place()`; new objects are drawn relative to
 their own corner.
 
+Two things the first objects did not need:
+
+- **Depth.** `g.depth(z)` gives a canvas on which art written for the window
+  wall is scaled about the vanishing point to stand `z` metres from the camera.
+  The luggage on the racks is drawn this way, and an object marked `on_rack`
+  has its zone and light scaled with it.
+- **Something in front.** When part of the room crosses an object — the rack's
+  rail across the briefcase's foot — that part is recorded as a second
+  silhouette, `<id>/front`. The object's sprite is then cut from a second
+  render without it, so it is whole, and the part in front becomes
+  `obj-<id>-front.webp`, which the page keeps above the sprites and never
+  moves. The object lifts behind it.
+
 `npm run art:check` fails the build when the generated geometry, the hotspots
 and the assets disagree, and `?debug=geometry` draws all of it over the scene.
 

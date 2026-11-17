@@ -67,7 +67,8 @@ def build_grain(size=192, seed=7):
 
 def num(v):
     """A coordinate as TypeScript source: integers without a trailing .0."""
-    return str(int(v)) if float(v).is_integer() else repr(round(float(v), 4))
+    v = round(float(v), 4)
+    return str(int(v)) if v.is_integer() else repr(v)
 
 
 def write_geometry(geo, path):
@@ -87,10 +88,20 @@ def write_geometry(geo, path):
         '  box?: { x: number; y: number; w: number; h: number };',
         '  /** The object alone, cut out along its own silhouette; covers `box` */',
         '  sprite?: string;',
+        '  /** What stands in front of the object and stays on top of its sprite */',
+        '  front?: { x: number; y: number; w: number; h: number; sprite: string };',
         '}',
         '',
         '/** The window opening and its corner radius, in scene units */',
         f"export const WINDOW = {{ x: {num(w['x'])}, y: {num(w['y'])}, w: {num(w['w'])}, h: {num(w['h'])}, r: {num(w['r'])} }};",
+        '',
+        '/** Width of each side extension (room-l, room-r) beyond the 480 scene */',
+        f"export const SIDE = {num(geo['side'])};",
+        '',
+        '/** One-point perspective: the vanishing point, and the window wall as drawn face-on */',
+        'export const PERSPECTIVE: { vx: number; vy: number; wall: [number, number, number, number] } = '
+        f"{{ vx: {num(geo['perspective']['vx'])}, vy: {num(geo['perspective']['vy'])}, "
+        f"wall: [{', '.join(num(v) for v in geo['perspective']['wall'])}] }};",
         '',
         '/** Where .cam zooms about, in scene units: the gap the camera flies through */',
         f"export const CAMERA = {{ x: {num(geo['camera']['x'])}, y: {num(geo['camera']['y'])} }};",
@@ -108,6 +119,9 @@ def write_geometry(geo, path):
             bx = o['box']
             parts.append(f"box: {{ x: {num(bx[0])}, y: {num(bx[1])}, w: {num(bx[2])}, h: {num(bx[3])} }}")
             parts.append(f"sprite: '{o['sprite']}'")
+        if 'front' in o:
+            fb = o['front']['box']
+            parts.append(f"front: {{ x: {num(fb[0])}, y: {num(fb[1])}, w: {num(fb[2])}, h: {num(fb[3])}, sprite: '{o['front']['sprite']}' }}")
         lines.append(f"  {key}: {{ {', '.join(parts)} }},")
     lines += ['};', '']
     with open(path, 'w') as f:
@@ -171,7 +185,18 @@ def main(out, src=None):
     save(build_c2(), os.path.join(out, 'c2.webp'))
     save(build_c3(), os.path.join(out, 'c3.webp'))
     room, masks = build_room()
-    for key, im in sprites(room, masks).items():
+    # What stands in front of an object is cut from the finished room; an object
+    # that has something in front of it is cut from a second render without it,
+    # so its sprite is whole.
+    fronts = {k: m for k, m in masks.items() if k.endswith('/front')}
+    whole = {k: m for k, m in masks.items() if k not in fronts}
+    behind = {k: m for k, m in whole.items() if f'{k}/front' in fronts}
+    cut = sprites(room, {k: m for k, m in whole.items() if k not in behind})
+    if behind:
+        bare, _ = build_room(over_rack=False)
+        cut.update(sprites(bare, behind))
+    cut.update({k.replace('/front', '-front'): im for k, im in sprites(room, fronts).items()})
+    for key, im in cut.items():
         save(im, os.path.join(out, f'obj-{key}.webp'), lossless=True)
     save(room.crop((OX * k, 0, (OX + 480) * k, 480 * k)), os.path.join(out, 'room.webp'))
     save(room.crop((0, 0, OX * k, 480 * k)).convert('RGB'), os.path.join(out, 'room-l.webp'))

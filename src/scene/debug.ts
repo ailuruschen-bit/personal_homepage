@@ -1,4 +1,4 @@
-import { CAMERA, OBJECTS, WINDOW } from './geometry.gen';
+import { CAMERA, OBJECTS, PERSPECTIVE, WINDOW } from './geometry.gen';
 import { SCENE } from './units';
 
 /**
@@ -44,6 +44,24 @@ export function drawGeometry(root: HTMLElement) {
       },
       text,
     );
+
+  // Perspective guides: the horizon, the vanishing point, the window wall, and
+  // the room's receding edges from its corners out past the edge of the scene
+  const { vx, vy, wall } = PERSPECTIVE;
+  const [wx0, wy0, wx1, wy1] = wall;
+  const guide = { ...line, stroke: '#ff9a3b', opacity: 0.85 };
+  add('path', { ...guide, d: `M-240 ${vy}H720`, 'stroke-dasharray': '2 3' });
+  add('rect', { ...guide, x: wx0, y: wy0, width: wx1 - wx0, height: wy1 - wy0 });
+  for (const [cx, cy] of [
+    [wx0, wy0],
+    [wx1, wy0],
+    [wx0, wy1],
+    [wx1, wy1],
+  ] as const) {
+    add('path', { ...guide, d: `M${vx} ${vy}L${vx + (cx - vx) * 6} ${vy + (cy - vy) * 6}` });
+  }
+  add('circle', { ...guide, cx: vx, cy: vy, r: 3 });
+  label(wx0 + 2, wy1 - 2, 'window wall', '#ff9a3b');
 
   // the window and the camera's zoom origin
   add('rect', {
@@ -106,10 +124,71 @@ export function drawGeometry(root: HTMLElement) {
     ['#3bd6ff', 'sprite box'],
     ['#39ff88', 'window'],
     ['#ff3b3b', 'camera origin'],
+    ['#ff9a3b', 'perspective'],
   ]
     .map(([c, t]) => `<div style="color:${c}">■ ${t}</div>`)
     .join('');
   root.appendChild(legend);
 
   scene.appendChild(svg);
+}
+
+/**
+ * Layer switchboard, loaded with ?debug=layers. Each checkbox removes one
+ * suspect from the page so a compositing fault can be narrowed down by eye in
+ * the browser that shows it. Choices persist across reloads in sessionStorage,
+ * so faults that only appear during the opening can be tested too.
+ */
+export function layerSwitches(root: HTMLElement) {
+  // The classes go on the mount, not on .stage: Opening rewrites .stage's
+  // className on every phase change
+  const stage = root;
+  const switches: Array<[string, string, string]> = [
+    ['x-pops', 'object sprites (.pop)', '.x-pops .pop{display:none}'],
+    ['x-glint', 'sprite glint animation', '.x-glint .pop{animation:none!important}'],
+    ['x-extfx', 'side panel shading', '.x-extfx .ext::before,.x-extfx .ext::after{display:none}'],
+    ['x-sides', 'side panels', '.x-sides .ext.l,.x-sides .ext.r{display:none}'],
+    ['x-glow', 'glows', '.x-glow .glow{display:none}'],
+    ['x-vig', 'vignette and focus light', '.x-vig .vig,.x-vig .beam{display:none}'],
+    ['x-grain', 'film grain', '.x-grain .grain{display:none}'],
+  ];
+  const style = document.createElement('style');
+  style.textContent = switches.map((s) => s[2]).join('\n');
+  document.head.appendChild(style);
+
+  const KEY = 'debug-layers';
+  let off: string[] = [];
+  try {
+    off = JSON.parse(sessionStorage.getItem(KEY) ?? '[]') as string[];
+  } catch {
+    off = [];
+  }
+  const panel = document.createElement('div');
+  panel.style.cssText =
+    'position:fixed;left:12px;top:12px;z-index:1000;padding:8px 10px;color:#fff;' +
+    'font:12px/1.7 monospace;background:rgba(0,0,0,0.75);border-radius:4px';
+  panel.innerHTML = '<div>tick to REMOVE:</div>';
+  for (const ev of ['click', 'pointerdown', 'pointerup', 'mousedown', 'wheel']) {
+    panel.addEventListener(ev, (e) => e.stopPropagation());
+  }
+  for (const [cls, label] of switches) {
+    const row = document.createElement('label');
+    row.style.display = 'block';
+    const box = document.createElement('input');
+    box.type = 'checkbox';
+    box.checked = off.includes(cls);
+    stage.classList.toggle(cls, box.checked);
+    box.addEventListener('change', () => {
+      stage.classList.toggle(cls, box.checked);
+      off = box.checked ? [...off, cls] : off.filter((c) => c !== cls);
+      try {
+        sessionStorage.setItem(KEY, JSON.stringify(off));
+      } catch {
+        /* storage unavailable: the choice lasts until reload */
+      }
+    });
+    row.append(box, ` ${label}`);
+    panel.appendChild(row);
+  }
+  root.appendChild(panel);
 }

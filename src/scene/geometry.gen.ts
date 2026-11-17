@@ -10,10 +10,18 @@ export interface ObjectGeometry {
   box?: { x: number; y: number; w: number; h: number };
   /** The object alone, cut out along its own silhouette; covers `box` */
   sprite?: string;
+  /** What stands in front of the object and stays on top of its sprite */
+  front?: { x: number; y: number; w: number; h: number; sprite: string };
 }
 
 /** The window opening and its corner radius, in scene units */
 export const WINDOW = { x: 150, y: 124, w: 180, h: 140, r: 10 };
+
+/** Width of each side extension (room-l, room-r) beyond the 480 scene */
+export const SIDE = 120;
+
+/** One-point perspective: the vanishing point, and the window wall as drawn face-on */
+export const PERSPECTIVE: { vx: number; vy: number; wall: [number, number, number, number] } = { vx: 240, vy: 209.808, wall: [24, 26, 456, 440] };
 
 /** Where .cam zooms about, in scene units: the gap the camera flies through */
 export const CAMERA = { x: 240, y: 209.808 };
@@ -23,6 +31,6 @@ export const OBJECTS: Record<string, ObjectGeometry> = {
   cover: { zone: [142, 116, 338, 272], light: { x: 240, y: 194, rx: 108, ry: 84 } },
   projects: { zone: [137, 279, 252, 376], light: { x: 195, y: 328, rx: 62, ry: 52 }, box: { x: 148, y: 288, w: 94, h: 81 }, sprite: '/assets/obj-projects.webp' },
   about: { zone: [306, 336, 358, 370], light: { x: 332, y: 353, rx: 30, ry: 20 }, box: { x: 316, y: 344, w: 33, h: 18 }, sprite: '/assets/obj-about.webp' },
-  stack: { zone: [308, 46, 396, 100], light: { x: 352, y: 75, rx: 48, ry: 28 }, box: { x: 318, y: 55, w: 68, h: 37 }, sprite: '/assets/obj-stack.webp' },
+  stack: { zone: [318.7565, 36.95, 409.9482, 92.9085], light: { x: 364.3523, y: 67.0018, rx: 49.7409, ry: 29.0155 }, box: { x: 325, y: 46, w: 75, h: 44 }, sprite: '/assets/obj-stack.webp', front: { x: 322, y: 77, w: 85, h: 17, sprite: '/assets/obj-stack-front.webp' } },
   journey: { zone: [166, 60, 300, 94], light: { x: 240, y: 77, rx: 78, ry: 18 }, box: { x: 173, y: 67, w: 134, h: 20 }, sprite: '/assets/obj-journey.webp' },
 };

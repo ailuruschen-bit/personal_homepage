@@ -34,6 +34,16 @@ export function buildScene(root: HTMLElement): SceneEls {
     })
     .join('');
 
+  // What stands in front of an object (the rack's rail across the briefcase)
+  // goes above the sprites and never moves, so the object lifts behind it
+  const fronts = hotspots
+    .filter((h) => h.front)
+    .map((h) => {
+      const f = h.front!;
+      return `<div class="pop-front" style="left:${pct(f.x)};top:${pct(f.y)};width:${pct(f.w)};height:${pct(f.h)};background-image:url(${f.sprite})"></div>`;
+    })
+    .join('');
+
   const zones = hotspots
     .map((h) => {
       const [x0, y0, x1, y1] = h.zone;
@@ -67,6 +77,7 @@ export function buildScene(root: HTMLElement): SceneEls {
     <div class="ext l"></div><div class="ext r"></div><div class="ext t"></div><div class="ext b"></div>
     <div class="room"></div>
     ${pops}
+    ${fronts}
 
     <div class="glow g-out"></div><div class="glow g-lamp"></div>
     <div class="glow g-neon"></div><div class="glow g-lap"></div>

@@ -523,6 +523,11 @@ on it, and keeping it fixed removes the largest risk in the redraw.
 | 1.5  | S-06       | Ceiling plane and fixture                                                                          |      |
 | 1.6  | S-07       | Table meets the wall; contact shadows                                                              | yes  |
 
+The side walls are the partitions of a sleeper compartment, and 1.1 already
+gives each one its folded upper berth with straps, plus a reading lamp or a net
+pocket in the strip below it: blank planes did not read as a train. 1.3 finishes
+those fittings.
+
 After 1.1 the picture will look worse than `main`. That is the block-in doing
 its job; the gate is about whether the space is right, not whether it is
 finished.
@@ -589,6 +594,242 @@ the screen at reading size, and the door. These are new drawings for
 into the manifest. They are drawn here and wired up when the scroll narrative
 is built.
 
+## Deferred
+
+Things set aside on purpose, to come back to after the artwork is redrawn.
+Each needs its own Chrome check before it is adopted.
+
+### D-01 Darkening the scene around a focused object
+
+**Restored** with the side images redrawn as a foreground (D-01a), using the
+door frame and curtain variant. What follows is the history.
+
+**Removed for a while.** Until F-003 the page dimmed everything but the focused
+object with a radial overlay (`.spot`), which is what made focus read as a
+spotlight. Extending that dimming over the side extensions flickered in Chrome
+in every variant tried, and the central dimming was taken out with it so that
+the room and its sides stay the same tone. Focus is currently the object's
+lift, the pointer light and the warm `.beam`, with nothing darkened.
+
+The full record, including the six variants that failed, is F-002 and F-003 in
+[09 Fix log](09-fix-log.md). What is known:
+
+- Overlays wider than the scene, gradients painted inside the side extensions,
+  flat opacity strips beside the scene and live `brightness()` filters on the
+  side artwork all flickered or cost pointer latency in Chrome.
+- Fading the central dimmer out toward its edges avoided the step in tone but
+  left a dark halo.
+
+The ways forward are D-01a, which leaves the page alone, and D-01b, which does
+not.
+
+### D-01a Bring the dimming back by designing the seam away
+
+**Proposed; nothing here is built.** The original focus lighting was good
+everywhere except at one place, and that place is a line, not an effect. So
+instead of changing how the page dims, change what the picture has on that
+line, and put the original `.spot` back untouched. Everything below is artwork
+only, which is the kind of change that has never flickered.
+
+#### What the seam is
+
+`.spot` covers the 480 scene and nothing else, so the dimming stops at the
+scene's left and right edges: two vertical lines on screen, at x = 0 and
+x = 480, the full height of the picture. The side extensions beyond them are
+never dimmed.
+
+Where those lines fall in the room as it is drawn now:
+
+- The corner between the window wall and each side wall is at x = 24 and 456,
+  so the seam is 24 units **outside** the corner, on the side wall, 1.8 m from
+  the camera.
+- Lower down the same line crosses the backrest, the cushion and the base of
+  each bench.
+- The extensions are only on screen when the viewport is wider than about
+  1.43 : 1. A 16:9 window shows roughly 57 units of each; a 4:3 window shows
+  none, and has no seam.
+
+One fact decides which ideas can work: **a vertical line on screen is not a
+vertical line in the room.** It is the trace of a plane through the camera. A
+real edge follows it only if that edge lies in that plane or is close enough to
+the camera to be flat-on. So there are two honest ways to hide it: make
+something end exactly there, or put something in front of it.
+
+#### The options
+
+**A. The corner on the seam, backrests let into the walls.** _(The idea this
+section started from.)_ Widen the compartment so the window wall is exactly the
+scene: half-width 240 / 180 = 1.33 m instead of 1.2. The corner then sits on
+the seam, and the side walls lie wholly in the extensions. Make the backrests
+thin and recessed into the partitions so they go with the walls.
+
+- Solves the seam on the wall completely, from the ceiling down to the top of
+  the cushion (y = 359): a change of tone at a corner is what corners do.
+- Does not solve it below that. The cushion and the base run toward the camera
+  and cross the line for the remaining 120 units; nothing about a bench ends
+  there.
+- Costs the 24-unit strips of side wall that are in the scene today, which are
+  most of the depth a 4:3 window sees.
+- Needs a partner for the lower part: C or D below, or a dark blanket and bag on
+  each seat where the line crosses.
+
+**B. Look in through the doorway.** The camera is already standing just inside
+the door. Put the door frame in the picture: two jambs close to the camera,
+their inner edges exactly on the seam. A door 0.9 m wide, 0.68 m from the
+camera, projects to x = 0 and 480.
+
+- Solves it completely and at full height: the jamb is a near, flat-on object,
+  so its edge is a true vertical on screen, and it is nearly black, so whether
+  it is dimmed or not cannot be seen.
+- Gives the picture the foreground it lacks (S-08) with no extra layer.
+- Fits the story: the detective has just come through this door, and the
+  occupant comes back through it.
+- **It cannot be narrow.** A jamb is the end of a wall, and the wall goes on
+  outward from it. Anything fixed to the side of the room that reaches in as
+  far as the seam hides all that lies beyond the seam. So B keeps the side
+  walls only where they are already inside the scene, the 24-unit strips, and
+  the berths, straps, lamp and net pocket in the extensions go behind it.
+
+**C. Berth curtains, drawn back.** What covers the seam does not have to cover
+the wall. It only has to stand **in the room, clear of the wall, and nearer
+than whatever crosses the line**; then it is a narrow band, and the side wall
+is seen past it on both sides.
+
+A sleeper has exactly that. Each berth has a privacy curtain on a rail along
+its open side, above the front of the bench, and when it is drawn back it
+gathers at the door end. Put the rail 0.67 m from the centre line and the
+gathered curtain 1.0 m from the camera: it projects onto x = 0 and x = 480. A
+bundle 5 to 6 cm thick is about 20 units wide on screen, enough to straddle the
+line, and it hangs from the ceiling to below the bottom of the picture, in
+front of the bench.
+
+- Solves it at full height, by interruption rather than by hiding: the two
+  tones are no longer side by side, and a gathered curtain is alternating light
+  and dark folds already, so a change of tone across it reads as fabric.
+- **Keeps everything.** The side walls, the berths and their fittings stay
+  visible outside the curtains on a wide screen, and the 24-unit strips stay
+  visible inside them.
+- Adds depth for free: the two rails run along the ceiling to the window wall
+  and converge on the vanishing point, and the curtains are a foreground.
+- Has to be drawn as a real object — folds, a hem, rings on the rail — and not
+  as a strip. Too narrow or too flat and the line shows through the idea.
+- The curtain is nearer than the benches, so nothing crosses in front of it.
+  That is what a post or a pilaster on the side wall cannot offer: the bench
+  runs in front of anything fixed to the wall, and the line reappears on the
+  bench.
+
+**D. Let the sides fall into shadow.** Put back what the artwork did
+originally: the extensions darken steeply toward the edges. The explanation in
+the room is that the light is all at the window end — the neon, the lamp, the
+ceiling strip by the wall — and the door end is unlit.
+
+- The cheapest: a few lines in `room.py`, already written once.
+- Hides the seam only as far as both sides of it are near black. Bright things
+  that cross the line, the headrest covers above all, would have to be toned
+  down or moved.
+- Costs the side walls: on a wide screen they would be shapes in the dark. This
+  is how the picture looked before the redraw, and "the walls have disappeared"
+  was the complaint that followed when it happened by accident.
+
+**E. A tape frame.** Do not show anything beyond the scene. On a wide window,
+pillarbox the hub and use the bars for what
+[11](11-premise-and-voice.md#what-carries-it) already wants on screen: the
+timecode and the recording badge.
+
+- Removes the seam by removing what is beside it. No artwork needed.
+- Costs the full-bleed picture on wide screens, which is where the scene looks
+  its best, and the opening is full-bleed, so the bars would have to arrive
+  after it.
+- A page change rather than an art change, small and static.
+
+#### Decision
+
+**Replace the two side images with a foreground.** `room-l.webp` and
+`room-r.webp` stop being a continuation of the room and become something that
+stands in front of it: the door frame, a curtain, or both. The seam is then the
+boundary between the room's image and the foreground's image, which is exactly
+where the dimming stops, so the line needs no further covering: a near, dark
+object beside a lit room is expected to differ in tone from it.
+
+This is option B in its plainest form, with C's curtain available as what the
+foreground is made of. It is chosen over the narrow curtain inside the room
+because it changes nothing inside the scene: no new geometry, no object placed
+to the unit, two images redrawn.
+
+What it means:
+
+- The room inside the scene is untouched, including the 24-unit strips of side
+  wall next to the corners. Those are the side-wall detail that stays.
+- The side walls drawn in the extensions go: the folded berths, straps,
+  reading lamp and net pocket. Step 1.3 shrinks to finishing the strips that
+  are inside the scene.
+- The foreground's inner edge is a straight vertical at the image boundary. A
+  door jamb has such an edge. A curtain does not, so a curtain needs either a
+  jamb or a track post at its inner edge, or a hem that hangs straight there.
+- Keep it dark and low in contrast. It is never dimmed, so the darker it is,
+  the less its tone can disagree with the dimmed room beside it.
+- It is the foreground stage 6 asks for (S-08), still inside the room's own
+  layer, so it does not move against the room. Moving it separately stays
+  deferred as D-03.
+- On a 4:3 window the extensions are off screen, so nothing changes there.
+
+What the foreground is — door frame, curtain, or a frame with a curtain
+gathered against it — is still to be chosen. A frame with a curtain is the
+fullest: the frame gives the straight edge and the story's door, the curtain
+gives colour and folds.
+
+A, the corner moved onto the seam, is not needed for this and stays open as a
+question about the compartment's width.
+
+#### When
+
+Before step 1.3, since it removes most of what 1.3 would have drawn.
+
+#### What to do, in order
+
+1. Restore `.spot` exactly as it was before F-003, and nothing else that F-003
+   removed. Check Chrome first with the artwork unchanged: the seam will show,
+   but there should be no flicker. If there is, stop — the premise of this
+   section is wrong.
+2. Draw the foreground in `room.py` in place of what the side extensions hold
+   now. The two images keep their size and position, so nothing on the page
+   changes.
+3. Check at 16:9 and wider, focusing each object in turn, the window most of
+   all: its light is the largest and leaves the least dimming at the edges.
+4. Record the outcome in [09](09-fix-log.md) either way.
+
+### D-01b Dimming from the page instead
+
+The alternative to D-01a: change the mechanism rather than the picture. Neither
+of these has been tried, and both are page changes that need the full Chrome
+check.
+
+1. **A dimming that follows the room.** Have `room.py` render a dark overlay
+   whose shape is the architecture: full strength over the window wall right up
+   to its corners, where a change of tone is natural, and fading out along the
+   benches and the floor well before they reach the scene's edge. The earlier
+   attempt to fade the dimmer at its edges left a halo because it faded across
+   the wall, a continuous surface; this fades only along surfaces that run
+   toward the camera. One static image, one opacity.
+2. **One image for the whole width.** If the room and its side extensions were
+   a single 720-wide element, an overlay the size of that element would not be
+   "wider than the scene". This changes the scene's structure and so belongs
+   with the scroll narrative work in [10](10-scroll-narrative.md).
+
+### D-02 The periodic glint on focusable objects
+
+**Removed in F-003.** The `.pop` filter animation that made objects glint every
+few seconds caused a flash when an early skip landed in the hub. It was the
+hint that an object can be picked up. If that hint is missed, bake a small
+highlight into each sprite or animate opacity on a separate, tiny element
+rather than filtering the sprite.
+
+### D-03 A separate foreground layer
+
+Stage 6 draws the foreground into `room.webp`. Making it its own layer for
+parallax is deferred for the same reason as D-01: it is a new moving layer
+over the carriage.
+
 ## Rollback
 
 Every step is one commit on `art/redraw`, and `main` only moves at a gate, so:
@@ -601,45 +842,77 @@ Every step is one commit on `art/redraw`, and `main` only moves at a gate, so:
 
 ## Progress
 
-Updated in the same commit as each step.
+Updated in the same commit as each step. `review` means built and waiting
+for the Chrome check; `partial` means started ahead of its turn while fixing
+something else.
 
-| Stage | Step | Status  |
-| ----- | ---- | ------- |
-| 0     | 0.1  | done    |
-| 0     | 0.2  | done    |
-| 0     | 0.3  | done    |
-| 0     | 0.4  | done    |
-| 0     | 0.5  | done    |
-| 0     | 0.6  | done    |
-| 0     | 0.7  | skipped |
-| 1     | 1.0  | pending |
-| 1     | 1.1  | pending |
-| 1     | 1.2  | pending |
-| 1     | 1.3  | pending |
-| 1     | 1.4  | pending |
-| 1     | 1.5  | pending |
-| 1     | 1.6  | pending |
-| 2     | 2.1  | pending |
-| 2     | 2.2  | pending |
-| 2     | 2.3  | pending |
-| 3     | 3.1  | pending |
-| 3     | 3.2  | pending |
-| 3     | 3.3  | pending |
-| 3     | 3.4  | pending |
-| 3     | 3.5  | pending |
-| 3     | 3.6  | pending |
-| 4     | 4.1  | pending |
-| 4     | 4.2  | pending |
-| 4     | 4.3  | pending |
-| 4     | 4.4  | pending |
-| 5     | 5.1  | pending |
-| 5     | 5.2  | pending |
-| 5     | 5.3  | pending |
-| 5     | 5.4  | pending |
-| 5     | 5.5  | pending |
-| 5     | 5.6  | pending |
-| 6     | 6    | pending |
-| 7     | 7    | pending |
+| Stage | Step | Status  | Notes                                                                           |
+| ----- | ---- | ------- | ------------------------------------------------------------------------------- |
+| 0     | 0.1  | done    |                                                                                 |
+| 0     | 0.2  | done    |                                                                                 |
+| 0     | 0.3  | done    |                                                                                 |
+| 0     | 0.4  | done    |                                                                                 |
+| 0     | 0.5  | done    |                                                                                 |
+| 0     | 0.6  | done    |                                                                                 |
+| 0     | 0.7  | skipped | decided against at the stage 0 gate                                             |
+| 1     | 1.0  | done    |                                                                                 |
+| 1     | 1.1  | done    | block-in, plus side walls as sleeper partitions and their baked vignette        |
+| 1     | 1.2  | done    | benches as swept cross-sections with soft edges                                 |
+| 1     | 1.3  | partial | folded berths, straps, reading lamp and net pocket are blocked in; not finished |
+| 1     | 1.4  | review  | two racks, luggage standing on them with sides; awaiting the Chrome check       |
+| 1     | 1.5  | partial | ceiling plane, seams and the light on the ceiling are in; cove and vents remain |
+| 1     | 1.6  | pending |                                                                                 |
+| 2     | 2.1  | pending |                                                                                 |
+| 2     | 2.2  | pending |                                                                                 |
+| 2     | 2.3  | pending |                                                                                 |
+| 3     | 3.1  | pending |                                                                                 |
+| 3     | 3.2  | pending |                                                                                 |
+| 3     | 3.3  | pending |                                                                                 |
+| 3     | 3.4  | pending |                                                                                 |
+| 3     | 3.5  | pending |                                                                                 |
+| 3     | 3.6  | pending |                                                                                 |
+| 4     | 4.1  | pending |                                                                                 |
+| 4     | 4.2  | pending |                                                                                 |
+| 4     | 4.3  | pending |                                                                                 |
+| 4     | 4.4  | pending |                                                                                 |
+| 5     | 5.1  | pending |                                                                                 |
+| 5     | 5.2  | pending |                                                                                 |
+| 5     | 5.3  | pending |                                                                                 |
+| 5     | 5.4  | pending |                                                                                 |
+| 5     | 5.5  | pending |                                                                                 |
+| 5     | 5.6  | pending |                                                                                 |
+| 6     | 6    | pending |                                                                                 |
+| 7     | 7    | pending |                                                                                 |
+
+### Where things stand
+
+Stage 0 is merged to `main`. Stage 1 was merged to `main` as a stable point
+after the side foreground was settled, ahead of its own gate after 1.6; the rest
+of stage 1 continues on `art/redraw` and merges at that gate as planned.
+
+Done so far in stage 1, beyond what the step table names:
+
+- The compartment is a model in metres (`P()` in `room.py`); every receding
+  surface is projected from it.
+- The side walls carry folded upper berths, and the side extensions have the
+  page's vignette baked into the artwork (F-002 in [09](09-fix-log.md)).
+- The benches are cross-sections swept along their length, so an edge is
+  softened or hardened by moving points in a table.
+- There are two luggage racks, 13 cm deep, either side of the line display.
+  Luggage stands on them at its own depth, with undersides and inner sides. The
+  canvas wrapper's `depth()` scales art written for the window wall to stand
+  nearer the camera.
+- The side images are a foreground (D-01a): a pilaster in the walls' panelling
+  and a curtain in the benches' upholstery, and the central focus dimming is
+  back.
+- An object that something stands in front of gets a second sprite for the
+  thing in front (`front` in the generated geometry). The briefcase lifts whole
+  behind the rack's rail this way.
+
+Next: restore the original dimming and check it in Chrome on its own; replace
+the side images with a foreground, per
+[D-01a](#d-01a-bring-the-dimming-back-by-designing-the-seam-away); then what is
+left of 1.3, and 1.5, 1.6 and the stage 1 gate.
 
 ## Keep in sync
 

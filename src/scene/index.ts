@@ -20,10 +20,11 @@ export interface SceneOptions {
 /** Mount the carriage scene: opening -> idle -> hub */
 export function mountScene(root: HTMLElement, { onEnter, skipOpening }: SceneOptions): SceneHandle {
   const els = buildScene(root);
-  // ?debug=geometry overlays the generated geometry; loaded only when asked for
-  if (new URLSearchParams(location.search).get('debug') === 'geometry') {
-    void import('./debug').then((m) => m.drawGeometry(root));
-  }
+  // ?debug=geometry overlays the generated geometry, ?debug=layers adds switches
+  // that remove one layer at a time; both are loaded only when asked for
+  const debug = new URLSearchParams(location.search).get('debug');
+  if (debug === 'geometry') void import('./debug').then((m) => m.drawGeometry(root));
+  if (debug === 'layers') void import('./debug').then((m) => m.layerSwitches(root));
   const opening = new Opening(els);
   const focus = new FocusEngine(
     els,
@@ -35,6 +36,22 @@ export function mountScene(root: HTMLElement, { onEnter, skipOpening }: SceneOpt
   if (skipOpening) opening.skip();
   focus.syncFrame();
   focus.start();
+
+  // Drop the grain's moving compositor layer before Chrome hides the tab, then
+  // let the visible carriage paint twice before starting that layer again.
+  let grainResume = 0;
+  const onVisibilityChange = () => {
+    cancelAnimationFrame(grainResume);
+    if (document.hidden) {
+      root.classList.add('grain-suspended');
+    } else {
+      grainResume = requestAnimationFrame(() => {
+        grainResume = requestAnimationFrame(() => root.classList.remove('grain-suspended'));
+      });
+    }
+  };
+  document.addEventListener('visibilitychange', onVisibilityChange);
+  onVisibilityChange();
 
   let pointerType = 'mouse';
 
@@ -97,6 +114,9 @@ export function mountScene(root: HTMLElement, { onEnter, skipOpening }: SceneOpt
 
   return {
     destroy() {
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      cancelAnimationFrame(grainResume);
+      root.classList.remove('grain-suspended');
       focus.stop();
       opening.dispose();
       document.removeEventListener('keydown', onKeyDown);

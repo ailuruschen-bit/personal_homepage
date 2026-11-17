@@ -295,6 +295,9 @@ export class FocusEngine {
     p.dim += ((light ? 1 : 0) - p.dim) * smoothing(dt, TAU.dim);
 
     this.els.beam.style.opacity = p.alpha.toFixed(3);
+    // .spot dims the 480 scene around the focused object and stops at its
+    // edges; the side images are a dark foreground, so the edge is where the
+    // room ends anyway (docs/13, D-01a)
     this.els.spot.style.opacity = p.dim.toFixed(3);
     if (p.alpha < 0.004 && p.dim < 0.004) return;
 

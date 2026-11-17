@@ -26,13 +26,15 @@ export interface Hotspot {
   light: { x: number; y: number; rx: number; ry: number };
   box?: { x: number; y: number; w: number; h: number };
   sprite?: string;
+  /** What stands in front of the object: drawn above its sprite, never lifted */
+  front?: { x: number; y: number; w: number; h: number; sprite: string };
 }
 
 /** Where an object is, from the generated geometry */
-function geo(target: string): Pick<Hotspot, 'zone' | 'light' | 'box' | 'sprite'> {
+function geo(target: string): Pick<Hotspot, 'zone' | 'light' | 'box' | 'sprite' | 'front'> {
   const g = OBJECTS[target];
   if (!g) throw new Error(`geometry.gen.ts has no object "${target}"`);
-  return { zone: g.zone, light: g.light, box: g.box, sprite: g.sprite };
+  return { zone: g.zone, light: g.light, box: g.box, sprite: g.sprite, front: g.front };
 }
 
 export const hotspots: Hotspot[] = [

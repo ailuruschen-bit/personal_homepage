@@ -1,12 +1,14 @@
 """The carriage interior.
 
 Drawn on a 720x480 canvas covering scene x in [-120, 600), then cut into the
-central 480 plus a 120-wide extension on each side.
+central 480 plus a 120-wide extension on each side. The window wall is drawn
+face-on; everything that recedes is built from the perspective model below.
 """
+import os
 import random
 
 import numpy as np
-from PIL import Image, ImageDraw
+from PIL import Image, ImageChops, ImageDraw
 
 import parts
 import px
@@ -37,7 +39,7 @@ AMBER = (255, 206, 110)
 OBJECTS = {
     'projects': dict(at=(148, 288), zone=(-11, -9, 104, 88), light=(47, 40, 62, 52)),
     'about': dict(at=(316, 344), zone=(-10, -8, 42, 26), light=(16, 9, 30, 20)),
-    'stack': dict(at=(318, 55), zone=(-10, -9, 78, 45), light=(34, 20, 48, 28)),
+    'stack': dict(at=(326, 52), zone=(-10, -9, 78, 45), light=(34, 20, 48, 28), on_rack=True),
     'journey': dict(at=(173, 67), zone=(-7, -7, 127, 27), light=(67, 10, 78, 18)),
 }
 
@@ -53,6 +55,49 @@ WINDOW_RADIUS = 10
 # flies through. The blinds are laid out relative to the opening (dom.ts,
 # scene.css), so this moves with the window.
 CAM_GAP = (90, 85.808)
+
+# ------------------------------------------------------------------ Perspective
+# The compartment as a box in metres, seen in one-point perspective. The camera
+# stands just inside the door looking straight at the window wall, which is
+# therefore drawn face-on; everything that runs toward the camera (side walls,
+# floor, ceiling, seats, the rack's underside) converges on the vanishing point.
+#
+# The vanishing point is the camera's zoom origin: the opening flies into the
+# point the room converges on. The scale and the eye height are read off the
+# window wall as it was already drawn: the window is 1.0 m wide (180 units) and
+# the floor meets the wall at y = 440. That puts the camera at chest height,
+# which is where the detective wears it. See docs/13, stage 1.
+WALL_SCALE = 180  # scene units per metre on the window wall
+WALL_DIST = 2.0  # metres from the camera to the window wall
+FOCAL = WALL_SCALE * WALL_DIST
+ROOM_HALF_WIDTH = 1.2  # the window wall runs 2.4 m between the side walls
+ROOM_CEILING = 2.30
+# The luggage racks: one over each bench end, either side of the line display
+# above the window. Shallow enough to reach from the seat below.
+RACK_DEPTH = 0.13
+RACK_INNER = 0.46  # each rack runs from here to the side wall
+# The luggage's front on each rack. On the left it stands just past the front
+# rail; the briefcase on the right is slim and stands against the wall, inside
+# the rack.
+LUGGAGE_Z = {-1: WALL_DIST - RACK_DEPTH - 0.01, 1: WALL_DIST - 0.07}
+LUGGAGE_FLAT = 1.0  # height of the luggage relative to how it was written; 1 is unchanged
+
+
+def vanishing_point():
+    """Where everything receding meets: the camera's zoom origin."""
+    return (WINDOW[0] + CAM_GAP[0], WINDOW[1] + CAM_GAP[1])
+
+
+EYE = (440 - vanishing_point()[1]) / WALL_SCALE  # camera height, about 1.28 m
+
+
+def P(X, Y, Z):
+    """A point in the compartment (metres: X right of centre, Y up from the
+    floor, Z away from the camera) projected into scene units."""
+    vx, vy = vanishing_point()
+    k = FOCAL / Z
+    return (vx + X * k, vy - (Y - EYE) * k)
+
 
 # The page's animated glows (.g-*), each x y w h. Two sit over light sources on
 # the walls, one over the laptop and one over the window; those two are relative
@@ -81,19 +126,32 @@ def geometry(masks):
         ax, ay = o['at']
         z, li = o['zone'], o['light']
         x0, y0, x1, y1 = masks[key].getbbox()
+        # an object on the rack stands nearer than the wall it was written on:
+        # its zone and light scale about the vanishing point with it
+        k = WALL_DIST / LUGGAGE_Z[1] if o.get('on_rack') else 1.0
+        vx, vy = vanishing_point()
+        sx, sy = (lambda v: vx + (v - vx) * k), (lambda v: vy + (v - vy) * k)
         objects[key] = dict(
-            zone=(ax + z[0], ay + z[1], ax + z[2], ay + z[3]),
-            light=(ax + li[0], ay + li[1], li[2], li[3]),
+            zone=(sx(ax + z[0]), sy(ay + z[1]), sx(ax + z[2]), sy(ay + z[3])),
+            light=(sx(ax + li[0]), sy(ay + li[1]), li[2] * k, li[3] * k),
             box=(x0 - OX, y0, x1 - x0, y1 - y0),
             sprite=f'/assets/obj-{key}.webp',
         )
+        front = masks.get(f'{key}/front')
+        if front:
+            fx0, fy0, fx1, fy1 = front.getbbox()
+            objects[key]['front'] = dict(box=(fx0 - OX, fy0, fx1 - fx0, fy1 - fy0), sprite=f'/assets/obj-{key}-front.webp')
     glows = {}
     for key, gl in GLOWS.items():
         if isinstance(gl[0], str):
             ax, ay = (wx, wy) if gl[0] == 'window' else OBJECTS[gl[0]]['at']
             gl = (ax + gl[1], ay + gl[2], gl[3], gl[4])
         glows[key] = gl
+    (bx0, by0), (bx1, by1) = P(-ROOM_HALF_WIDTH, ROOM_CEILING, WALL_DIST), P(ROOM_HALF_WIDTH, 0, WALL_DIST)
+    vx, vy = vanishing_point()
     return dict(
+        side=OX,
+        perspective=dict(vx=vx, vy=vy, wall=(bx0, by0, bx1, by1)),
         window=dict(x=wx, y=wy, w=ww, h=wh, r=WINDOW_RADIUS),
         camera=dict(x=wx + CAM_GAP[0], y=wy + CAM_GAP[1]),
         glows=glows,
@@ -111,24 +169,60 @@ def hole_mask():
 
 
 class Off:
-    """Canvas wrapper with an offset, so everything below is written in scene
-    coordinates.
+    """Canvas wrapper, so everything below is written in scene coordinates.
+
+    It carries a shift, and optionally a depth: art written as if it were on the
+    window wall is scaled about the vanishing point to stand nearer the camera
+    instead (see depth()).
 
     It can also carry a tag. While a tag is set, every solid or lit shape drawn is
     recorded in that tag's silhouette mask as well; shadows, light and texture are
     not, because they are not part of an object's outline. build.py turns the masks
     into the objects' sprites and bounding boxes."""
 
-    def __init__(self, cv, dx=OX, dy=0, tag=None, masks=None):
-        self.cv, self.dx, self.dy, self.tag = cv, dx, dy, tag
+    def __init__(self, cv, dx=0, dy=0, tag=None, masks=None, k=1.0, flat=(1.0, 0)):
+        self.cv, self.dx, self.dy, self.tag, self.k, self.flat = cv, dx, dy, tag, k, flat
         self.masks = {} if masks is None else masks
 
     def at(self, dx, dy, tag=None):
         """The same canvas shifted by (dx, dy), recording into silhouette `tag`."""
-        return Off(self.cv, self.dx + dx, self.dy + dy, tag, self.masks)
+        return Off(self.cv, self.dx + dx, self.dy + dy, tag, self.masks, self.k, self.flat)
+
+    def depth(self, z):
+        """The same canvas for art standing z metres from the camera instead of
+        on the window wall: everything is scaled about the vanishing point."""
+        return Off(self.cv, self.dx, self.dy, self.tag, self.masks, WALL_DIST / z, self.flat)
+
+    def flatten(self, f, foot):
+        """The same canvas with art squashed to f of its height toward the line
+        y = foot it stands on, in the coordinates the art was written in."""
+        return Off(self.cv, self.dx, self.dy, self.tag, self.masks, self.k, (f, foot))
+
+    @property
+    def plain(self):
+        return self.k == 1.0 and self.flat[0] == 1.0
+
+    # ---- scene coordinates to canvas pixels
+    def _xy(self, x, y):
+        f, foot = self.flat
+        x, y = x + self.dx, foot + (y - foot) * f + self.dy
+        if self.k != 1.0:
+            vx, vy = vanishing_point()
+            x, y = vx + (x - vx) * self.k, vy + (y - vy) * self.k
+        return (x + OX, y)
+
+    def _r(self, x, y, w, h):
+        """A rectangle as canvas x, y, w, h; whole pixels once scaled."""
+        if self.plain:
+            return (x + self.dx + OX, y + self.dy, w, h)
+        (x0, y0), (x1, y1) = self._xy(x, y), self._xy(x + w, y + h)
+        x0, y0, x1, y1 = round(x0), round(y0), round(x1), round(y1)
+        return (x0, y0, max(1, x1 - x0) if w > 0 else 0, max(1, y1 - y0) if h > 0 else 0)
 
     def _p(self, pts):
-        return [(x + self.dx, y + self.dy) for x, y in pts]
+        if self.plain:
+            return [self._xy(x, y) for x, y in pts]
+        return [tuple(round(v) for v in self._xy(x, y)) for x, y in pts]
 
     def _m(self):
         """Drawing handle on this tag's silhouette mask; None when untagged."""
@@ -139,7 +233,8 @@ class Off:
         return ImageDraw.Draw(self.masks[self.tag])
 
     def _box(self, x, y, w, h):
-        return [x + self.dx, y + self.dy, x + self.dx + w - 1, y + self.dy + h - 1]
+        x, y, w, h = self._r(x, y, w, h)
+        return [x, y, x + w - 1, y + h - 1]
 
     def _mrect(self, x, y, w, h):
         m = self._m()
@@ -149,18 +244,18 @@ class Off:
     def _mline(self, pts, width):
         m = self._m()
         if m:
-            m.line([(round(x), round(y)) for x, y in self._p(pts)], fill=255, width=max(1, round(width)))
+            m.line([(round(x), round(y)) for x, y in self._p(pts)], fill=255, width=max(1, round(width * self.k)))
 
     def rect(self, x, y, w, h, c):
-        self.cv.rect(x + self.dx, y + self.dy, w, h, c)
+        self.cv.rect(*self._r(x, y, w, h), c)
         self._mrect(x, y, w, h)
 
     def px(self, x, y, c):
-        self.cv.px(x + self.dx, y + self.dy, c)
+        self.cv.rect(*self._r(x, y, 1, 1), c)
         self._mrect(x, y, 1, 1)
 
     def line(self, pts, c, width=1):
-        self.cv.line(self._p(pts), c, width)
+        self.cv.line(self._p(pts), c, max(1, round(width * self.k)))
         self._mline(pts, width)
 
     def poly(self, pts, c):
@@ -170,36 +265,37 @@ class Off:
             m.polygon(self._p(pts), fill=255)
 
     def ellipse(self, x, y, w, h, c):
-        self.cv.ellipse(x + self.dx, y + self.dy, w, h, c)
+        self.cv.ellipse(*self._r(x, y, w, h), c)
         m = self._m()
         if m:
             m.ellipse(self._box(x, y, w, h), fill=255)
 
     def rrect(self, x, y, w, h, r, c):
-        self.cv.rrect(x + self.dx, y + self.dy, w, h, r, c)
+        self.cv.rrect(*self._r(x, y, w, h), round(r * self.k), c)
         m = self._m()
         if m:
-            m.rounded_rectangle(self._box(x, y, w, h), r, fill=255)
+            m.rounded_rectangle(self._box(x, y, w, h), round(r * self.k), fill=255)
 
     def mask(self, x, y, m, c):
-        self.cv.mask(x + self.dx, y + self.dy, m, c)
+        cx, cy = (round(v) for v in self._xy(x, y))
+        self.cv.mask(cx, cy, m, c)
         if self._m():
-            self.masks[self.tag].paste(255, (x + self.dx, y + self.dy), m)
+            self.masks[self.tag].paste(255, (cx, cy), m)
 
     def lrect(self, x, y, w, h, c, k=1.0, body=None):
-        self.cv.lrect(x + self.dx, y + self.dy, w, h, c, k, body)
+        self.cv.lrect(*self._r(x, y, w, h), c, k, body)
         self._mrect(x, y, w, h)
 
     def lpx(self, x, y, c, k=1.0):
-        self.cv.lpx(x + self.dx, y + self.dy, c, k)
+        self.cv.lrect(*self._r(x, y, 1, 1), c, k)
         self._mrect(x, y, 1, 1)
 
     def lline(self, pts, c, k=1.0, width=1, body=None):
-        self.cv.lline(self._p(pts), c, k, width, body)
+        self.cv.lline(self._p(pts), c, k, max(1, round(width * self.k)), body)
         self._mline(pts, width)
 
     def fline(self, pts, c, k=0.0, width=1, body=None):
-        self.cv.fline(self._p(pts), c, k, width, body)
+        self.cv.fline([self._xy(x, y) for x, y in pts], c, k, width * self.k, body)
         self._mline(pts, width)
 
     def lpoly(self, pts, c, k=1.0, body=None):
@@ -211,23 +307,23 @@ class Off:
             m.polygon(p, fill=255)
 
     def lellipse(self, x, y, w, h, c, k=1.0, body=None):
-        self.cv.lellipse(x + self.dx, y + self.dy, w, h, c, k, body)
+        self.cv.lellipse(*self._r(x, y, w, h), c, k, body)
         m = self._m()
         if m:
             m.ellipse(self._box(x, y, w, h), fill=255)
 
     # ---- not part of any outline
     def light(self, x, y, w, h, c, k=1.0):
-        self.cv.light(x + self.dx, y + self.dy, w, h, c, k)
+        self.cv.light(*self._r(x, y, w, h), c, k)
 
     def shadow(self, x, y, w, h, k=0.5, ell=False):
-        self.cv.shadow(x + self.dx, y + self.dy, w, h, k, ell)
+        self.cv.shadow(*self._r(x, y, w, h), k, ell)
 
     def shade(self, x, y, w, h, k):
-        parts.shade(self.cv, x + self.dx, y + self.dy, w, h, k)
+        parts.shade(self.cv, *self._r(x, y, w, h), k)
 
     def speckle(self, x, y, w, h, amount, rnd, density=0.12):
-        self.cv.speckle(x + self.dx, y + self.dy, w, h, amount, rnd, density)
+        self.cv.speckle(*self._r(x, y, w, h), amount, rnd, density)
 
 
 def place(g, key, drawn_at):
@@ -260,13 +356,6 @@ def shell(g, rnd):
         g.rect(x, 0, 1, 48, mul(CEIL, 0.7))
         g.rect(x + 1, 0, 1, 48, mul(CEIL, 1.15))
     g.speckle(L, 0, Wd, 48, 0.08, rnd, 0.2)
-    for x0, w in ((-116, 100), (40, 400), (496, 100)):
-        g.rect(x0 - 4, 27, w + 8, 12, (38, 40, 62))
-        g.rect(x0 - 4, 27, w + 8, 1, (84, 88, 120))
-        g.lrect(x0, 30, w, 6, (255, 222, 164), 0.85, body=(255, 240, 208))
-        g.lrect(x0, 35, w, 1, (255, 196, 120), 0.7, body=(240, 200, 150))
-        for x in range(x0 + 49, x0 + w, 50):
-            g.rect(x, 29, 2, 8, (38, 40, 62))
     # ventilation grilles
     for x0 in (-60, 150, 300, 470):
         g.rect(x0, 8, 30, 10, (40, 42, 66))
@@ -343,8 +432,7 @@ def shell(g, rnd):
 
 
 # ------------------------------------------------------------------ Luggage rack
-def rack(g, rnd):
-    g.shadow(-120, 96, 720, 12, 0.5)
+def rack(g, rnd, over_rack=True):
     # route map (the journey object)
     o = place(g, 'journey', (173, 67))
     o.shadow(172, 86, 136, 6, 0.6)
@@ -368,46 +456,74 @@ def rack(g, rnd):
     for x in (175, 304):
         o.px(x, 69, (150, 158, 190))
         o.px(x, 84, (150, 158, 190))
-    # brackets
-    for x in (-100, -30, 70, 164, 346, 440, 510, 580):
-        g.rect(x, 60, 3, 37, (84, 94, 130))
-        g.rect(x, 60, 1, 37, (136, 146, 182))
-        g.rect(x - 2, 60, 7, 3, (64, 72, 106))
-        g.line([(x + 3, 84), (x + 9, 93)], (64, 72, 106))
-    # luggage, sitting on y = 92
+    # Luggage. Each piece was written as if it stood on the window wall with its
+    # foot at y = 92; it is drawn LUGGAGE_Z from the camera instead, standing on
+    # the rack, so it is scaled about the vanishing point and lifted to the
+    # rack's level. From below, its underside shows between its front and the wall.
+    # It is also flattened: bags laid on a rack are lower than they are wide.
+    D = WALL_DIST
+    lug = g.flatten(LUGGAGE_FLAT, 92).at(0, -3).depth(LUGGAGE_Z[-1])
+    bx, rl = lug.at(24, 0), lug.at(22, 0)
+    um = g.flatten(LUGGAGE_FLAT, 92).at(2, -3).depth(LUGGAGE_Z[1])
+    # x0, x1, height as written, colour, silhouette tag
+    pieces = ((28, 52, 6, (226, 222, 210), None), (52, 88, 20, (176, 138, 98), None), (96, 151, 24, (60, 140, 138), None),
+              (326, 394, 34, (150, 96, 62), 'stack'), (400, 448, 4, (44, 50, 84), None))
+    for x0, x1, h, c, tag in pieces:
+        xa, xb = (x0 - 240) / WALL_SCALE, (x1 - 240) / WALL_SCALE
+        zl = LUGGAGE_Z[-1 if x1 < 240 else 1]
+        quad(g, [(xa, RACK_Y, D), (xb, RACK_Y, D), (xb, RACK_Y, zl), (xa, RACK_Y, zl)], mul(c, 0.34))
+    # The left rack goes in before its luggage's visible faces: that luggage
+    # overhangs the front rail, so nothing of the rack crosses it. The right
+    # rack is drawn last, at the end of this function.
+    rack_frame(g, -1)
+    # each piece's side that faces the middle of the compartment, running back
+    # to the wall: its body colour in shade, a lit top edge, and a band or two
+    # carried round from the front
+    for x0, x1, h, c, tag in pieces:
+        xs = (x1 if x1 < 240 else x0)
+        zl = LUGGAGE_Z[-1 if x1 < 240 else 1]
+        X, top = (xs - 240) / WALL_SCALE, RACK_Y + h * LUGGAGE_FLAT / WALL_SCALE
+        t = g.at(0, 0, tag) if tag else g
+        quad(t, [(X, RACK_Y, D), (X, top, D), (X, top, zl), (X, RACK_Y, zl)], mul(c, 0.6))
+        t.line([ri(P(X, top, D)), ri(P(X, top, zl))], mul(c, 0.95))
+        t.line([ri(P(X, RACK_Y + 0.004, D)), ri(P(X, RACK_Y + 0.004, zl))], mul(c, 0.4))
+        if h >= 20:
+            for f in (0.3, 0.7):
+                z = zl + (D - zl) * f
+                quad(t, [(X, RACK_Y, z), (X, top, z), (X, top, z + 0.025), (X, RACK_Y, z + 0.025)], mul(c, 0.42))
     # cardboard box
-    g.rect(28, 72, 36, 20, (176, 138, 98))
-    g.rect(28, 72, 36, 2, (210, 174, 130))
-    g.rect(28, 90, 36, 2, (120, 90, 66))
-    g.rect(43, 72, 6, 20, (206, 186, 150))
-    g.rect(52, 78, 9, 6, (236, 230, 214))
-    g.rect(53, 80, 6, 1, (120, 60, 60))
-    g.rect(53, 82, 4, 1, (90, 90, 110))
-    g.shade(60, 72, 4, 20, 0.8)
+    bx.rect(28, 72, 36, 20, (176, 138, 98))
+    bx.rect(28, 72, 36, 2, (210, 174, 130))
+    bx.rect(28, 90, 36, 2, (120, 90, 66))
+    bx.rect(43, 72, 6, 20, (206, 186, 150))
+    bx.rect(52, 78, 9, 6, (236, 230, 214))
+    bx.rect(53, 80, 6, 1, (120, 60, 60))
+    bx.rect(53, 82, 4, 1, (90, 90, 110))
+    bx.shade(60, 72, 4, 20, 0.8)
     # rolled-up drawings
-    g.rect(6, 86, 24, 6, (226, 222, 210))
-    g.rect(6, 86, 24, 1, (250, 248, 240))
-    g.rect(6, 90, 24, 2, (170, 166, 160))
-    g.ellipse(27, 86, 5, 6, (190, 186, 178))
-    g.px(29, 88, (90, 88, 96))
-    g.rect(14, 86, 2, 6, (200, 70, 70))
+    rl.rect(6, 86, 24, 6, (226, 222, 210))
+    rl.rect(6, 86, 24, 1, (250, 248, 240))
+    rl.rect(6, 90, 24, 2, (170, 166, 160))
+    rl.ellipse(27, 86, 5, 6, (190, 186, 178))
+    rl.px(29, 88, (90, 88, 96))
+    rl.rect(14, 86, 2, 6, (200, 70, 70))
     # holdall
     c = (60, 140, 138)
-    g.rrect(96, 68, 55, 24, 7, c)
-    g.rrect(98, 69, 51, 8, 4, mul(c, 1.28))
-    g.rect(100, 84, 47, 7, mul(c, 0.74))
-    g.rect(98, 77, 51, 1, mul(c, 0.6))
+    lug.rrect(96, 68, 55, 24, 7, c)
+    lug.rrect(98, 69, 51, 8, 4, mul(c, 1.28))
+    lug.rect(100, 84, 47, 7, mul(c, 0.74))
+    lug.rect(98, 77, 51, 1, mul(c, 0.6))
     for x in (110, 134):
-        g.rect(x, 68, 4, 24, mul(c, 0.62))
-        g.rect(x, 68, 1, 24, mul(c, 0.9))
-        g.rect(x, 79, 4, 3, BRASS)
-    g.line([(113, 68), (116, 63), (133, 63), (136, 68)], mul(c, 0.5))
-    g.line([(114, 68), (117, 64), (132, 64), (135, 68)], mul(c, 0.8))
-    g.rect(146, 78, 5, 9, (236, 226, 200))
-    g.rect(147, 80, 3, 1, (150, 60, 60))
-    g.px(148, 77, (40, 40, 56))
+        lug.rect(x, 68, 4, 24, mul(c, 0.62))
+        lug.rect(x, 68, 1, 24, mul(c, 0.9))
+        lug.rect(x, 79, 4, 3, BRASS)
+    lug.line([(113, 68), (116, 63), (133, 63), (136, 68)], mul(c, 0.5))
+    lug.line([(114, 68), (117, 64), (132, 64), (135, 68)], mul(c, 0.8))
+    lug.rect(146, 78, 5, 9, (236, 226, 200))
+    lug.rect(147, 80, 3, 1, (150, 60, 60))
+    lug.px(148, 77, (40, 40, 56))
     # briefcase (the stack object)
-    o = place(g, 'stack', (318, 55))
+    o = place(g.flatten(LUGGAGE_FLAT, 92).depth(LUGGAGE_Z[1]), 'stack', (318, 55))
     lb = (150, 96, 62)
     o.rect(318, 58, 68, 34, lb)
     o.rect(318, 58, 68, 3, mul(lb, 1.3))
@@ -438,18 +554,52 @@ def rack(g, rnd):
     o.rect(354, 78, 10, 7, (214, 70, 70))
     o.rect(354, 80, 10, 2, (240, 232, 220))
     # umbrella
-    g.rect(398, 88, 42, 4, (44, 50, 84))
-    g.rect(398, 88, 42, 1, (84, 92, 136))
-    g.rect(412, 88, 2, 4, (150, 60, 70))
-    g.rect(394, 89, 4, 2, (160, 166, 190))
-    g.line([(440, 89), (446, 89), (447, 86), (445, 84)], BRASS)
-    # the shelf itself: two rails
-    g.rect(-120, 92, 720, 2, STEEL)
-    g.rect(-120, 92, 720, 1, (170, 180, 210))
-    g.rect(-120, 96, 720, 1, (64, 72, 106))
-    for x in range(-120, 600, 4):
-        g.px(x, 94, (84, 94, 130))
-        g.px(x + 2, 95, (84, 94, 130))
+    um.rect(398, 88, 42, 4, (44, 50, 84))
+    um.rect(398, 88, 42, 1, (84, 92, 136))
+    um.rect(412, 88, 2, 4, (150, 60, 70))
+    um.rect(394, 89, 4, 2, (160, 166, 190))
+    um.line([(440, 89), (446, 89), (447, 86), (445, 84)], BRASS)
+    # The briefcase stands inside the right rack, so the rack's floor and rail
+    # cross its foot. The page lifts the briefcase's sprite on focus, and a
+    # briefcase cut off at the rail looks sawn in two. So its silhouette stays
+    # whole, and the part of the rack that crosses it is recorded as a second
+    # silhouette, 'stack/front', which the page keeps on top of the sprite: the
+    # briefcase lifts behind the rail. build.py cuts the briefcase's sprite from
+    # a second render made with over_rack=False, where the rack is not in its way.
+    if over_rack:
+        rack_frame(g.at(0, 0, '_rack'), 1)
+        over = g.masks.pop('_rack')
+        x0, y0, x1, y1 = g.masks['stack'].getbbox()
+        near = Image.new('L', over.size, 0)
+        ImageDraw.Draw(near).rectangle([x0 - 6, y0 - 6, x1 + 6, y1 + 3], fill=255)
+        g.masks['stack/front'] = ImageChops.multiply(over, near)
+
+
+def rack_frame(g, s):
+    """One luggage rack, seen from below: slats running out from the wall, a
+    front rail with a lip that the luggage stands behind, and a bracket at each
+    end. s = -1 for the left-hand rack, +1 for the right."""
+    HW, D = ROOM_HALF_WIDTH, WALL_DIST
+    zf = D - RACK_DEPTH
+    dark, mid, lite = (64, 72, 106), STEEL, (176, 186, 214)
+    at = lambda x, z, y=RACK_Y: ri(P(s * x, y, z))
+    # slats, and the wire that ties them halfway out
+    x = RACK_INNER
+    while x < HW - 0.01:
+        g.line([at(x, D), at(x, zf)], mul(mid, 0.82))
+        x += 0.055
+    g.line([at(RACK_INNER, (D + zf) / 2), at(HW, (D + zf) / 2)], mul(mid, 0.7))
+    g.line([at(RACK_INNER, D), at(HW, D)], dark)
+    # the front rail: a low lip the luggage stands behind
+    quad(g, [(s * RACK_INNER, RACK_Y - 0.008, zf), (s * HW, RACK_Y - 0.008, zf), (s * HW, RACK_Y + 0.014, zf), (s * RACK_INNER, RACK_Y + 0.014, zf)], mid)
+    g.line([at(RACK_INNER, zf, RACK_Y + 0.014), at(HW, zf, RACK_Y + 0.014)], lite)
+    g.line([at(RACK_INNER, zf, RACK_Y - 0.008), at(HW, zf, RACK_Y - 0.008)], dark)
+    # the inner end: a side rail, and a bracket down to the wall
+    g.line([at(RACK_INNER, D), at(RACK_INNER, zf)], mid, width=2)
+    g.line([at(RACK_INNER, D, RACK_Y - 0.17), at(RACK_INNER, zf)], dark, width=2)
+    g.line([at(RACK_INNER, D, RACK_Y - 0.17), at(RACK_INNER, D)], dark, width=2)
+    bx, by = at(RACK_INNER, zf)
+    g.rect(bx - 1, by - 1, 3, 3, lite)
 
 
 # ------------------------------------------------------------------ Window and curtains
@@ -565,7 +715,7 @@ def poster(g, x, y, w, h, kind):
 
 def walls(g, rnd):
     # ---- left wall
-    poster(g, 22, 118, 48, 70, 'sunset')
+    poster(g, 40, 118, 48, 70, 'sunset')
     # neon tube
     g.line([(97, 58), (97, 96)], (30, 30, 50))
     g.line([(97, 104), (97, 123)], (30, 30, 50))
@@ -627,7 +777,7 @@ def walls(g, rnd):
     g.lrect(397, 231, 3, 3, (255, 80, 80), 0.8)
     g.lrect(392, 231, 3, 3, (90, 255, 150), 0.7)
     # small picture frame and emergency hammer
-    poster(g, 420, 114, 34, 30, 'moon')
+    poster(g, 408, 112, 34, 30, 'moon')
     g.shadow(423, 188, 26, 30, 0.6)
     g.rect(422, 186, 24, 28, (196, 56, 62))
     g.rect(422, 186, 24, 1, (255, 120, 120))
@@ -641,79 +791,214 @@ def walls(g, rnd):
     g.rect(427, 210, 6, 1, (150, 50, 50))
 
 
-# ------------------------------------------------------------------ Seats
-def seat(g, rnd, mirror):
-    def X(x):
-        return 480 - x if mirror else x
+# ------------------------------------------------------------------ Structure
+# Everything that recedes, built from the perspective model rather than drawn by
+# eye. Heights in metres. The dado is where the light strip runs along the
+# window wall, and the rack meets the wall where the luggage already sits.
+DADO = EYE - (296 - vanishing_point()[1]) / WALL_SCALE
+RACK_Y = EYE + (vanishing_point()[1] - 89) / WALL_SCALE
+SEAT_H = 0.45  # cushion top
+SEAT_INNER = 0.60  # front edge of the cushion, from the centre line
+BACK_FACE = 1.05  # the backrest's face; the side wall is at ROOM_HALF_WIDTH
+BACK_TOP = 1.18
+Z_NEAR = 0.5  # far enough forward that everything runs off the scene
 
-    def P(pts):
-        return [(X(x), y) for x, y in pts]
 
-    def R(x, y, w, h, c):
-        g.rect(X(x + w - 1) if mirror else x, y, w, h, c)
+def quad(g, pts, c):
+    """A flat polygon given in compartment coordinates."""
+    g.poly([P(*p) for p in pts], c)
 
-    back = SEAT
-    # shadow the seat back casts on the wall
-    g.shadow(X(84) if mirror else 68, 236, 16, 120, 0.55)
-    g.shadow(X(146) if mirror else 10, 346, 136, 14, 0.6)
-    # base
-    R(10, 428, 124, 52, (56, 30, 50))
-    R(10, 428, 124, 2, (30, 16, 30))
-    R(14, 436, 116, 1, (84, 48, 70))
-    # front face of the cushion
-    R(10, 404, 124, 24, mul(back, 0.72))
-    R(10, 404, 124, 2, mul(back, 1.25))
-    R(10, 424, 124, 4, mul(back, 0.5))
-    for x in range(16, 130, 9):
-        g.px(X(x), 407, mul(back, 1.5))
-    # top face of the cushion
-    g.poly(P([(70, 352), (141, 352), (133, 404), (10, 404)]), mul(back, 1.12))
-    g.poly(P([(70, 352), (141, 352), (140, 358), (63, 358)]), mul(back, 0.8))
-    g.line(P([(52, 368), (138, 368)]), mul(back, 0.94))
-    g.line(P([(34, 384), (136, 384)]), mul(back, 0.94))
-    g.line(P([(14, 402), (132, 402)]), mul(back, 1.4))
-    for x, y in ((92, 364), (112, 376), (72, 378), (96, 392), (50, 394), (120, 396)):
-        g.px(X(x), y, mul(back, 0.6))
-        g.px(X(x), y + 1, mul(back, 1.5))
-    # front of the seat back
-    g.poly(P([(10, 249), (70, 238), (70, 352), (10, 404)]), back)
-    # diamond tufting
-    def ty(x):
-        return 286 - (x - 10) * 22 / 60
 
-    pts = {}
-    for j in range(5):
-        for i in range(5):
-            x = 16 + i * 13 + (6 if j % 2 else 0)
-            y = ty(x) + 10 + j * 17
-            pts[(i, j)] = (x, y)
-    for (i, j), (x, y) in pts.items():
-        for di in ((0, 1), (-1, 1)) if j % 2 == 0 else ((0, 1), (1, 1)):
-            q = pts.get((i + di[0], j + di[1]))
-            if q and q[0] < 70 and x < 70:
-                g.line([(X(x), int(y)), (X(q[0]), int(q[1]))], mul(back, 0.78))
-    for (i, j), (x, y) in pts.items():
-        if 12 < x < 68 and y < 392 - (70 - x) * 0.8:
-            g.rect(X(x) - (1 if mirror else 0), int(y), 2, 2, mul(back, 0.5))
-            g.px(X(x), int(y) - 1, mul(back, 1.5))
-    # outer face and top edge
-    g.poly(P([(0, 252), (10, 249), (10, 480), (0, 480)]), mul(back, 0.5))
-    g.poly(P([(0, 250), (10, 247), (70, 236), (70, 238), (10, 249), (0, 252)]), mul(back, 1.5))
-    # darken the side nearest the wall
-    g.poly(P([(66, 262), (70, 261), (70, 352), (66, 355)]), mul(back, 0.7))
-    # antimacassar
-    cloth = (196, 192, 212)
-    g.poly(P([(10, 249), (70, 238), (70, 264), (10, 286)]), cloth)
-    g.poly(P([(10, 249), (70, 238), (70, 242), (10, 253)]), (226, 224, 240))
-    for x in range(12, 70, 3):
-        y = 286 - (x - 10) * 22 / 60
-        g.px(X(x), int(y) - 1, (170, 164, 190))
-        g.px(X(x + 1), int(y), cloth)
-    for x in (24, 40, 56):
-        y = 249 - (x - 10) * 11 / 60
-        g.line(P([(x, int(y) + 5), (x - 1, int(y) + 24 - (x - 10) // 6)]), (198, 192, 214))
-    g.poly(P([(0, 252), (10, 249), (10, 286), (0, 290)]), (176, 170, 194))
+def receding(g, x0, y0, x1, y1, c, z0=None, z1=Z_NEAR):
+    """A surface running from the window wall toward the camera, between two
+    edges given as (X, Y) pairs: (x0, y0) to (x1, y1) across it."""
+    z0 = WALL_DIST if z0 is None else z0
+    quad(g, [(x0, y0, z0), (x1, y1, z0), (x1, y1, z1), (x0, y0, z1)], c)
 
+
+def structure(g):
+    """Block-in, docs/13 step 1.1: the ceiling, side walls, floor and the
+    luggage rack's rails, in flat colour."""
+    HW, C, D = ROOM_HALF_WIDTH, ROOM_CEILING, WALL_DIST
+    receding(g, -HW, C, HW, C, CEIL)
+    for s in (-1, 1):
+        receding(g, s * HW, DADO, s * HW, C, mul(WALL, 0.78))
+        receding(g, s * HW, 0, s * HW, DADO, mul(WALL_LO, 0.78))
+    receding(g, -HW, 0, HW, 0, (46, 48, 76))
+    # the ceiling light: a strip running down the middle of the ceiling toward
+    # the camera, in a housing
+    receding(g, -0.2, C, 0.2, C, (38, 40, 62), D - 0.04)
+    g.lpoly([ri(P(x, C, z)) for x, z in ((-0.15, D - 0.07), (0.15, D - 0.07), (0.15, Z_NEAR), (-0.15, Z_NEAR))],
+            (255, 222, 164), 0.85, body=(255, 240, 208))
+    for z in (1.78, 1.6, 1.44, 1.3):
+        g.line([ri(P(-0.2, C, z)), ri(P(0.2, C, z))], (38, 40, 62))
+
+
+BERTH = (1.42, 1.90, 0.06)  # folded upper berth: bottom, top, thickness off the wall
+
+
+def side_wall(g, s):
+    """What makes the side walls a sleeper compartment's partitions rather than
+    blank planes: the upper berth folded up against each one, held by straps,
+    with a strip of wall between it and the backrest for the small fittings.
+    s = -1 on the left, +1 on the right."""
+    HW, C, D = ROOM_HALF_WIDTH, ROOM_CEILING, WALL_DIST
+    y0, y1, t = BERTH
+    wall = mul(WALL, 0.78)
+    on = lambda z, y, inset=0.0: ri(P(s * (HW - inset), y, z))
+    # partition panel seams
+    for z in (1.62, 1.24, 0.9):
+        g.line([on(z, BACK_TOP), on(z, C)], mul(wall, 0.7))
+    # the berth: its shadow on the wall, its underside, its face
+    receding(g, s * HW, y0 - 0.07, s * HW, y0, mul(wall, 0.62))
+    receding(g, s * HW, y0, s * (HW - t), y0, mul(WALL, 0.4))
+    face = (92, 102, 136)
+    receding(g, s * (HW - t), y0, s * (HW - t), y1, face)
+    g.line([on(D, y1, t), on(Z_NEAR, y1, t)], mul(face, 1.35))
+    g.line([on(D, y0, t), on(Z_NEAR, y0, t)], mul(face, 0.55))
+    g.line([on(D, y0 + 0.06, t), on(Z_NEAR, y0 + 0.06, t)], mul(face, 0.8))
+    g.line([on(D, y1 - 0.06, t), on(Z_NEAR, y1 - 0.06, t)], mul(face, 0.8))
+    # retaining straps and the pull handle
+    for z in (1.9, 1.5, 1.1):
+        quad(g, [(s * (HW - t), y0, z), (s * (HW - t), y1, z), (s * (HW - t), y1, z - 0.045), (s * (HW - t), y0, z - 0.045)], (150, 96, 62))
+        bx, by = on(z - 0.022, y0 + 0.1, t)
+        g.rect(bx - 1, by - 1, 3, 3, BRASS)
+    g.line([on(1.78, 1.66, t), on(1.62, 1.66, t)], BRASS, width=2)
+    if s > 0:
+        # reading lamp under the berth, by the window
+        pts = [P(HW - 0.04, y, z) for z, y in ((1.88, 1.27), (1.88, 1.34), (1.74, 1.34), (1.74, 1.27))]
+        g.lpoly([ri(q) for q in pts], (255, 190, 110), 0.8, body=(255, 232, 180))
+        lx, ly = on(1.81, 1.3)
+        g.light(lx - 40, ly - 22, 70, 60, (255, 170, 90), 0.3)
+    else:
+        # net pocket with a folded paper in it
+        net = lambda z, y: P(-(HW - 0.03), y, z)
+        g.poly([ri(net(1.82, 1.24)), ri(net(1.82, 1.4)), ri(net(1.6, 1.4)), ri(net(1.6, 1.24))], (226, 222, 210))
+        g.poly([ri(net(1.86, 1.2)), ri(net(1.86, 1.33)), ri(net(1.5, 1.33)), ri(net(1.5, 1.2))], (40, 44, 72))
+        g.line([ri(net(1.86, 1.33)), ri(net(1.5, 1.33))], STEEL)
+
+
+def floor_and_ceiling(g):
+    """Seams that run toward the camera and across it, so the floor and ceiling
+    read as planes with depth."""
+    HW, C, D = ROOM_HALF_WIDTH, ROOM_CEILING, WALL_DIST
+    dark = (30, 32, 54)
+    for x in (-0.3, 0.0, 0.3):
+        g.line([ri(P(x, 0, D)), ri(P(x, 0, Z_NEAR))], dark)
+    for z in (1.7, 1.42, 1.18, 0.98, 0.82):
+        g.line([ri(P(-HW, 0, z)), ri(P(HW, 0, z))], dark)
+    for x in (-0.6, 0.0, 0.6):
+        g.line([ri(P(x, C, D)), ri(P(x, C, Z_NEAR))], mul(CEIL, 0.7))
+    for z in (1.6, 1.25):
+        g.line([ri(P(-HW, C, z)), ri(P(HW, C, z))], mul(CEIL, 0.7))
+
+
+def extrude(g, s, profile, shades, base, z0=None, z1=Z_NEAR):
+    """A cross-section swept along the bench. `profile` is a polyline of (X, Y)
+    points for the right-hand bench (mirrored by s) and `shades` gives one
+    brightness per segment, applied to `base`. Rounding an edge is a matter of
+    giving the profile a few short segments round the corner, each a step
+    lighter or darker: upholstery has no hard edges."""
+    for (xa, ya), (xb, yb), k in zip(profile, profile[1:], shades):
+        receding(g, s * xa, ya, s * xb, yb, mul(base, k), z0, z1)
+
+
+# Cross-sections. The cushion's top runs flat from the backrest, then rolls
+# over a soft shoulder down its front; the backrest's face rolls over into its
+# top the same way.
+CUSHION = [
+    (BACK_FACE, SEAT_H), (BACK_FACE - 0.05, SEAT_H), (BACK_FACE - 0.12, SEAT_H + 0.006),
+    (SEAT_INNER + 0.16, SEAT_H + 0.006), (SEAT_INNER + 0.10, SEAT_H), (SEAT_INNER + 0.06, SEAT_H - 0.006),
+    (SEAT_INNER + 0.03, SEAT_H - 0.02), (SEAT_INNER + 0.01, SEAT_H - 0.045), (SEAT_INNER, SEAT_H - 0.075),
+    (SEAT_INNER + 0.012, SEAT_H - 0.105), (SEAT_INNER + 0.04, SEAT_H - 0.12),
+]
+CUSHION_SHADES = [0.5, 0.82, 0.9, 1.0, 1.14, 1.32, 1.18, 0.94, 0.72, 0.52]
+BACK_ROLL = [
+    (BACK_FACE, BACK_TOP - 0.05), (BACK_FACE + 0.003, BACK_TOP - 0.03), (BACK_FACE + 0.01, BACK_TOP - 0.014),
+    (BACK_FACE + 0.022, BACK_TOP - 0.004), (BACK_FACE + 0.04, BACK_TOP), (ROOM_HALF_WIDTH, BACK_TOP),
+]
+BACK_ROLL_SHADES = [0.9, 1.04, 1.22, 1.38, 1.26]
+
+
+def bench(g, s):
+    """A bench along a side wall, s = -1 on the left and +1 on the right, from
+    the window wall to beyond the edge of the scene: a base, a cushion with a
+    rolled front edge, and a quilted backrest slab with a rolled top and a
+    headrest cover per seat. Everything is placed in compartment coordinates,
+    so the quilting and every seam converge with the room."""
+    HW, D = ROOM_HALF_WIDTH, WALL_DIST
+    xi, xb = s * SEAT_INNER, s * BACK_FACE
+    face = mul(SEAT, 0.8)
+    on_face = lambda z, y: ri(P(xb, y, z))
+    on_top = lambda x, z: ri(P(s * x, SEAT_H, z))
+
+    # base, set back under the cushion, with the cushion's shadow along its top
+    receding(g, s * (SEAT_INNER + 0.04), 0, s * (SEAT_INNER + 0.04), SEAT_H - 0.11, mul(SEAT, 0.42))
+    receding(g, s * (SEAT_INNER + 0.04), SEAT_H - 0.17, s * (SEAT_INNER + 0.04), SEAT_H - 0.11, mul(SEAT, 0.26))
+    g.line([ri(P(s * (SEAT_INNER + 0.04), 0.04, D)), ri(P(s * (SEAT_INNER + 0.04), 0.04, Z_NEAR))], mul(SEAT, 0.6))
+
+    # cushion: a soft-shouldered cross-section swept along the bench
+    extrude(g, s, CUSHION, CUSHION_SHADES, SEAT)
+
+    # backrest face with the crease at its foot
+    # the flat face stops where the roll begins: run to the very top, its
+    # square corner shows behind the rounded roll
+    receding(g, xb, SEAT_H, xb, BACK_ROLL[0][1], face)
+    receding(g, xb, SEAT_H, xb, SEAT_H + 0.035, mul(SEAT, 0.42))
+    # diamond quilting: two families of diagonals on the face, and a button
+    # where they cross
+    y0, y1, pitch = SEAT_H + 0.035, BACK_TOP - 0.05, 0.17
+    n = 0
+    while True:
+        c = Z_NEAR - (y1 - y0) + n * pitch
+        if c > D:
+            break
+        for sign in (1, -1):
+            # z runs from c to c + (y1 - y0) as y climbs (sign 1) or falls (-1)
+            za, zb = c, c + (y1 - y0)
+            ya, yb = (y0, y1) if sign > 0 else (y1, y0)
+            if zb > D:  # clip at the window wall
+                t = (D - za) / (zb - za)
+                zb, yb = D, ya + (yb - ya) * t
+            if za < Z_NEAR:
+                t = (Z_NEAR - za) / (zb - za)
+                za, ya = Z_NEAR, ya + (yb - ya) * t
+            if zb > za:
+                g.line([on_face(za, ya), on_face(zb, yb)], mul(SEAT, 0.58))
+        n += 1
+    k = 0
+    while Z_NEAR - (y1 - y0) + k * pitch / 2 <= D:
+        z = Z_NEAR - (y1 - y0) + k * pitch / 2
+        for m in range(8):
+            y = y0 + (m + (k % 2) * 0.5) * pitch
+            # the two diagonals through (z, y) only cross on this lattice
+            if y0 < y < y1 and Z_NEAR < z < D and abs(((z - y0) - (y - y0)) / pitch % 1) < 1e-6:
+                bx, by = on_face(z, y)
+                g.px(bx, by, mul(SEAT, 0.4))
+                g.px(bx, by - 1, mul(SEAT, 1.25))
+        k += 1
+
+    # the top of the backrest rolls over instead of ending in an edge
+    extrude(g, s, BACK_ROLL, BACK_ROLL_SHADES, SEAT)
+
+    # seat divisions, across the cushion and up the backrest
+    for z in (1.42, 0.84):
+        g.line([on_top(SEAT_INNER, z), on_top(BACK_FACE, z)], mul(SEAT, 0.5))
+        g.line([on_face(z, SEAT_H), on_face(z, BACK_TOP - 0.03)], mul(SEAT, 0.45))
+        g.line([ri(P(xi, SEAT_H - 0.105, z)), ri(P(s * (SEAT_INNER + 0.03), SEAT_H - 0.02, z))], mul(SEAT, 0.45))
+
+    # headrest covers: one per seat, draped over the roll so they follow its
+    # curve, with a hem along the bottom
+    cloth = (204, 198, 222)
+    drape = [(BACK_FACE, BACK_TOP - 0.25), (BACK_FACE, BACK_TOP - 0.225)] + [(x - 0.004, y + 0.004) for x, y in BACK_ROLL]
+    drape[2] = (BACK_FACE - 0.004, BACK_TOP - 0.05)
+    tones = [0.7, 0.9] + [0.96, 1.04, 1.12, 1.2, 1.14]
+    drape[-1] = (ROOM_HALF_WIDTH, BACK_TOP + 0.004)
+    # the covers stop short of the window wall and of each other, so the
+    # backrest's own rolled edge shows between them
+    for z0, z1 in ((1.94, 1.5), (1.34, 0.92), (0.76, Z_NEAR)):
+        extrude(g, s, drape, tones, cloth, z0, z1)
+        g.line([on_face(z1, BACK_TOP - 0.25), on_face(z1, BACK_TOP - 0.05)], mul(cloth, 0.62))
 
 # ------------------------------------------------------------------ Table and what is on it
 def table(g, rnd):
@@ -854,89 +1139,187 @@ def table(g, rnd):
     g.px(258, 365, BRASS)
 
 
-# ------------------------------------------------------------------ Side extensions
-def extensions(g, rnd):
-    back = mul(SEAT, 0.82)
-    for mirror in (False, True):
-        def X(x):
-            return 480 - x if mirror else x
+# ------------------------------------------------------------------ Foreground
+# room-l.webp and room-r.webp are not a continuation of the room. They are a
+# foreground standing in front of it, so that the page's focus dimming, which
+# covers the 480 scene and stops at its edges, stops exactly where the room
+# stops: a near, dark object beside a lit room is expected to differ in tone.
+# See docs/13, D-01a. Which foreground is drawn is FOREGROUND, or the
+# FOREGROUND environment variable when trying variants.
+FOREGROUND = os.environ.get('FOREGROUND', 'velvet')
 
-        def R(x, y, w, h, c):
-            g.rect(X(x + w - 1) if mirror else x, y, w, h, c)
-
-        # the back-to-back seat next door: only the rear of its back is visible
-        R(-56, 252, 56, 228, back)
-        R(-56, 250, 56, 3, mul(back, 1.5))
-        R(-56, 252, 2, 228, mul(back, 0.6))
-        R(-2, 252, 2, 228, mul(back, 0.55))
-        R(-56, 428, 56, 52, (56, 30, 50))
-        # back of the antimacassar
-        R(-54, 253, 52, 26, (196, 190, 212))
-        R(-54, 278, 52, 1, (150, 144, 170))
-        # seat-back net with a newspaper
-        R(-48, 330, 40, 40, mul(back, 0.7))
-        R(-40, 322, 22, 30, (226, 220, 204))
-        R(-38, 326, 18, 2, (70, 66, 80))
-        for y in range(331, 348, 3):
-            R(-38, y, 16, 1, (150, 144, 140))
-        for y in range(334, 370, 4):
-            R(-48, y, 40, 1, (60, 30, 44))
-        for x in range(-48, -8, 4):
-            R(x, 334, 1, 36, (60, 30, 44))
-        R(-49, 329, 42, 2, (110, 100, 110))
-        # hanging grab handles
-        for x in (-86, -70):
-            R(x, 58, 1, 30, (190, 190, 206))
-            g.ellipse(X(x + 4) if mirror else x - 4, 88, 9, 10, (200, 200, 216))
-            g.ellipse(X(x + 2) if mirror else x - 2, 90, 5, 6, WALL)
-    # left: route poster and fire extinguisher
-    poster(g, -110, 130, 44, 60, 'map')
-    g.shadow(-101, 306, 16, 44, 0.6)
-    g.rect(-100, 304, 12, 40, (200, 56, 60))
-    g.rect(-100, 304, 3, 40, (255, 120, 110))
-    g.rect(-91, 304, 3, 40, (120, 30, 40))
-    g.rect(-98, 298, 8, 6, (60, 60, 80))
-    g.rect(-96, 294, 10, 3, (40, 40, 60))
-    g.rect(-98, 316, 8, 8, (240, 232, 226))
-    g.rect(-102, 310, 16, 2, (84, 94, 130))
-    g.rect(-102, 336, 16, 2, (84, 94, 130))
-    # right: a coat and a shoulder bag on the hooks
-    g.rect(536, 148, 56, 3, BRASS)
-    g.rect(536, 148, 56, 1, (255, 236, 170))
-    for x in (544, 564, 584):
-        g.rect(x, 151, 2, 5, BRASS)
-        g.px(x - 1, 155, BRASS)
-    g.shadow(538, 158, 34, 110, 0.6)
-    coat = (190, 150, 84)
-    g.poly([(548, 156), (562, 156), (572, 176), (574, 262), (538, 262), (538, 178)], coat)
-    g.poly([(555, 156), (552, 200), (558, 262), (538, 262), (538, 178), (548, 156)], mul(coat, 0.8))
-    g.line([(555, 160), (554, 262)], mul(coat, 0.56))
-    g.rect(548, 154, 14, 4, mul(coat, 1.2))
-    for y in (190, 210, 230):
-        g.rect(557, y, 2, 2, (90, 60, 40))
-    g.rect(540, 222, 12, 2, mul(coat, 0.6))
-    g.rect(562, 222, 10, 2, mul(coat, 0.6))
-    g.line([(585, 156), (580, 196)], (60, 44, 44))
-    g.line([(585, 156), (592, 196)], (60, 44, 44))
-    g.rrect(574, 196, 24, 22, 4, (96, 70, 110))
-    g.rect(574, 200, 24, 2, (130, 100, 150))
-    g.rect(584, 204, 4, 4, BRASS)
+# Curtain colours: the benches' red, or the window curtains' green
+FG_CURTAIN = {'velvet': mul(SEAT, 0.84), 'teal': (58, 110, 96)}
 
 
-def build_room(seed=21):
+# Size of the curtain's diamond quilting, in units of the cloth
+FG_QUILT = 26
+
+# A 3 on the pilaster's plate, as (row, column) from the glyph's top-left
+FG_NUMBER = ((47, 0), (47, 1), (47, 2), (48, 2), (49, 2), (50, 1), (50, 2), (51, 2), (52, 2), (53, 2), (53, 1), (53, 0))
+
+
+def foreground_rgb(style):
+    """The foreground as an RGB array, 480 rows by 120 columns. Column u is u
+    units out from the edge of the scene, so the left image is this mirrored.
+
+    It is built from the interior's own materials so that it reads as the end
+    of the same carriage: a pilaster in the wall panelling, edged in brass, with
+    the dado rail and ribbed lower panel of the walls; a cornice across the top;
+    and beyond it a curtain on a brass rod under a pelmet, tied back with a
+    brass rope and tassel."""
+    H_, U = 480, 120
+    f32 = lambda c: np.array(c, np.float32)
+    out = np.zeros((H_, U, 3), np.float32)
+    uu, yy = np.meshgrid(np.arange(U), np.arange(H_))
+    LIFT = 1.18  # the foreground is out of the room's lights: lift its colours
+
+    # beyond the curtain: the corridor, dim, with a handrail
+    out[:] = f32(WALL_LO) * 0.62
+    out[300:304] = f32(BRASS) * 0.5
+    out[300] = f32(BRASS) * 0.75
+
+    # the curtain
+    curtain = f32(FG_CURTAIN[style]) * LIFT
+    u_in, top, tie, bottom, y_top = 22, 60, 44, 70, 48
+    for row in range(y_top, H_):
+        if row < 258:
+            t = (row - y_top) / (258 - y_top)
+            uo = top + (tie - top) * t * t
+        else:
+            t = (row - 258) / (H_ - 258)
+            uo = tie + (bottom - tie) * np.sqrt(t)
+        uo = u_in + uo
+        cols = np.arange(u_in, min(U, int(round(uo))))
+        f = (cols + 0.5 - u_in) / (uo - u_in)
+        wave = 0.5 + 0.5 * np.cos(2 * np.pi * (f * 4.5 + 0.1))
+        k = 0.5 + 0.72 * wave**1.3
+        k *= 1 - 0.45 * np.clip(1 - f / 0.14, 0, 1)  # in the pilaster's shadow
+        k *= 1 - 0.35 * np.clip((f - 0.82) / 0.18, 0, 1)  # turning away at the edge
+        if style == 'velvet':
+            # the benches' upholstery: the same red in the same tones as their
+            # backrests, and their diamond quilting with a button at each
+            # crossing, laid out across the cloth so that it gathers into the
+            # folds with it
+            cu = f * 56.0
+            P_ = FG_QUILT
+            m = np.full(len(cols), 1.0, np.float32)
+            d1, d2 = (cu + row) % P_, (cu - row) % P_
+            m[(d1 < 1) | (d2 < 1)] = 0.62
+            btn = (np.abs(d1 - P_ / 2) < 0.5) & (np.abs(d2 - P_ / 2) < 0.5)
+            m[btn] = 0.45
+            out[row, cols] = curtain[None, :] * (k * m)[:, None]
+            if row > y_top:
+                up = (np.abs(((cu + row - 1) % P_) - P_ / 2) < 0.5) & (np.abs(((cu - row + 1) % P_) - P_ / 2) < 0.5)
+                out[row - 1, cols[up]] = curtain * 1.25 * k[up, None]
+            # piping down the leading edge, as along the cushions' front
+            out[row, cols[f < 0.035]] = curtain * 0.4
+        else:
+            c = curtain[None, :] * k[:, None]
+            sheen = np.clip((wave - 0.9) / 0.1, 0, 1)[:, None] * 0.22  # velvet catches light on the crests
+            out[row, cols] = c * (1 - sheen) + f32((255, 196, 206)) * sheen * 0.8
+    # tie-back: a brass rope across the folds, and its tassel at the outer end
+    rope = [0.62, 0.86, 1.08, 1.22, 1.12, 0.92, 0.7]
+    for r, k in enumerate(rope):
+        out[255 + r, u_in : u_in + tie + 3] = f32(BRASS) * k
+    for r in range(262, 294):
+        w = 2 + min(4, (r - 262) // 5)
+        x0 = u_in + tie - 1
+        out[r, x0 - w // 2 : x0 + w // 2 + 1] = f32(BRASS) * (0.9 if r % 3 else 0.6)
+    # pelmet over the rod, with brass piping and a scalloped edge. Over the
+    # velvet it is the headrest covers' pale cloth, laid over the red the way
+    # they are laid over the backrests
+    pel = f32((204, 198, 222)) * 0.9 if style == 'velvet' else curtain * 0.92
+    out[34:46, 22:] = pel
+    for c in range(22, U, 4):
+        out[34:46, c] = pel * 0.78
+    out[46, 22:] = f32(BRASS) * 1.1
+    out[47, 22:] = f32(BRASS) * 0.75
+    for c0 in range(22, U, 12):
+        for d in range(min(12, U - c0)):
+            depth = int(round(4 * np.sin(np.pi * (d + 0.5) / 12)))
+            out[48 : 48 + depth, c0 + d : c0 + d + 1] = pel * 0.85
+            if depth:
+                out[48 + depth - 1, c0 + d] = pel * 0.6
+
+    # the pilaster: wall panelling with the walls' diamond pattern, edged in brass
+    P = 22
+    wall = f32(WALL) * LIFT
+    a, b = (uu + yy) % 12, (uu - yy) % 12
+    pat = np.where((a == 0) | (b == 0), 0.9, np.where((a == 6) & (b == 6), 1.06, 1.0)).astype(np.float32)
+    out[:, :P] = wall * pat[:, :P, None]
+    out[:, 2:4] *= 1.22  # the face turning toward the room catches its light
+    out[:, 17:19] *= 0.8
+    out[:, 19:22] *= 0.55
+    for x in (7, 14):
+        for y in range(70, 290, 26):
+            out[y, x] = wall * 1.35
+            out[y + 1, x] = wall * 0.6
+    # dado rail and the ribbed lower panel, as on the walls
+    out[288:296, :P] = f32((70, 80, 118)) * LIFT
+    out[288, :P] = f32((128, 138, 176)) * LIFT
+    out[294:296, :P] = f32((36, 42, 70)) * LIFT
+    low = f32(WALL_LO) * LIFT
+    out[296:, :P] = low
+    for x in range(2, P - 3, 3):
+        out[296:, x] *= 0.84
+        out[296:, x + 1] *= 1.08
+    out[296:, 17:22] *= 0.7
+    # brass edge on the scene side, and a brass number plate
+    out[:, 0] = f32(BRASS) * 1.12
+    out[:, 1] = f32(BRASS) * 0.72
+    out[44:58, 5:17] = f32(BRASS) * 0.85
+    out[44, 5:17] = f32(BRASS) * 1.15
+    out[46:56, 7:15] = f32((40, 30, 24))
+
+    # cornice across the top, as on the walls
+    out[:34] = f32((50, 54, 84)) * LIFT
+    out[30] = f32((96, 102, 140)) * LIFT
+    out[32:34] = f32((30, 32, 54)) * LIFT
+    return np.clip(out, 0, 255).astype(np.uint8)
+
+
+def foreground(g, style=None):
+    """Paint the foreground over both side extensions and clear any shadow left
+    there by what was drawn before. The room's invisible lights are left alone:
+    they reach into the room through the render's blur, and clearing them here
+    would change the room as well as the foreground."""
+    a = foreground_rgb(style or FOREGROUND)
+    cv = g.cv
+    for side, img in ((-1, a[:, ::-1].copy()), (1, a)):
+        x0 = 0 if side < 0 else OX + 480
+        # the carriage number on the plate, written after mirroring so that it
+        # reads the right way round on both sides
+        c0 = 9 if side > 0 else 120 - 12
+        for y, x in FG_NUMBER:
+            img[y, c0 + x] = (255, 214, 140)
+        cv.im.paste(Image.fromarray(np.ascontiguousarray(img), 'RGB').convert('RGBA'), (x0, 0))
+        cv.em.paste((0, 0, 0), (x0, 0, x0 + 120, H))
+        cv.sh.paste(255, (x0, 0, x0 + 120, H))
+
+
+def build_room(seed=21, over_rack=True):
     """The carriage as one RGBA image at output resolution, and the silhouette
-    mask of every interactive object at 1x, keyed by object id."""
-    rnd = random.Random(seed)
+    mask of every interactive object at 1x, keyed by object id. A key ending in
+    '/front' is what stands in front of that object and must stay on top of its
+    sprite. With over_rack=False the right-hand rack is left out, which is how
+    the briefcase is rendered without the rack across it."""
+    # One random stream per section, so that changing one part of the room does
+    # not reshuffle the texture of every part drawn after it
+    rng = lambda name: random.Random(f'{seed}:{name}')
     cv = Cv(W, H)
     g = Off(cv)
-    shell(g, rnd)
-    walls(g, rnd)
-    rack(g, rnd)
-    window(g, rnd)
-    extensions(g, rnd)
-    seat(g, rnd, False)
-    seat(g, rnd, True)
-    table(g, rnd)
+    shell(g, rng('shell'))
+    walls(g, rng('walls'))
+    rack(g, rng('rack'), over_rack)
+    window(g, rng('window'))
+    structure(g)
+    floor_and_ceiling(g)
+    side_wall(g, -1)
+    side_wall(g, 1)
+    bench(g, -1)
+    bench(g, 1)
+    table(g, rng('table'))
     # Overall lighting: the ceiling strip washing the walls, cold light from outside
     g.light(-120, 40, 720, 50, (255, 214, 160), 0.26)
     wx, wy, ww, wh = WINDOW
@@ -950,12 +1333,15 @@ def build_room(seed=21):
     g.light(330, 380, 180, 90, (255, 190, 120), 0.16)
     g.light(140, 430, 200, 60, (120, 150, 255), 0.18)
 
+    foreground(g)
+
     amb = np.ones((H, W, 3), np.float32)
     yy = np.arange(H, dtype=np.float32).reshape(H, 1, 1)
     amb *= np.clip(1.05 - np.abs(yy - 250) / 760, 0.6, 1.05)
-    xx = np.arange(W, dtype=np.float32).reshape(1, W, 1) - OX
-    edge = np.clip(np.minimum(xx + 120, 600 - xx) / 150, 0, 1)
-    amb *= 0.42 + 0.58 * edge**0.8
+    # No darkening toward the left and right edges here. The extensions used to
+    # be a dark periphery and were faded out in the art; now they show the side
+    # walls and benches, which are part of the room, and the page's vignette
+    # (scene.css .vig) shades the whole width as one picture.
     im = render(
         cv,
         ambient=(0.36, 0.36, 0.56),
@@ -969,9 +1355,20 @@ def build_room(seed=21):
     )
     k = px.SCALE
     a = np.asarray(im).copy()
-    # the extensions fall off toward the edges along with the light
-    fall = np.repeat(0.4 + 0.6 * edge[0, :, 0] ** 0.7, k).reshape(1, W * k, 1)
-    a[..., :3] = (a[..., :3] * fall).astype(np.uint8)
+    # The page lays a vignette over the 480 scene (scene.css .vig) and must not
+    # be made to cover the side extensions as well: overlays wider than the
+    # scene, and gradients painted inside the extensions, both flickered in
+    # Chrome (docs/09, F-002). So the extensions get the same vignette baked in
+    # here. It is .vig's gradient exactly: an ellipse about (240, 201.6) reaching
+    # the scene's farthest corner, clear to 38% and rgba(5, 4, 14, 0.5) by 82%.
+    ys, xs = np.mgrid[0 : H * k, 0 : W * k].astype(np.float32)
+    sx, sy = (xs + 0.5) / k - OX, (ys + 0.5) / k
+    t = np.sqrt(((sx - 240) / (240 * 2**0.5)) ** 2 + ((sy - 201.6) / (278.4 * 2**0.5)) ** 2)
+    va = (0.5 * np.clip((t - 0.38) / (0.82 - 0.38), 0, 1))[..., None]
+    # half strength over the foreground: it is near the camera, and the change
+    # of tone at the room's edge is now an object's edge
+    va = np.where((sx < 0) | (sx >= 480), 0.5, 0)[..., None] * va
+    a[..., :3] = (a[..., :3] * (1 - va) + np.array([5, 4, 14], np.float32) * va).astype(np.uint8)
     a[..., 3] = 255
     # Punch out the window opening
     hole = hole_mask()[..., None]
