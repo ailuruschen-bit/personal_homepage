@@ -789,8 +789,8 @@ CUSHION = [
 ]
 CUSHION_SHADES = [0.5, 0.82, 0.9, 1.0, 1.14, 1.32, 1.18, 0.94, 0.72, 0.52]
 BACK_ROLL = [
-    (BACK_FACE, BACK_TOP - 0.10), (BACK_FACE + 0.004, BACK_TOP - 0.06), (BACK_FACE + 0.016, BACK_TOP - 0.03),
-    (BACK_FACE + 0.04, BACK_TOP - 0.01), (BACK_FACE + 0.075, BACK_TOP), (ROOM_HALF_WIDTH, BACK_TOP),
+    (BACK_FACE, BACK_TOP - 0.05), (BACK_FACE + 0.003, BACK_TOP - 0.03), (BACK_FACE + 0.01, BACK_TOP - 0.014),
+    (BACK_FACE + 0.022, BACK_TOP - 0.004), (BACK_FACE + 0.04, BACK_TOP), (ROOM_HALF_WIDTH, BACK_TOP),
 ]
 BACK_ROLL_SHADES = [0.9, 1.04, 1.22, 1.38, 1.26]
 
@@ -820,7 +820,7 @@ def bench(g, s):
     receding(g, xb, SEAT_H, xb, SEAT_H + 0.035, mul(SEAT, 0.42))
     # diamond quilting: two families of diagonals on the face, and a button
     # where they cross
-    y0, y1, pitch = SEAT_H + 0.035, BACK_TOP - 0.10, 0.17
+    y0, y1, pitch = SEAT_H + 0.035, BACK_TOP - 0.05, 0.17
     n = 0
     while True:
         c = Z_NEAR - (y1 - y0) + n * pitch
@@ -857,18 +857,21 @@ def bench(g, s):
     # seat divisions, across the cushion and up the backrest
     for z in (1.42, 0.84):
         g.line([on_top(SEAT_INNER, z), on_top(BACK_FACE, z)], mul(SEAT, 0.5))
-        g.line([on_face(z, SEAT_H), on_face(z, BACK_TOP - 0.06)], mul(SEAT, 0.45))
+        g.line([on_face(z, SEAT_H), on_face(z, BACK_TOP - 0.03)], mul(SEAT, 0.45))
         g.line([ri(P(xi, SEAT_H - 0.105, z)), ri(P(s * (SEAT_INNER + 0.03), SEAT_H - 0.02, z))], mul(SEAT, 0.45))
 
     # headrest covers: one per seat, draped over the roll so they follow its
     # curve, with a hem along the bottom
     cloth = (204, 198, 222)
     drape = [(BACK_FACE, BACK_TOP - 0.25), (BACK_FACE, BACK_TOP - 0.225)] + [(x - 0.004, y + 0.004) for x, y in BACK_ROLL]
-    drape[2] = (BACK_FACE - 0.004, BACK_TOP - 0.10)
+    drape[2] = (BACK_FACE - 0.004, BACK_TOP - 0.05)
     tones = [0.7, 0.9] + [0.96, 1.04, 1.12, 1.2, 1.14]
-    for z0, z1 in ((1.94, 1.5), (1.34, 0.92), (0.76, Z_NEAR)):
+    drape[-1] = (ROOM_HALF_WIDTH, BACK_TOP + 0.004)
+    # the first cover starts a hair behind the window wall, so that rounding
+    # cannot leave a pixel of the backrest showing in the corner
+    for z0, z1 in ((D + 0.03, 1.5), (1.34, 0.92), (0.76, Z_NEAR)):
         extrude(g, s, drape, tones, cloth, z0, z1)
-        g.line([on_face(z1, BACK_TOP - 0.25), on_face(z1, BACK_TOP - 0.10)], mul(cloth, 0.62))
+        g.line([on_face(z1, BACK_TOP - 0.25), on_face(z1, BACK_TOP - 0.05)], mul(cloth, 0.62))
 
 # ------------------------------------------------------------------ Table and what is on it
 def table(g, rnd):
