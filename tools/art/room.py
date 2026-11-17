@@ -7,7 +7,7 @@ face-on; everything that recedes is built from the perspective model below.
 import random
 
 import numpy as np
-from PIL import Image, ImageDraw
+from PIL import Image, ImageChops, ImageDraw
 
 import parts
 import px
@@ -73,9 +73,12 @@ ROOM_HALF_WIDTH = 1.2  # the window wall runs 2.4 m between the side walls
 ROOM_CEILING = 2.30
 # The luggage racks: one over each bench end, either side of the line display
 # above the window. Shallow enough to reach from the seat below.
-RACK_DEPTH = {-1: 0.13, 1: 0.06}  # left rack, right rack: the right one only holds the briefcase, upright
+RACK_DEPTH = 0.13
 RACK_INNER = 0.46  # each rack runs from here to the side wall
-LUGGAGE_Z = {s: WALL_DIST - d - 0.01 for s, d in RACK_DEPTH.items()}  # the luggage's front on each rack: just past its rail
+# The luggage's front on each rack. On the left it stands just past the front
+# rail; the briefcase on the right is slim and stands against the wall, inside
+# the rack.
+LUGGAGE_Z = {-1: WALL_DIST - RACK_DEPTH - 0.01, 1: WALL_DIST - 0.07}
 LUGGAGE_FLAT = 1.0  # height of the luggage relative to how it was written; 1 is unchanged
 
 
@@ -464,11 +467,10 @@ def rack(g, rnd):
         xa, xb = (x0 - 240) / WALL_SCALE, (x1 - 240) / WALL_SCALE
         zl = LUGGAGE_Z[-1 if x1 < 240 else 1]
         quad(g, [(xa, RACK_Y, D), (xb, RACK_Y, D), (xb, RACK_Y, zl), (xa, RACK_Y, zl)], mul(c, 0.34))
-    # the racks go in before the luggage's visible faces: the luggage overhangs
-    # the front rail, so nothing of the rack crosses it, and an object's sprite
-    # is the object alone
+    # The left rack goes in before its luggage's visible faces: that luggage
+    # overhangs the front rail, so nothing of the rack crosses it. The right
+    # rack is drawn last, at the end of this function.
     rack_frame(g, -1)
-    rack_frame(g, 1)
     # each piece's side that faces the middle of the compartment, running back
     # to the wall: its body colour in shade, a lit top edge, and a band or two
     # carried round from the front
@@ -552,6 +554,22 @@ def rack(g, rnd):
     um.rect(412, 88, 2, 4, (150, 60, 70))
     um.rect(394, 89, 4, 2, (160, 166, 190))
     um.line([(440, 89), (446, 89), (447, 86), (445, 84)], BRASS)
+    # The briefcase stands inside the right rack, so the rack's floor and rail
+    # cross its foot. They are drawn over it, and its silhouette ends where
+    # they begin, so that its sprite is the briefcase alone and the rack stays
+    # put when it lifts.
+    rack_frame(g.at(0, 0, '_rack'), 1)
+    if '_rack' in g.masks:
+        over = g.masks.pop('_rack')
+        # Everything of the briefcase from the rail down is behind the rack:
+        # end its silhouette at the rail's top edge rather than leave slivers
+        # of its foot showing between the slats
+        both = np.asarray(ImageChops.multiply(g.masks['stack'], over))
+        rows = np.nonzero(both.any(axis=1))[0]
+        if len(rows):
+            m = np.asarray(g.masks['stack']).copy()
+            m[rows[0] :, :] = 0
+            g.masks['stack'] = Image.fromarray(m, 'L')
 
 
 def rack_frame(g, s):
@@ -559,7 +577,7 @@ def rack_frame(g, s):
     front rail with a lip that the luggage stands behind, and a bracket at each
     end. s = -1 for the left-hand rack, +1 for the right."""
     HW, D = ROOM_HALF_WIDTH, WALL_DIST
-    zf = D - RACK_DEPTH[s]
+    zf = D - RACK_DEPTH
     dark, mid, lite = (64, 72, 106), STEEL, (176, 186, 214)
     at = lambda x, z, y=RACK_Y: ri(P(s * x, y, z))
     # slats, and the wire that ties them halfway out
