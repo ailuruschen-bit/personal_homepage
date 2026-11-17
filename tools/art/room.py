@@ -40,9 +40,9 @@ OBJECTS = {
     'projects': dict(at=(148, 288), zone=(-11, -9, 104, 88), light=(47, 40, 62, 52)),
     'about': dict(at=(306, 343), zone=(-10, -8, 42, 26), light=(16, 9, 30, 20)),
     'stack': dict(at=(326, 52), zone=(-10, -9, 78, 45), light=(34, 20, 48, 28), on_rack=1),
-    # the map, half unrolled on the left-hand bench; the line display on the
-    # wall is the railway's, and only a decoy
-    'journey': dict(at=(20, 360), zone=(-6, -6, 104, 60), light=(49, 27, 52, 30)),
+    # the map, flung half unrolled over the left-hand backrest; the line
+    # display on the wall is the railway's, and only a decoy
+    'journey': dict(at=(6, 221), zone=(-6, -6, 46, 83), light=(20, 38, 24, 40)),
 }
 
 # The window opening (x y w h) and its corner radius. The page lays .win over it:
@@ -978,44 +978,66 @@ BACK_ROLL_SHADES = [0.9, 1.04, 1.22, 1.38, 1.26]
 
 
 def journey_map(g):
-    """The journey object: a paper map thrown down on the left-hand bench by
-    the window, half unrolled. The sheet lies flat on the cushion and shows
-    what is printed on it; the rest is still rolled up along its far side.
-    Drawn in compartment coordinates, so it lies in the cushion's plane."""
+    """The journey object: a paper map flung over the top of the left-hand
+    backrest by the window, half unrolled. The roll lies on the backrest's top;
+    the open sheet hangs down its face, askew, creased, one corner folded over
+    and a coffee ring on it. Drawn on the backrest's plane, so it hangs in the
+    room's perspective. It sits at the height of the window, where a wide
+    screen's framing still shows it."""
     o = g.at(0, 0, 'journey')
-    y = SEAT_H + 0.012
-    q = lambda X, Z, dy=0.0: ri(P(X, y + dy, Z))
-    xa, xb, za, zb = -0.86, -0.63, 1.86, 1.46  # the open sheet, back to front
-    paper, ink = (232, 224, 200), (60, 70, 96)
-    o.poly([q(xa, za), q(xb, za), q(xb, zb), q(xa, zb)], paper)
-    o.line([q(xb, za), q(xb, zb)], (250, 246, 230))
-    # what is printed: water, a park, streets, and the line with its stations
-    span = lambda u, v: (xa + (xb - xa) * u, za + (zb - za) * v)
-    o.poly([q(*span(0.0, 0.62)), q(*span(0.55, 0.48)), q(*span(1.0, 0.56)), q(*span(1.0, 0.68)), q(*span(0.5, 0.6)), q(*span(0.0, 0.74))], (150, 190, 214))
-    o.poly([q(*span(0.6, 0.08)), q(*span(0.92, 0.1)), q(*span(0.88, 0.3)), q(*span(0.62, 0.28))], (168, 204, 150))
-    for u in (0.25, 0.5, 0.78):
-        o.line([q(*span(u, 0.02)), q(*span(u, 0.98))], (206, 198, 176))
-    for v in (0.2, 0.42, 0.86):
-        o.line([q(*span(0.02, v)), q(*span(0.98, v))], (206, 198, 176))
-    route = [span(0.12, 0.06), span(0.3, 0.22), span(0.34, 0.45), span(0.7, 0.62), span(0.66, 0.84), span(0.86, 0.96)]
-    o.line([q(*r) for r in route], (210, 66, 70), width=2)
-    for i, r in enumerate(route):
-        sx, sy = q(*r)
-        o.rect(sx - 1, sy - 1, 3, 3, (250, 246, 230))
-        o.px(sx, sy, ink if i not in (2, 4) else (210, 66, 70))
-    # circled stations, as the script says: circled more than once
-    for r in (route[2], route[4]):
-        sx, sy = q(*r)
-        o.line([(sx - 3, sy - 2), (sx + 3, sy - 2), (sx + 4, sy + 1), (sx, sy + 3), (sx - 4, sy + 1), (sx - 3, sy - 2)], (200, 40, 50))
-    # the rolled part, along the sheet's far edge, with a rubber band
-    for dy, c in ((0.0, (170, 160, 140)), (0.012, (214, 206, 184)), (0.024, (240, 234, 214)), (0.034, (206, 198, 176))):
-        o.line([q(xa - 0.012, za, dy), q(xa - 0.012, zb - 0.02, dy)], c, width=2)
-    sx, sy = q(xa - 0.012, zb - 0.02, 0.018)
-    o.ellipse(sx - 2, sy - 3, 5, 6, (214, 206, 184))
-    o.px(sx, sy - 1, (120, 110, 96))
-    o.line([q(xa - 0.012, 1.7, 0.0), q(xa - 0.012, 1.7, 0.036)], (190, 60, 62), width=2)
-    # a soft shadow where the sheet meets the cushion along its near edge
-    g.line([q(xb + 0.004, za, -0.006), q(xb + 0.004, zb, -0.006)], mul(SEAT, 0.5))
+    X = -(BACK_FACE - 0.006)
+    q = lambda z, y: ri(P(X, y, z))
+    # the sheet's corners (z, y): top edge along the roll, bottom edge sagging
+    # lower at the near side, and the far bottom corner folded up
+    tl, tr = (1.93, BACK_TOP - 0.004), (1.63, BACK_TOP - 0.01)
+    br, bl = (1.61, BACK_TOP - 0.29), (1.80, BACK_TOP - 0.24)
+    fold = (1.89, BACK_TOP - 0.17)
+    sheet = [tl, tr, br, bl, fold]
+    paper = (232, 222, 196)
+    o.poly([q(*c) for c in sheet], paper)
+    # the corner folded over: the paper's back, a shade darker, with its crease
+    flap = [bl, fold, (1.86, BACK_TOP - 0.13)]
+    o.poly([q(*c) for c in flap], mul(paper, 0.82))
+    o.line([q(*bl), q(*fold)], mul(paper, 0.62))
+
+    def at(u, v):
+        """A point on the sheet: u across from far (0) to near (1), v down."""
+        top = (tl[0] + (tr[0] - tl[0]) * u, tl[1] + (tr[1] - tl[1]) * u)
+        bot = (bl[0] + (br[0] - bl[0]) * u, bl[1] + (br[1] - bl[1]) * u)
+        return q(top[0] + (bot[0] - top[0]) * v, top[1] + (bot[1] - top[1]) * v)
+
+    # printed: a river across it, a park, streets, and the line with stations
+    o.poly([at(0.0, 0.48), at(0.4, 0.4), at(1.0, 0.55), at(1.0, 0.66), at(0.45, 0.52), at(0.0, 0.6)], (150, 186, 210))
+    o.poly([at(0.58, 0.1), at(0.86, 0.08), at(0.9, 0.3), at(0.62, 0.32)], (166, 200, 148))
+    for u in (0.22, 0.47, 0.74):
+        o.line([at(u, 0.04), at(u + 0.03, 0.9)], (210, 200, 176))
+    for v in (0.24, 0.72):
+        o.line([at(0.03, v), at(0.97, v + 0.03)], (210, 200, 176))
+    route = [at(0.08, 0.12), at(0.3, 0.3), at(0.36, 0.5), at(0.66, 0.6), at(0.7, 0.78), at(0.92, 0.88)]
+    o.line(route, (204, 60, 66), width=2)
+    for k, (sx, sy) in enumerate(route):
+        o.rect(sx - 1, sy - 1, 3, 3, (250, 244, 226))
+        o.px(sx, sy, (204, 60, 66) if k in (2, 4) else (60, 70, 96))
+    for sx, sy in (route[2], route[4]):  # circled, and circled again
+        o.line([(sx - 4, sy - 2), (sx + 3, sy - 3), (sx + 4, sy + 1), (sx, sy + 3), (sx - 4, sy + 1), (sx - 3, sy - 3)], (196, 36, 48))
+        o.line([(sx - 3, sy - 3), (sx + 4, sy - 2)], (196, 36, 48))
+    # handled paper: two creases from being folded, a coffee ring, a torn notch
+    o.line([at(0.0, 0.33), at(1.0, 0.36)], mul(paper, 0.86))
+    o.line([at(0.5, 0.0), at(0.53, 0.95)], mul(paper, 0.88))
+    cx, cy = at(0.25, 0.72)
+    o.line([(cx - 3, cy), (cx - 2, cy - 2), (cx + 1, cy - 2), (cx + 3, cy), (cx + 1, cy + 2), (cx - 2, cy + 2), (cx - 3, cy)], (176, 140, 100))
+    nx, ny = at(1.0, 0.18)
+    o.rect(nx - 1, ny, 2, 2, mul(SEAT, 0.8))
+    # the near edge catches the light, and casts a little shadow on the backrest
+    o.line([q(*tr), q(*br)], (252, 248, 232))
+    g.line([ri(P(X - 0.004, tr[1] - 0.01, tr[0] - 0.012)), ri(P(X - 0.004, br[1], br[0] - 0.012))], mul(SEAT, 0.42))
+    # the rest of it, still rolled, lying along the top of the backrest
+    for dy, c in ((0.0, (172, 162, 142)), (0.012, (214, 204, 180)), (0.024, (242, 236, 214)), (0.034, (206, 196, 172))):
+        o.line([ri(P(-(BACK_FACE + 0.02), BACK_TOP + dy, 1.95)), ri(P(-(BACK_FACE + 0.02), BACK_TOP + dy, 1.66))], c, width=2)
+    ex, ey = ri(P(-(BACK_FACE + 0.02), BACK_TOP + 0.018, 1.66))
+    o.ellipse(ex - 2, ey - 3, 5, 6, (214, 204, 180))
+    o.px(ex, ey - 1, (120, 110, 96))
+    o.line([ri(P(-(BACK_FACE + 0.02), BACK_TOP - 0.002, 1.82)), ri(P(-(BACK_FACE + 0.02), BACK_TOP + 0.038, 1.82))], (190, 60, 62), width=2)
 
 
 def bench(g, s):
