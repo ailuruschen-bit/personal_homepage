@@ -768,6 +768,33 @@ def floor_and_ceiling(g):
         g.line([ri(P(-HW, C, z)), ri(P(HW, C, z))], mul(CEIL, 0.7))
 
 
+def extrude(g, s, profile, shades, base, z0=None, z1=Z_NEAR):
+    """A cross-section swept along the bench. `profile` is a polyline of (X, Y)
+    points for the right-hand bench (mirrored by s) and `shades` gives one
+    brightness per segment, applied to `base`. Rounding an edge is a matter of
+    giving the profile a few short segments round the corner, each a step
+    lighter or darker: upholstery has no hard edges."""
+    for (xa, ya), (xb, yb), k in zip(profile, profile[1:], shades):
+        receding(g, s * xa, ya, s * xb, yb, mul(base, k), z0, z1)
+
+
+# Cross-sections. The cushion's top runs flat from the backrest, then rolls
+# over a soft shoulder down its front; the backrest's face rolls over into its
+# top the same way.
+CUSHION = [
+    (BACK_FACE, SEAT_H), (BACK_FACE - 0.05, SEAT_H), (BACK_FACE - 0.12, SEAT_H + 0.006),
+    (SEAT_INNER + 0.16, SEAT_H + 0.006), (SEAT_INNER + 0.10, SEAT_H), (SEAT_INNER + 0.06, SEAT_H - 0.006),
+    (SEAT_INNER + 0.03, SEAT_H - 0.02), (SEAT_INNER + 0.01, SEAT_H - 0.045), (SEAT_INNER, SEAT_H - 0.075),
+    (SEAT_INNER + 0.012, SEAT_H - 0.105), (SEAT_INNER + 0.04, SEAT_H - 0.12),
+]
+CUSHION_SHADES = [0.5, 0.82, 0.9, 1.0, 1.14, 1.32, 1.18, 0.94, 0.72, 0.52]
+BACK_ROLL = [
+    (BACK_FACE, BACK_TOP - 0.10), (BACK_FACE + 0.004, BACK_TOP - 0.06), (BACK_FACE + 0.016, BACK_TOP - 0.03),
+    (BACK_FACE + 0.04, BACK_TOP - 0.01), (BACK_FACE + 0.075, BACK_TOP), (ROOM_HALF_WIDTH, BACK_TOP),
+]
+BACK_ROLL_SHADES = [0.9, 1.04, 1.22, 1.38, 1.26]
+
+
 def bench(g, s):
     """A bench along a side wall, s = -1 on the left and +1 on the right, from
     the window wall to beyond the edge of the scene: a base, a cushion with a
@@ -785,22 +812,15 @@ def bench(g, s):
     receding(g, s * (SEAT_INNER + 0.04), SEAT_H - 0.17, s * (SEAT_INNER + 0.04), SEAT_H - 0.11, mul(SEAT, 0.26))
     g.line([ri(P(s * (SEAT_INNER + 0.04), 0.04, D)), ri(P(s * (SEAT_INNER + 0.04), 0.04, Z_NEAR))], mul(SEAT, 0.6))
 
-    # cushion: front face, top, the roll along the front edge, the dip where
-    # people sit, and the crease against the backrest
-    receding(g, xi, SEAT_H - 0.11, xi, SEAT_H, mul(SEAT, 0.62))
-    receding(g, xb, SEAT_H, xi, SEAT_H, SEAT)
-    receding(g, s * (SEAT_INNER + 0.16), SEAT_H, s * (BACK_FACE - 0.12), SEAT_H, mul(SEAT, 0.9))
-    receding(g, s * (SEAT_INNER + 0.07), SEAT_H, xi, SEAT_H, mul(SEAT, 1.22))
-    receding(g, s * (SEAT_INNER + 0.02), SEAT_H, xi, SEAT_H, mul(SEAT, 1.5))
-    receding(g, xb, SEAT_H, s * (BACK_FACE - 0.05), SEAT_H, mul(SEAT, 0.5))
-    g.line([ri(P(xi, SEAT_H - 0.035, D)), ri(P(xi, SEAT_H - 0.035, Z_NEAR))], mul(SEAT, 0.4))  # piping
+    # cushion: a soft-shouldered cross-section swept along the bench
+    extrude(g, s, CUSHION, CUSHION_SHADES, SEAT)
 
     # backrest face with the crease at its foot
     receding(g, xb, SEAT_H, xb, BACK_TOP, face)
     receding(g, xb, SEAT_H, xb, SEAT_H + 0.035, mul(SEAT, 0.42))
     # diamond quilting: two families of diagonals on the face, and a button
     # where they cross
-    y0, y1, pitch = SEAT_H + 0.035, BACK_TOP - 0.05, 0.17
+    y0, y1, pitch = SEAT_H + 0.035, BACK_TOP - 0.10, 0.17
     n = 0
     while True:
         c = Z_NEAR - (y1 - y0) + n * pitch
@@ -831,26 +851,24 @@ def bench(g, s):
                 g.px(bx, by - 1, mul(SEAT, 1.25))
         k += 1
 
-    # the rolled top: a lit band along the top of the face, and the top surface
-    receding(g, xb, BACK_TOP - 0.05, xb, BACK_TOP, mul(SEAT, 1.05))
-    receding(g, s * HW, BACK_TOP, xb, BACK_TOP, mul(SEAT, 1.3))
-    g.line([on_face(D, BACK_TOP), on_face(Z_NEAR, BACK_TOP)], mul(SEAT, 1.6))
+    # the top of the backrest rolls over instead of ending in an edge
+    extrude(g, s, BACK_ROLL, BACK_ROLL_SHADES, SEAT)
 
     # seat divisions, across the cushion and up the backrest
     for z in (1.42, 0.84):
         g.line([on_top(SEAT_INNER, z), on_top(BACK_FACE, z)], mul(SEAT, 0.5))
-        g.line([on_face(z, SEAT_H), on_face(z, BACK_TOP)], mul(SEAT, 0.45))
-        g.line([ri(P(xi, SEAT_H - 0.11, z)), ri(P(xi, SEAT_H, z))], mul(SEAT, 0.4))
+        g.line([on_face(z, SEAT_H), on_face(z, BACK_TOP - 0.06)], mul(SEAT, 0.45))
+        g.line([ri(P(xi, SEAT_H - 0.105, z)), ri(P(s * (SEAT_INNER + 0.03), SEAT_H - 0.02, z))], mul(SEAT, 0.45))
 
-    # headrest covers: one per seat, wrapped over the roll, with a hem
+    # headrest covers: one per seat, draped over the roll so they follow its
+    # curve, with a hem along the bottom
     cloth = (204, 198, 222)
+    drape = [(BACK_FACE, BACK_TOP - 0.25), (BACK_FACE, BACK_TOP - 0.225)] + [(x - 0.004, y + 0.004) for x, y in BACK_ROLL]
+    drape[2] = (BACK_FACE - 0.004, BACK_TOP - 0.10)
+    tones = [0.7, 0.9] + [0.96, 1.04, 1.12, 1.2, 1.14]
     for z0, z1 in ((1.94, 1.5), (1.34, 0.92), (0.76, Z_NEAR)):
-        quad(g, [(xb, BACK_TOP - 0.24, z0), (xb, BACK_TOP, z0), (xb, BACK_TOP, z1), (xb, BACK_TOP - 0.24, z1)], cloth)
-        quad(g, [(xb, BACK_TOP, z0), (s * HW, BACK_TOP, z0), (s * HW, BACK_TOP, z1), (xb, BACK_TOP, z1)], mul(cloth, 1.12))
-        quad(g, [(xb, BACK_TOP - 0.24, z0), (xb, BACK_TOP - 0.215, z0), (xb, BACK_TOP - 0.215, z1), (xb, BACK_TOP - 0.24, z1)], mul(cloth, 0.72))
-        g.line([on_face(z0, BACK_TOP), on_face(z1, BACK_TOP)], (244, 240, 252))
-        g.line([on_face(z1, BACK_TOP - 0.24), on_face(z1, BACK_TOP)], mul(cloth, 0.6))
-
+        extrude(g, s, drape, tones, cloth, z0, z1)
+        g.line([on_face(z1, BACK_TOP - 0.25), on_face(z1, BACK_TOP - 0.10)], mul(cloth, 0.62))
 
 # ------------------------------------------------------------------ Table and what is on it
 def table(g, rnd):
