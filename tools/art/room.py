@@ -816,7 +816,9 @@ def bench(g, s):
     extrude(g, s, CUSHION, CUSHION_SHADES, SEAT)
 
     # backrest face with the crease at its foot
-    receding(g, xb, SEAT_H, xb, BACK_TOP, face)
+    # the flat face stops where the roll begins: run to the very top, its
+    # square corner shows behind the rounded roll
+    receding(g, xb, SEAT_H, xb, BACK_ROLL[0][1], face)
     receding(g, xb, SEAT_H, xb, SEAT_H + 0.035, mul(SEAT, 0.42))
     # diamond quilting: two families of diagonals on the face, and a button
     # where they cross
@@ -867,9 +869,9 @@ def bench(g, s):
     drape[2] = (BACK_FACE - 0.004, BACK_TOP - 0.05)
     tones = [0.7, 0.9] + [0.96, 1.04, 1.12, 1.2, 1.14]
     drape[-1] = (ROOM_HALF_WIDTH, BACK_TOP + 0.004)
-    # the first cover starts a hair behind the window wall, so that rounding
-    # cannot leave a pixel of the backrest showing in the corner
-    for z0, z1 in ((D + 0.03, 1.5), (1.34, 0.92), (0.76, Z_NEAR)):
+    # the covers stop short of the window wall and of each other, so the
+    # backrest's own rolled edge shows between them
+    for z0, z1 in ((1.94, 1.5), (1.34, 0.92), (0.76, Z_NEAR)):
         extrude(g, s, drape, tones, cloth, z0, z1)
         g.line([on_face(z1, BACK_TOP - 0.25), on_face(z1, BACK_TOP - 0.05)], mul(cloth, 0.62))
 
