@@ -795,9 +795,25 @@ def walls(g, rnd):
     # neon tube
     g.line([(97, 58), (97, 96)], (30, 30, 50))
     g.line([(97, 104), (97, 123)], (30, 30, 50))
-    g.rect(91, 121, 12, 8, (64, 68, 100))
-    g.rect(91, 121, 12, 1, (120, 126, 162))
-    g.rect(91, 252, 12, 8, (64, 68, 100))
+    # The two sockets are boxes standing off the wall. The tube is left of and
+    # level with the vanishing point, so each shows its face, its side toward
+    # the middle of the room, and the face toward the tube: the underside of
+    # the top one and the top of the bottom one, lit by the tube itself.
+    cap, side, rim = (64, 68, 100), (38, 40, 66), (120, 126, 162)
+    # top socket
+    g.poly([(103, 121), (106, 124), (106, 132), (103, 129)], side)
+    g.poly([(91, 129), (103, 129), (106, 132), (94, 132)], (150, 104, 170))
+    g.rect(91, 121, 12, 8, cap)
+    g.rect(91, 121, 12, 1, rim)
+    g.rect(91, 121, 1, 8, mul(cap, 1.25))
+    g.rect(91, 128, 12, 1, mul(cap, 0.7))
+    g.px(103, 121, rim)
+    # bottom socket
+    g.poly([(103, 252), (106, 249), (106, 257), (103, 260)], side)
+    g.poly([(91, 252), (103, 252), (106, 249), (94, 249)], (176, 116, 190))
+    g.rect(91, 252, 12, 8, cap)
+    g.rect(91, 252, 12, 1, (210, 150, 220))
+    g.rect(91, 252, 1, 8, mul(cap, 1.25))
     g.rect(91, 259, 12, 1, (30, 32, 54))
     g.rect(90, 130, 1, 122, (44, 48, 76))
     g.lrect(93, 129, 8, 123, MAG, 0.95, body=(255, 150, 215))
@@ -820,10 +836,20 @@ def walls(g, rnd):
             g.px(x + (y // 2) % 2, y, (22, 24, 42))
     # ---- right wall
     # wall lamp
-    g.rect(379, 132, 10, 7, (84, 90, 126))
+    # its wall plate, a box right of and above the vanishing point: its face,
+    # the side toward the middle of the room, and its underside, warm from the
+    # shade below; then the stem as a round rod, and a collar where they meet
+    plate = (84, 90, 126)
+    g.poly([(379, 132), (376, 135), (376, 142), (379, 139)], (48, 52, 80))
+    g.poly([(379, 139), (389, 139), (386, 142), (376, 142)], (128, 104, 96))
+    g.rect(379, 132, 10, 7, plate)
     g.rect(379, 132, 10, 1, (150, 156, 190))
-    g.rect(382, 139, 4, 9, (150, 116, 60))
-    g.rect(382, 139, 1, 9, (230, 190, 110))
+    g.rect(388, 132, 1, 7, mul(plate, 1.2))
+    g.rect(379, 138, 10, 1, mul(plate, 0.72))
+    for x, c in ((382, (120, 90, 46)), (383, (240, 204, 124)), (384, (200, 160, 88)), (385, (128, 96, 50))):
+        g.rect(x, 140, 1, 8, c)
+    g.rect(381, 139, 6, 2, mul(BRASS, 0.7))
+    g.rect(382, 139, 4, 1, BRASS)
     g.rect(370, 147, 28, 3, BRASS)
     g.rect(370, 147, 28, 1, (255, 236, 170))
     g.lpoly([(372, 150), (396, 150), (403, 172), (365, 172)], (255, 176, 90), 0.5, body=(250, 196, 120))
