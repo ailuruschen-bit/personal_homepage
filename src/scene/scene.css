@@ -137,33 +137,17 @@
   position: absolute;
   overflow: hidden;
 }
-/* The glass: two streaks of sheen, and the room faintly reflected toward its
-   edges, the neon's magenta on the left and the lamp's warmth on the right
-   (docs/13, L-05). Painted on the existing element: no new layer. */
 .glass {
   position: absolute;
   inset: 0;
-  background:
-    linear-gradient(
-      115deg,
-      transparent 0 30%,
-      rgba(255, 255, 255, 0.07) 30% 36%,
-      transparent 36% 44%,
-      rgba(255, 255, 255, 0.04) 44% 47%,
-      transparent 47%
-    ),
-    linear-gradient(
-      to right,
-      rgba(255, 90, 200, 0.14),
-      transparent 16% 84%,
-      rgba(255, 170, 100, 0.1)
-    ),
-    linear-gradient(
-      to bottom,
-      rgba(150, 170, 255, 0.08),
-      transparent 18% 86%,
-      rgba(150, 170, 255, 0.06)
-    );
+  background: linear-gradient(
+    115deg,
+    transparent 0 30%,
+    rgba(255, 255, 255, 0.07) 30% 36%,
+    transparent 36% 44%,
+    rgba(255, 255, 255, 0.04) 44% 47%,
+    transparent 47%
+  );
 }
 .rain {
   position: absolute;
