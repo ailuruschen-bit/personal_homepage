@@ -39,7 +39,7 @@ AMBER = (255, 206, 110)
 # object moves its focus target with it.
 OBJECTS = {
     'projects': dict(at=(148, 288), zone=(-11, -9, 104, 88), light=(47, 40, 62, 52)),
-    'about': dict(at=(318, 352), zone=(-10, -8, 42, 26), light=(16, 9, 30, 20)),
+    'about': dict(at=(308, 344), zone=(-6, -6, 56, 34), light=(26, 14, 32, 22)),
     'stack': dict(at=(326, 52), zone=(-10, -9, 78, 45), light=(34, 20, 48, 28), on_rack=1),
     # the map, half open on the table; the line display on the wall is the
     # railway's, and only a decoy
@@ -1081,11 +1081,14 @@ def side_wall(g, s):
     else:
         # net pocket: a frame on the wall, the net drawn as a lattice over the
         # dark wall behind it, and a folded timetable standing out of it
+        # its shadow on the partition, down from the ceiling's light
+        poly([(1.9, 1.14), (1.9, 1.33), (1.58, 1.33), (1.58, 1.14)], mul(wall, 0.62))
         poly([(1.88, 1.18), (1.88, 1.36), (1.56, 1.36), (1.56, 1.18)], (36, 40, 66))
         for k in range(1, 9):
             z = 1.88 - k * 0.04
             g.line([ri(w(z, 1.18, 0.02)), ri(w(z + 0.04, 1.33, 0.02))], (88, 96, 132))
             g.line([ri(w(z + 0.04, 1.18, 0.02)), ri(w(z, 1.33, 0.02))], (70, 78, 112))
+        poly([(1.79, 1.31, 0.005), (1.79, 1.41, 0.005), (1.65, 1.41, 0.005), (1.65, 1.31, 0.005)], (24, 28, 48))
         poly([(1.80, 1.30, 0.01), (1.80, 1.43, 0.01), (1.66, 1.43, 0.01), (1.66, 1.30, 0.01)], (226, 220, 200))
         for y in (1.405, 1.385, 1.365):
             g.line([ri(w(1.78, y, 0.012)), ri(w(1.69, y, 0.012))], (150, 120, 120))
@@ -1097,10 +1100,23 @@ def floor_and_ceiling(g):
     read as planes with depth."""
     HW, C, D = ROOM_HALF_WIDTH, ROOM_CEILING, WALL_DIST
     dark = (30, 32, 54)
-    for x in (-0.3, 0.0, 0.3):
-        g.line([ri(P(x, 0, D)), ri(P(x, 0, Z_NEAR))], dark)
-    for z in (1.7, 1.42, 1.18, 0.98, 0.82):
+    # Floor tiles (docs/13, O-22), 15 cm square, in two tones, with a worn path
+    # down the aisle where the tiles are paler and smoother; little of the
+    # floor is in the frame, so they are small enough to read in it
+    base, t = (46, 48, 76), 0.15
+    for i in range(-8, 8):
+        for j, z0 in enumerate((2.0, 1.85, 1.7, 1.55, 1.4)):
+            x0 = i * t
+            k = 0.9 if (i + j) % 2 else 1.06
+            if -0.3 <= x0 < 0.3:
+                k *= 1.12
+            quad(g, [(x0, 0, z0), (x0 + t, 0, z0), (x0 + t, 0, z0 - t), (x0, 0, z0 - t)], mul(base, k))
+    for i in range(-8, 9):
+        g.line([ri(P(i * t, 0, D)), ri(P(i * t, 0, 1.25))], dark)
+    for z in (1.85, 1.7, 1.55, 1.4):
         g.line([ri(P(-HW, 0, z)), ri(P(HW, 0, z))], dark)
+    # the table's shadow on the floor beneath it
+    g.shadow(120, 440, 240, 40, 0.55)
     for x in (-0.6, 0.0, 0.6):
         g.line([ri(P(x, C, D)), ri(P(x, C, Z_NEAR))], mul(CEIL, 0.7))
     for z in (1.6, 1.25):
@@ -1436,28 +1452,42 @@ def table(g, rnd):
     cg.px(293, 333, (150, 96, 70))
     cup = g.masks['_cup']
     g.masks['journey'] = ImageChops.multiply(g.masks['journey'], ImageChops.invert(cup))
-    # ---- ticket (the about object)
-    o = place(g, 'about', (316, 344))
-    o.shadow(318, 349, 32, 15, 0.6)
-    # the business card tucked behind it, one corner showing
-    C_ = [(310, 341), (334, 339), (337, 350), (313, 352)]
+    # ---- ticket (the about object), docs/13 O-08: larger, with a fold, print
+    # rows, a perforated stub with a punched hole, and the business card (N-01)
+    # under it, one corner showing
+    o = place(g, 'about', (308, 344))
+    TQ = [(316, 352), (352, 349), (356, 367), (320, 370)]  # far left, far right, near right, near left
+    Q = lambda a, b: lerp(lerp(TQ[0], TQ[1], a), lerp(TQ[3], TQ[2], a), b)
+    o.shadow(318, 356, 40, 16, 0.55)
+    C_ = [(308, 346), (336, 344), (339, 357), (311, 359)]
     o.poly(C_, (236, 236, 242))
     o.line([C_[0], C_[1]], (255, 255, 255))
     o.line([C_[0], C_[3]], (190, 190, 204))
-    o.fline([(312.5, 342.6), (322, 341.9)], (60, 60, 80))
-    o.fline([(313, 344.6), (320, 344.1)], (140, 140, 160))
-    T = [(316, 346), (344, 344), (348, 358), (320, 361)]
-    o.poly(T, (240, 228, 198))
-    o.line([T[0], T[1]], (255, 250, 232))
-    o.line([T[3], T[2]], (170, 156, 130))
-    o.fline([(319, 349.2), (336, 349.2)], (206, 60, 66), width=2)
-    o.fline([(321, 352.8), (333, 352.8)], (96, 90, 104))
-    o.fline([(322, 355.6), (330, 355.6)], (150, 140, 140))
-    for y in range(346, 359, 2):
-        o.px(338 + (y - 346) // 4, y, (170, 156, 130))
-    o.rect(341, 349, 4, 4, (60, 56, 76))
-    o.px(342, 350, (240, 228, 198))
-    o.px(344, 352, (240, 228, 198))
+    o.fline([(310.5, 347.6), (322, 346.8)], (60, 60, 80))
+    o.fline([(311, 349.6), (319, 349)], (140, 140, 160))
+    paper = (240, 228, 198)
+    o.poly(TQ, paper)
+    # the fold: the half beyond it lies a little lower, a shade darker
+    o.poly([Q(0, 0), Q(0.38, 0), Q(0.38, 1), Q(0, 1)], mul(paper, 0.93))
+    o.fline([Q(0.38, 0.02), Q(0.38, 0.98)], mul(paper, 0.78))
+    o.fline([TQ[0], TQ[1]], (255, 250, 232))
+    o.fline([TQ[3], TQ[2]], (170, 156, 130))
+    # print: a red band, then rows of type
+    o.fline([Q(0.05, 0.22), Q(0.68, 0.22)], (206, 60, 66), width=2)
+    for b, a1, c in ((0.46, 0.5, (96, 90, 104)), (0.62, 0.62, (150, 140, 140)), (0.78, 0.4, (150, 140, 140))):
+        o.fline([Q(0.06, b), Q(a1, b)], c)
+    o.fline([Q(0.46, 0.46), Q(0.66, 0.46)], (96, 90, 104))
+    # the perforation, notched at both edges, and the stub beyond it
+    for k in range(9):
+        x, y = Q(0.74, 0.05 + k * 0.11)
+        o.frect(round(x), round(y), 1, 1, (176, 162, 136))
+    for b in (0.0, 1.0):
+        x, y = Q(0.74, b)
+        o.frect(round(x) - 1, round(y) - (0 if b == 0 else 1), 2, 1, mul(WOOD, 0.8))
+    hx, hy = Q(0.86, 0.36)
+    o.ellipse(round(hx) - 2, round(hy) - 1, 4, 3, mul(WOOD, 0.7))  # the punched hole
+    for k in range(6):  # a barcode on the stub
+        o.fline([Q(0.79 + k * 0.025, 0.58), Q(0.79 + k * 0.025, 0.86)], (60, 56, 76), width=0.5 + (k % 2) * 0.5)
     # ---- pen, about 14 cm against the laptop, left of it
     g.line([(124, 370), (150, 364)], (40, 60, 120), width=2)
     g.line([(124, 371), (150, 365)], (24, 36, 80))
