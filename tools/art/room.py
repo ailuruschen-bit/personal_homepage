@@ -4,6 +4,7 @@ Drawn on a 720x480 canvas covering scene x in [-120, 600), then cut into the
 central 480 plus a 120-wide extension on each side. The window wall is drawn
 face-on; everything that recedes is built from the perspective model below.
 """
+import math
 import os
 import random
 
@@ -466,6 +467,31 @@ def shell(g, rnd):
 
 
 # ------------------------------------------------------------------ Luggage rack
+def rounded_side(g, xr, r, c, zl):
+    """The end of a piece of luggage whose front is a rounded rectangle (the
+    holdall, written at x .. xr, y 68 .. 92 with corner radius r), carried back
+    from its front at depth zl to the wall. The profile is taken from the very
+    outline the front is drawn with, so the side meets the rounded corners
+    exactly: each step of the outline becomes a strip running back, shaded by
+    which way it faces."""
+    base = g.flatten(LUGGAGE_FLAT, 92).at(0, -3)
+    front, back = base.depth(zl), base
+    y0, y1 = 68, 92
+    prof = []
+    for k in range(7):  # top corner, from the top round to the side
+        a = math.radians(-90 + 15 * k)
+        prof.append((xr - r + r * math.cos(a), y0 + r + r * math.sin(a), 'top' if k < 3 else 'edge'))
+    # then straight down: the lower corner sits on the rack, behind its rail,
+    # and the underside is not seen
+    prof.append((xr, y1, 'side'))
+    tone = {'top': 0.95, 'edge': 0.78, 'side': 0.6}
+    sc = lambda o, x, y: (o._xy(x, y)[0] - OX, o._xy(x, y)[1])
+    for (xa, ya, _), (xb, yb, kind) in zip(prof, prof[1:]):
+        g.poly([sc(front, xa, ya), sc(front, xb, yb), sc(back, xb, yb), sc(back, xa, ya)], mul(c, tone[kind]))
+    # the lit line along the top of the rounded edge
+    g.line([ri(sc(front, xr - r, y0)), ri(sc(back, xr - r, y0))], mul(c, 1.05))
+
+
 def rack(g, rnd, over_rack=True):
     # the railway's line display: a decoy, not an object
     o = g
@@ -500,7 +526,7 @@ def rack(g, rnd, over_rack=True):
     bx = lug.at(24, 0)
     um = g.flatten(LUGGAGE_FLAT, 92).at(2, -3).depth(LUGGAGE_Z[1])
     # x0, x1, height as written, colour, silhouette tag
-    pieces = ((52, 88, 20, (176, 138, 98), None, 0), (96, 151, 24, (60, 140, 138), None, 1),
+    pieces = ((52, 88, 20, (176, 138, 98), None, 0), (96, 151, 24, (60, 140, 138), None, 7),
               (326, 394, 34, (150, 96, 62), 'stack', 0), (400, 448, 4, (44, 50, 84), None, 0))
     for x0, x1, h, c, tag, r_ in pieces:
         xa, xb = (x0 - 240) / WALL_SCALE, (x1 - 240) / WALL_SCALE
@@ -518,17 +544,11 @@ def rack(g, rnd, over_rack=True):
         zl = LUGGAGE_Z[-1 if x1 < 240 else 1]
         X, top = (xs - 240) / WALL_SCALE, RACK_Y + h * LUGGAGE_FLAT / WALL_SCALE
         t = g.at(0, 0, tag) if tag else g
-        # a piece rounded at its corners (the holdall) is a rounded section
-        # carried back to the wall: the flat side stops short of the top
-        # corner, and the rounded edge runs back as a strip
-        rd = (7 if r_ else 0) / WALL_SCALE
-        I = -1 if x1 < 240 else 1  # toward the piece's inside
-        # Seen from below, only the upper rounded edge matters: the rack's rail
-        # hides the lower one.
-        quad(t, [(X, RACK_Y, D), (X, top - rd, D), (X, top - rd, zl), (X, RACK_Y, zl)], mul(c, 0.6))
-        if rd:
-            quad(t, [(X + I * rd, top, D), (X, top - rd, D), (X, top - rd, zl), (X + I * rd, top, zl)], mul(c, 0.95))
-        t.line([ri(P(X + I * rd, top, D)), ri(P(X + I * rd, top, zl))], mul(c, 0.95))
+        if r_:
+            rounded_side(g, x1, r_, c, zl)
+            continue
+        quad(t, [(X, RACK_Y, D), (X, top, D), (X, top, zl), (X, RACK_Y, zl)], mul(c, 0.6))
+        t.line([ri(P(X, top, D)), ri(P(X, top, zl))], mul(c, 0.95))
         t.line([ri(P(X, RACK_Y + 0.004, D)), ri(P(X, RACK_Y + 0.004, zl))], mul(c, 0.4))
         if h >= 20:
             for f in (0.3, 0.7):
