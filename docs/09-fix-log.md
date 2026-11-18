@@ -19,6 +19,22 @@ anything that is now load-bearing because of it.
 
 ---
 
+## F-005 Chrome: nearest-neighbour scaling of the carriage stutters
+
+**Symptom.** With `image-rendering: pixelated` on the carriage's images
+(`.room`, the side images, the sprites and their fronts), tried for sharpness
+in docs/13 step 4.1, the page stuttered clearly in Chrome, and the picture was
+not much sharper.
+
+**Cause.** Not traced. Those images scale with the camera, and Chrome appears to
+take a slower path for nearest-neighbour scaling of large images under a
+transform.
+
+**Fix.** Reverted; the images scale smoothly again.
+
+**Load-bearing.** Do not set `image-rendering` on anything that scales with the
+camera. Sharpness has to come from the art.
+
 ## F-004 Chrome: the return from outside stutters with more paint on the glass
 
 **Symptom.** After stage 3.6 added two faint edge gradients to `.glass` (a
