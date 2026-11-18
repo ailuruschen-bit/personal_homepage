@@ -43,7 +43,7 @@ OBJECTS = {
     'stack': dict(at=(326, 52), zone=(-10, -9, 78, 45), light=(34, 20, 48, 28), on_rack=1),
     # the map, half open on the table; the line display on the wall is the
     # railway's, and only a decoy
-    'journey': dict(at=(233, 326), zone=(-6, -6, 77, 27), light=(32, 10, 38, 14)),
+    'journey': dict(at=(233, 323), zone=(-6, -6, 77, 25), light=(32, 9, 38, 12)),
 }
 
 # The window opening (x y w h) and its corner radius. The page lays .win over it:
@@ -104,7 +104,7 @@ def P(X, Y, Z):
 
 # The cup and saucer were drawn too large for the laptop beside them: they are
 # drawn at COFFEE_SCALE about the middle of the saucer's foot.
-COFFEE_AT = (281, 356)
+COFFEE_AT = (283, 360)
 COFFEE_SCALE = 0.62
 
 # Small animated things the page lays over the art, each x y relative to what
@@ -1082,7 +1082,7 @@ def table_map(g, T):
     o = g.at(0, 0, 'journey')
     paper = (232, 222, 196)
     # the flat sheet, a little askew
-    A, B, C, D = T(0.47, 0.14), T(0.77, 0.11), T(0.78, 0.35), T(0.48, 0.38)
+    A, B, C, D = T(0.47, 0.08), T(0.77, 0.05), T(0.78, 0.28), T(0.48, 0.31)
     o.poly([A, B, C, D], paper)
     g.line([(D[0], D[1] + 1), (C[0], C[1] + 1)], mul(WOOD, 0.55))  # its shadow on the wood
 
@@ -1283,9 +1283,16 @@ def table(g, rnd):
     o.px(181, 290, (20, 22, 40))
     # body
     Bq = [(151, 348), (218, 343), (241, 357), (170, 366)]
+    # the base has a thickness: its front edge and the side toward the middle
+    # of the room both show, and it sits on the table on a dark contact line
+    o.poly([(151, 348), (170, 366), (170, 370), (151, 351)], (60, 64, 94))
+    o.poly([(218, 343), (241, 357), (241, 361), (218, 346)], (74, 80, 112))
+    o.poly([(170, 366), (241, 357), (241, 361), (170, 370)], (96, 102, 138))
+    o.line([(170, 367), (241, 358)], (132, 140, 176))
+    o.line([(170, 371), (241, 362)], (20, 18, 30))
+    o.line([(241, 357), (241, 361)], (150, 158, 192))
     o.poly(Bq, (160, 168, 198))
     o.line([Bq[0], Bq[1]], (40, 44, 70))
-    o.poly([(170, 366), (241, 357), (241, 359), (170, 368)], (92, 98, 132))
     for t in (0.14, 0.32, 0.5, 0.68):
         a, b = lerp(Bq[0], Bq[3], t), lerp(Bq[1], Bq[2], t)
         n = 13
