@@ -587,6 +587,11 @@ def rack(g, rnd, over_rack=True):
     lug.rrect(98, 69, 51, 8, 4, mul(c, 1.28))
     lug.rect(100, 84, 47, 7, mul(c, 0.74))
     lug.rect(98, 77, 51, 1, mul(c, 0.6))
+    # Material marks (docs/13, R-04). Fabric: the nylon's twill, a diagonal
+    # weave of darker threads across the body
+    for y in range(78, 91):
+        for x in range(99 + (y % 3), 149, 3):
+            lug.px(x, y, mul(c, 0.84 if y < 84 else 0.62))
     for x in (110, 134):
         lug.rect(x, 68, 4, 24, mul(c, 0.62))
         lug.rect(x, 68, 1, 24, mul(c, 0.9))
@@ -607,6 +612,10 @@ def rack(g, rnd, over_rack=True):
     o.rect(385, 58, 1, 34, mul(lb, 0.55))
     o.rect(318, 91, 68, 1, mul(lb, 0.5))
     o.speckle(318, 58, 68, 34, 0.1, rnd, 0.3)
+    # Leather: a broad, soft sheen across the lid, brightest toward the lamp
+    o.ellipse(326, 66, 58, 12, mul(lb, 1.12))
+    o.ellipse(340, 68, 36, 7, mul(lb, 1.26))
+    o.ellipse(352, 69, 16, 3, mul(lb, 1.42))
     for x in range(321, 384, 3):
         o.px(x, 63, mul(lb, 1.45))
         o.px(x, 88, mul(lb, 1.2))
@@ -686,6 +695,9 @@ def window(g, rnd):
         g.rect(x, 97, 2, 5, (120, 92, 50))
     g.rect(120, 100, 240, 4, BRASS)
     g.rect(120, 100, 240, 1, (255, 232, 160))
+    # Metal: sharp speculars where the brass faces a light, small and hard
+    for x in (138, 139, 182, 318, 342, 343):
+        g.lpx(x, 101, (255, 250, 230), 0.5)
     g.rect(120, 103, 240, 1, (130, 96, 50))
     for x in (114, 358):
         g.ellipse(x, 97, 9, 9, BRASS)
@@ -879,6 +891,8 @@ def walls(g, rnd):
         g.line([(384 + (x - 384) * 0.62, 150), (x, 172)], (214, 150, 84))
     g.rect(364, 172, 40, 2, BRASS)
     g.rect(364, 172, 40, 1, (255, 236, 170))
+    for x in (368, 369, 392):
+        g.lpx(x, 172, (255, 252, 236), 0.6)
     g.lrect(376, 174, 16, 2, (255, 214, 150), 0.8, body=(255, 244, 214))
     for y in range(176, 196, 2):
         g.px(400, y, (214, 180, 110))
@@ -1250,6 +1264,11 @@ def table(g, rnd):
     # edging and apron
     g.rect(118, 372, 245, 2, BRASS)
     g.rect(118, 372, 245, 1, (255, 236, 170))
+    for x in (194, 195, 298, 299, 300):
+        g.lpx(x, 372, (255, 252, 236), 0.5)
+    # Wood: an edge highlight along the top's front edge, where the varnish
+    # turns down to the brass
+    g.line([(119, 371), (361, 371)], mul(WOOD, 1.32))
     g.rect(118, 374, 245, 9, mul(WOOD, 0.6))
     g.rect(118, 374, 245, 1, mul(WOOD, 0.42))
     g.rect(118, 382, 245, 1, mul(WOOD, 0.36))
