@@ -1682,7 +1682,7 @@ def reflections(a, table, front, k):
 
 
 # The step between bands of light on the room (px.render, docs/13 R-02)
-BANDS = float(os.environ.get('BANDS', '0.12')) or None
+BANDS = float(os.environ.get('BANDS', '0.2')) or None
 
 
 def build_room(seed=21, over_rack=True):
