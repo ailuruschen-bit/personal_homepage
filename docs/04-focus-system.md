@@ -12,8 +12,9 @@ and where the light is.
 Two references, both deliberate:
 
 - **The iPadOS pointer.** The cursor is not a fixed arrow; it deforms and is
-  attracted to what it is near. Here the light is pulled toward an object as
-  the pointer approaches, and snaps onto it on arrival.
+  attracted to what it is near. Here the object snaps into focus on arrival
+  and its pool of light lands on it; the pointer light itself stays under the
+  pointer (see below).
 - **tvOS focus.** The focused element is lifted and brightened rather than
   everything else being dimmed. Here the object is lifted, brightened and given
   a shadow, and a pool of light lands on it.
@@ -70,22 +71,13 @@ The effect is that focus feels sticky: it does not flicker between two objects
 when the pointer sits between them, and it does not grab an object you are
 clearly moving past.
 
-## Pulling the light
+## The pointer light
 
-While nothing is focused, the light does not follow the pointer exactly. In
-`placeLight`, if the nearest object is within `PULL_RANGE` (78 units) and the
-pointer is approaching it:
-
-```ts
-t = 1 - (distance - SNAP_RANGE) / (PULL_RANGE - SNAP_RANGE);
-pullTarget = PULL_MAX * t * t; // PULL_MAX = 0.42
-```
-
-`t` ramps from 0 at the edge of the pull range to 1 at the snap boundary, and
-is squared so the pull stays nearly absent until you are close. The light is
-then interpolated that fraction of the way toward the object's light anchor.
-`pull` itself is smoothed, so entering and leaving the pull range is not a
-step change.
+The pointer light follows the pointer one to one, always. It used to be pulled
+toward the nearest object as the pointer approached (`PULL_RANGE` 78 units,
+`PULL_MAX` 0.42), but with the pull smoothed and switched on and off by the
+approach test, the light could drift away from the cursor without the pointer
+moving. The pull was removed; snapping is left to focus and the pool.
 
 ## The spotlight pool
 
@@ -163,8 +155,6 @@ is tabbable. `pointer-events` is only enabled on them in the hub.
 | Constant            | Value | Effect of raising it                                 |
 | ------------------- | ----- | ---------------------------------------------------- |
 | `SNAP_RANGE`        | 22    | Objects grab the pointer from further away           |
-| `PULL_RANGE`        | 78    | The light starts bending toward objects sooner       |
-| `PULL_MAX`          | 0.42  | A stronger bend at the snap boundary                 |
 | `DIRECTION_EPSILON` | 1.2   | More tolerant of tremor, slower to notice a reversal |
 | `FREE_RADIUS`       | 30    | A larger pool before snapping                        |
 | `TAU.camera`        | 0.34  | Slower framing and outside-layer easing              |
