@@ -43,7 +43,7 @@ OBJECTS = {
     'stack': dict(at=(326, 52), zone=(-10, -9, 78, 45), light=(34, 20, 48, 28), on_rack=1),
     # the map, half open on the table; the line display on the wall is the
     # railway's, and only a decoy
-    'journey': dict(at=(233, 323), zone=(-6, -6, 77, 25), light=(32, 9, 38, 12)),
+    'journey': dict(at=(245, 323), zone=(-5, -6, 67, 25), light=(28, 9, 32, 12)),
 }
 
 # The window opening (x y w h) and its corner radius. The page lays .win over it:
@@ -1106,7 +1106,7 @@ def table_map(g, T):
     o = g.at(0, 0, 'journey')
     paper = (232, 222, 196)
     # the flat sheet, a little askew
-    A, B, C, D = T(0.47, 0.08), T(0.77, 0.05), T(0.78, 0.28), T(0.48, 0.31)
+    A, B, C, D = T(0.53, 0.08), T(0.8, 0.05), T(0.81, 0.28), T(0.54, 0.31)
     o.poly([A, B, C, D], paper)
     g.line([(D[0], D[1] + 1), (C[0], C[1] + 1)], mul(WOOD, 0.55))  # its shadow on the wood
 
@@ -1278,15 +1278,27 @@ def table(g, rnd):
     table_map(g, T)
     # ---- laptop (the projects object)
     # Drawn in the table's own perspective: its base is a rectangle on the table
-    # top, square to the table's edges, found through T(u, v); the lid stands
-    # up from the base's back edge. All of it on the fine layer, whose straight
-    # edges EPX would tear (docs/13, R-03, O-06).
+    # top, found through T(u, v), turned a little toward the left-hand seat as if
+    # someone had just been working at it from there; the lid stands up from the
+    # base's back edge. All of it on the fine layer, whose straight edges EPX
+    # would tear (docs/13, R-03, O-06).
     o = place(g, 'projects', (148, 288))
-    u0, u1, v0, v1 = 0.12, 0.47, 0.42, 0.9
-    BLb, BRb, FRb, FLb = T(u0, v0), T(u1, v0), T(u1, v1), T(u0, v1)
-    # contact shadow along its front and left edges, where it meets the table
-    o.shadow(round(FLb[0]) - 3, round(FLb[1]) - 1, round(FRb[0] - FLb[0]) + 6, 5, 0.45)
-    o.shadow(round(FLb[0]) - 4, round(BLb[1]), 6, round(FLb[1] - BLb[1]), 0.6)
+    TW, TD = 1.0, 0.5  # the table's width and depth in metres, for turning
+    cu, cv, hw, hd, turn = 0.29, 0.62, 0.175, 0.12, math.radians(-11)
+
+    def on_table(a, b):
+        """A point of the base, a across from 0 (left) to 1, b from 0 (back) to 1."""
+        x, z = (a - 0.5) * 2 * hw, (b - 0.5) * 2 * hd
+        x, z = x * math.cos(turn) - z * math.sin(turn), x * math.sin(turn) + z * math.cos(turn)
+        return T(cu + x / TW, cv + z / TD)
+
+    BLb, BRb, FRb, FLb = on_table(0, 0), on_table(1, 0), on_table(1, 1), on_table(0, 1)
+    K = lambda a, b: on_table(a, b)
+    # contact shadow along its front edge and its left side
+    xs = [q[0] for q in (BLb, BRb, FRb, FLb)]
+    ys = [q[1] for q in (BLb, BRb, FRb, FLb)]
+    o.shadow(round(min(xs)) - 3, round(max(ys)) - 3, round(max(xs) - min(xs)) + 6, 6, 0.45)
+    o.shadow(round(min(xs)) - 4, round(min(ys)), 7, round(max(ys) - min(ys)), 0.6)
     th = 3  # the base's thickness
     o.fpoly([FLb, FRb, (FRb[0], FRb[1] + th), (FLb[0], FLb[1] + th)], (88, 94, 130))
     o.fpoly([BRb, FRb, (FRb[0], FRb[1] + th), (BRb[0], BRb[1] + th)], (68, 74, 106))
@@ -1294,18 +1306,14 @@ def table(g, rnd):
     o.fline([(FLb[0], FLb[1] + th + 1), (FRb[0], FRb[1] + th + 1)], (18, 16, 28))
     o.fpoly([BLb, BRb, FRb, FLb], (150, 158, 190))
     # the keyboard well, and the keys at their size: five rows
-    K = lambda u, v: T(u0 + (u1 - u0) * u, v0 + (v1 - v0) * v)
     o.fpoly([K(0.06, 0.06), K(0.94, 0.06), K(0.95, 0.6), K(0.05, 0.6)], (92, 100, 138))
     for r in range(5):
-        v = 0.1 + r * 0.1
         n = 15
         for i in range(n):
-            x, y = K(0.09 + (i + 0.5) * 0.82 / n, v)
+            x, y = K(0.09 + (i + 0.5) * 0.82 / n, 0.1 + r * 0.1)
             o.frect(round(x) - 1, round(y), 2, 1, (196, 204, 234))
     # the space bar
-    xa, ya = K(0.32, 0.55)
-    xb, _ = K(0.68, 0.55)
-    o.frect(round(xa), round(ya), round(xb - xa), 1, (196, 204, 234))
+    o.fline([K(0.32, 0.56), K(0.68, 0.56)], (196, 204, 234))
     # the trackpad
     o.fpoly([K(0.355, 0.67), K(0.645, 0.67), K(0.65, 0.91), K(0.35, 0.91)], (110, 118, 154))
     o.fpoly([K(0.36, 0.68), K(0.64, 0.68), K(0.645, 0.9), K(0.355, 0.9)], (172, 180, 212))
@@ -1319,36 +1327,39 @@ def table(g, rnd):
     # the screen inside a bezel: narrow at the sides and top, wider at the foot
     D = [(L[0][0] + 4, L[0][1] + 4), (L[1][0] - 4, L[1][1] + 4), (BRb[0] - 4, BRb[1] - 7), (BLb[0] + 4, BLb[1] - 7)]
     o.fpoly(D, (40, 70, 160), 0.42, body=(22, 30, 62))
-    cx = (L[0][0] + L[1][0]) / 2
-    o.frect(round(cx), round(L[0][1]) + 1, 1, 1, (16, 18, 30))  # the camera
+    Sp = lambda a, b: lerp(lerp(D[0], D[1], a), lerp(D[3], D[2], a), b)
+    o.frect(round((L[0][0] + L[1][0]) / 2), round((L[0][1] + L[1][1]) / 2) + 1, 1, 1, (16, 18, 30))  # the camera
     # hinge: a dark seam across the lid's foot, a barrel at each end
     o.fline([(BLb[0] + 1, BLb[1] - 1), (BRb[0] - 1, BRb[1] - 1)], (22, 24, 38), width=1.5)
-    for hx in (BLb[0] + 9, BRb[0] - 13):
-        o.frect(round(hx), round(BLb[1]) - 2, 5, 2, (96, 102, 136))
-    # code on the screen
+    for t in (0.14, 0.8):
+        hx, hy = lerp(BLb, BRb, t)
+        o.frect(round(hx), round(hy) - 2, 5, 2, (96, 102, 136))
+    # code on the screen, its rows following the screen's slope
     colors = [MAG, CYA, (255, 206, 110), (150, 255, 170), (226, 232, 255), (176, 130, 255)]
-    sx0, sx1 = D[0][0] + 5, D[1][0] - 3
-    sy0, sy1 = D[0][1] + 3, D[3][1] - 3
     rows = 9
     for r in range(rows):
-        y = sy0 + r * (sy1 - sy0) / (rows - 1)
-        o.frect(round(D[0][0]) + 2, round(y), 1, 1, (90, 110, 170), 0.5)
-        x = sx0 + rnd.choice([0, 0, 4, 8, 4])
+        b = 0.08 + r * 0.84 / (rows - 1)
+        nx, ny = Sp(0.03, b)
+        o.frect(round(nx), round(ny), 1, 1, (90, 110, 170), 0.5)
+        a = 0.09 + rnd.choice([0, 0, 0.06, 0.12, 0.06])
         n = rnd.choice([2, 3, 3, 4])
         if r == 7:
-            x, n = sx0, 2
+            a, n = 0.09, 2
         for _ in range(n):
-            ln = rnd.randrange(4, 13)
-            if r == 7 and x + ln > sx0 + 30:
+            ln = rnd.randrange(4, 13) / 62
+            if r == 7 and a + ln > 0.55:
                 break
-            x1 = min(x + ln, sx1) - 1
-            o.fline([(x, y), (x1, y)], rnd.choice(colors), 0.95)
-            x += ln + 2
-            if x > sx1 - 5:
+            a1 = min(a + ln, 0.96)
+            # each run level in itself, at the height of its middle: a sloping
+            # run would show a step
+            (xa, ya), (xb, yb) = Sp(a, b), Sp(a1, b)
+            o.fline([(xa, (ya + yb) / 2), (xb, (ya + yb) / 2)], rnd.choice(colors), 0.95)
+            a = a1 + 2 / 62
+            if a > 0.9:
                 break
     # the screen's light on the keys and on the table in front
-    o.light(round(BLb[0]), round(BLb[1]) - 6, round(BRb[0] - BLb[0]), 30, (90, 150, 255), 0.5)
-    o.light(round(BLb[0]) - 6, round(L[0][1]) - 6, round(BRb[0] - BLb[0]) + 12, top + 12, (80, 120, 255), 0.25)
+    o.light(round(min(xs)), round(min(ys)) - 6, round(max(xs) - min(xs)), 30, (90, 150, 255), 0.5)
+    o.light(round(min(xs)) - 6, round(min(ys)) - top - 6, round(max(xs) - min(xs)) + 12, top + 12, (80, 120, 255), 0.25)
     # ---- coffee
     # the cup stands in front of the map; it is cut out of the map's sprite
     cg = scaled(g, COFFEE_SCALE, *COFFEE_AT).at(0, 0, '_cup')
