@@ -100,14 +100,6 @@ the apparent pixel size.
 Lighting, bloom and shadow are computed **after** the upscale, at the output
 resolution, so glows and gradients are smooth rather than chunky.
 
-The carriage's assets (the room, the side images and the sprites) are then
-doubled once more by nearest neighbour before they are written, so they are 4x
-the scene (`CARRIAGE_UP` in `build.py`). The page shows the scene at more than
-2x, and a browser scaling a 2x image up smoothly blurs every edge; a 4x image is
-scaled down instead and stays sharp. The extra pixels are exact copies, so
-nothing in the art changes. CSS `image-rendering` is not an alternative: it made
-the camera's flight stutter (docs/09, F-005). The city stays at 2x.
-
 ### The fine layer
 
 EPX has one failure mode that matters. A line that is meant to be straight but
