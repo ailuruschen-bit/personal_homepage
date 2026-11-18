@@ -816,9 +816,19 @@ def walls(g, rnd):
     g.rect(91, 252, 1, 8, mul(cap, 1.25))
     g.rect(91, 259, 12, 1, (30, 32, 54))
     g.rect(90, 130, 1, 122, (44, 48, 76))
-    g.lrect(93, 129, 8, 123, MAG, 0.95, body=(255, 150, 215))
-    g.lrect(95, 129, 4, 123, (255, 200, 235), 1.0, body=(255, 226, 244))
+    # the tube: a glass envelope round a glowing core, its far edge darker as
+    # it turns away, standing off the wall on two clips whose arms run back to
+    # the wall toward the vanishing point
+    g.lrect(93, 129, 9, 123, MAG, 0.95, body=(255, 150, 215))
+    g.lrect(95, 129, 5, 123, (255, 200, 235), 1.0, body=(255, 226, 244))
     g.lrect(96, 131, 2, 119, (255, 255, 255), 1.0)
+    g.rect(101, 129, 1, 123, (176, 60, 150))
+    for y in (166, 214):
+        g.poly([(100, y), (105, y + 3), (105, y + 6), (100, y + 3)], (40, 42, 70))
+        g.rect(92, y, 11, 3, (70, 74, 110))
+        g.rect(92, y, 11, 1, (150, 156, 196))
+        g.rect(92, y + 2, 11, 1, (40, 42, 70))
+        g.px(92, y + 1, (190, 196, 230))
     g.light(56, 110, 84, 176, MAG, 0.6)
     # instant photos
     for x, y, c in ((106, 146, (90, 130, 170)), (109, 166, (190, 120, 90))):
