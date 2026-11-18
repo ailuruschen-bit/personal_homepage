@@ -863,22 +863,19 @@ def walls(g, rnd):
         g.line([(384 + (x - 384) * 0.62, 150), (x, 172)], (214, 150, 84))
     g.rect(364, 172, 40, 2, BRASS)
     g.rect(364, 172, 40, 1, (255, 236, 170))
-    # the open bottom of the shade, seen from below: a soft glow inside it
-    # round the bulb's own bright strip
-    g.lpoly([(368, 174), (400, 174), (396, 176), (372, 176)], (255, 200, 140), 0.32, body=(250, 214, 160))
     g.lrect(376, 174, 16, 2, (255, 214, 150), 0.8, body=(255, 244, 214))
     for y in range(176, 196, 2):
         g.px(400, y, (214, 180, 110))
     g.rect(399, 196, 3, 3, BRASS)
     # The light it throws (docs/13, L-04): a cone down the wall from the open
-    # bottom of the shade, brightest near the shade, then a pool on the panel
-    # below and on the top of the right-hand backrest by the wall, and a little
-    # up the wall above the shade
+    # bottom of the shade, starting just below it so the lamp itself stays as
+    # it was, brightest near the shade; a pool on the panel below and on the
+    # top of the right-hand backrest by the wall, and a little up the wall
     warm = (255, 128, 40)  # saturated: the wall is blue, a paler warm only greys it
     g.light_poly([(360, 184), (408, 184), (452, 330), (318, 330)], warm, 0.3)
     g.light_poly([(364, 184), (404, 184), (434, 300), (336, 300)], warm, 0.46)
     g.light_poly([(368, 184), (400, 184), (414, 250), (354, 250)], warm, 0.64)
-    g.light(348, 180, 72, 80, (255, 160, 80), 0.5)
+    g.light(348, 176, 72, 84, (255, 160, 80), 0.34)
     g.light(404, 214, 70, 34, warm, 0.45)
     g.light(362, 116, 44, 30, (255, 160, 80), 0.2)
     # control panel (outside any focus region, decorative only)
