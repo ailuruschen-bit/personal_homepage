@@ -51,7 +51,10 @@ def composite(assets):
         layer = Image.open(os.path.join(assets, f'{name}.webp')).convert('RGBA')
         out.alpha_composite(layer.crop((0, 0, W, layer.height)), (0, H - layer.height - 60))
     for name, x in (('room-l', 0), ('room', SIDE * K), ('room-r', (SIDE + 480) * K)):
-        out.alpha_composite(Image.open(os.path.join(assets, f'{name}.webp')).convert('RGBA'), (x, 0))
+        im = Image.open(os.path.join(assets, f'{name}.webp')).convert('RGBA')
+        # the carriage's assets are written at twice K (CARRIAGE_UP in build.py)
+        im = im.resize((im.width // 2, im.height // 2), Image.NEAREST)
+        out.alpha_composite(im, (x, 0))
     # The page lays a vignette over the 480 scene (scene.css .vig); the side
     # extensions have the same one baked in. Apply it here so the preview shows
     # what the page shows instead of a false step at the room's edge.

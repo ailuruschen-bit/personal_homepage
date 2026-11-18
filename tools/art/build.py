@@ -22,6 +22,17 @@ import px  # noqa: E402
 # at the output resolution and so come out smooth.
 px.SCALE = 2
 
+# The carriage's assets are then doubled once more, pixel for pixel, before they
+# are written. The page shows the scene larger than 2x, and a browser scaling a
+# 2x image up smoothly blurs every edge; scaling a 4x image down does not. The
+# extra pixels are exact copies, so the art itself is unchanged (docs/13, R-01).
+# The city stays at 2x: it is soft on purpose.
+CARRIAGE_UP = 2
+
+
+def up(im):
+    return im.resize((im.width * CARRIAGE_UP, im.height * CARRIAGE_UP), Image.NEAREST)
+
 from city import build_c2  # noqa: E402
 from far import build_c1, build_c3, build_sky  # noqa: E402
 from room import OX, build_room, geometry  # noqa: E402
@@ -200,10 +211,10 @@ def main(out, src=None):
         cut.update(sprites(bare, behind))
     cut.update({k.replace('/front', '-front'): im for k, im in sprites(room, fronts).items()})
     for key, im in cut.items():
-        save(im, os.path.join(out, f'obj-{key}.webp'), lossless=True)
-    save(room.crop((OX * k, 0, (OX + 480) * k, 480 * k)), os.path.join(out, 'room.webp'))
-    save(room.crop((0, 0, OX * k, 480 * k)).convert('RGB'), os.path.join(out, 'room-l.webp'))
-    save(room.crop(((OX + 480) * k, 0, (OX + 600) * k, 480 * k)).convert('RGB'), os.path.join(out, 'room-r.webp'))
+        save(up(im), os.path.join(out, f'obj-{key}.webp'), lossless=True)
+    save(up(room.crop((OX * k, 0, (OX + 480) * k, 480 * k))), os.path.join(out, 'room.webp'))
+    save(up(room.crop((0, 0, OX * k, 480 * k)).convert('RGB')), os.path.join(out, 'room-l.webp'))
+    save(up(room.crop(((OX + 480) * k, 0, (OX + 600) * k, 480 * k)).convert('RGB')), os.path.join(out, 'room-r.webp'))
     save(build_grain(), os.path.join(out, 'grain.png'))
     geo = geometry(masks)
     write_geometry(geo, os.path.join(src or out, 'geometry.gen.ts'))

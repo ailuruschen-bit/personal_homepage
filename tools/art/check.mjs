@@ -11,6 +11,8 @@ import { fileURLToPath } from 'node:url';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const SCENE = 480;
 const SCALE = 2; // px.SCALE in build.py: assets are drawn at 1x and written at 2x
+// ...and the carriage's are doubled again (CARRIAGE_UP in build.py)
+const CARRIAGE = SCALE * 2;
 const read = (p) => readFileSync(join(ROOT, p), 'utf8');
 const problems = [];
 const fail = (msg) => problems.push(msg);
@@ -71,8 +73,8 @@ for (const [id, o] of objects) {
   const [, , w, h] = o.box ?? [];
   expectSize(
     join('public', o.sprite),
-    w * SCALE,
-    h * SCALE,
+    w * CARRIAGE,
+    h * CARRIAGE,
     `the box of "${id}" in geometry.gen.ts`,
   );
 }
@@ -87,17 +89,17 @@ if (win) {
 
 // ---- assets have the sizes scene.css lays them out at
 const css = read('src/scene/scene.css');
-expectSize('public/assets/room.webp', SCENE * SCALE, SCENE * SCALE, '.room in scene.css');
+expectSize('public/assets/room.webp', SCENE * CARRIAGE, SCENE * CARRIAGE, '.room in scene.css');
 expectSize(
   'public/assets/room-l.webp',
-  120 * SCALE,
-  SCENE * SCALE,
+  120 * CARRIAGE,
+  SCENE * CARRIAGE,
   'the side extensions in scene.css',
 );
 expectSize(
   'public/assets/room-r.webp',
-  120 * SCALE,
-  SCENE * SCALE,
+  120 * CARRIAGE,
+  SCENE * CARRIAGE,
   'the side extensions in scene.css',
 );
 const layerHeight = Number(css.match(/background-size: auto (\d+)px;/)?.[1]);
