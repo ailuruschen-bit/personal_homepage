@@ -795,29 +795,30 @@ def walls(g, rnd):
     # neon tube
     g.line([(97, 58), (97, 96)], (30, 30, 50))
     g.line([(97, 104), (97, 123)], (30, 30, 50))
-    # The two sockets are boxes standing off the wall. The tube is left of and
+    # The two sockets are shallow boxes on the wall, so the tube sits close to
+    # it. The tube is left of and
     # level with the vanishing point, so each shows its face, its side toward
     # the middle of the room, and the face toward the tube: the underside of
     # the top one and the top of the bottom one, lit by the tube itself.
     cap, side, rim = (64, 68, 100), (38, 40, 66), (120, 126, 162)
     # top socket
-    g.poly([(103, 121), (106, 124), (106, 132), (103, 129)], side)
-    g.poly([(91, 129), (103, 129), (106, 132), (94, 132)], (150, 104, 170))
+    g.poly([(103, 121), (104, 122), (104, 130), (103, 129)], side)
+    g.poly([(91, 129), (103, 129), (104, 130), (92, 130)], (150, 104, 170))
     g.rect(91, 121, 12, 8, cap)
     g.rect(91, 121, 12, 1, rim)
     g.rect(91, 121, 1, 8, mul(cap, 1.25))
     g.rect(91, 128, 12, 1, mul(cap, 0.7))
     g.px(103, 121, rim)
     # bottom socket
-    g.poly([(103, 252), (106, 249), (106, 257), (103, 260)], side)
-    g.poly([(91, 252), (103, 252), (106, 249), (94, 249)], (176, 116, 190))
+    g.poly([(103, 252), (104, 251), (104, 259), (103, 260)], side)
+    g.poly([(91, 252), (103, 252), (104, 251), (92, 251)], (176, 116, 190))
     g.rect(91, 252, 12, 8, cap)
     g.rect(91, 252, 12, 1, (210, 150, 220))
     g.rect(91, 252, 1, 8, mul(cap, 1.25))
     g.rect(91, 259, 12, 1, (30, 32, 54))
     g.rect(90, 130, 1, 122, (44, 48, 76))
-    g.lrect(92, 129, 10, 123, MAG, 0.95, body=(255, 150, 215))
-    g.lrect(94, 129, 6, 123, (255, 200, 235), 1.0, body=(255, 226, 244))
+    g.lrect(93, 129, 8, 123, MAG, 0.95, body=(255, 150, 215))
+    g.lrect(95, 129, 4, 123, (255, 200, 235), 1.0, body=(255, 226, 244))
     g.lrect(96, 131, 2, 119, (255, 255, 255), 1.0)
     g.light(56, 110, 84, 176, MAG, 0.6)
     # instant photos
