@@ -910,7 +910,7 @@ Done so far in stage 1, beyond what the step table names:
   behind the rack's rail this way.
 
 Stage 1 passed its gate and is merged. Stage 2 passed its gate and is merged.
-Stage 3 is under way: the value plan (3.1) passed its gate; cast shadows (3.2) passed review, with the tube's sockets and the lamp's mount given depth along the way; occlusion (3.3) passed review; the lamp's light (3.4) passed review; core shadows and rim light (3.5) passed review; reflections (3.6) are done, and stage 3 passed its gate and is merged. Stage 4 is next.
+Stage 3 passed its gate and is merged. Stage 4 passed its gate and is merged: sharpness (4.1) was skipped after two attempts that stuttered or did not help (F-005 in 09), banded light (4.2), clean diagonals (4.3) and material marks (4.4) are done. Stage 5 has started: the laptop (5.1) is waiting at its gate.
 
 ## Keep in sync
 
