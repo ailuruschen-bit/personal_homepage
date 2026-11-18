@@ -868,8 +868,8 @@ something else.
 | 3     | 3.1  | done    | value plan as a grade on the render (`VALUE_PLAN` in `room.py`): the window wall lifted 16% and cooled, fading out below the table; benches down 14%; headrest covers darker; the foreground was already darkest |
 | 3     | 3.2  | done    | `cast()` in `room.py`: each wall fitting's outline slid away from its nearest light, dark against the object and fading; the poster and photos away from the neon, the panel, hammer box and frame away from the lamp, a band under each rack from the ceiling strip |
 | 3     | 3.3  | done    | `occlusion()` in `room.py`: soft dark lines along the creases, written in compartment coordinates: the window wall's floor, ceiling and corners, the side walls' ceiling edge, each bench's end against the window wall, its base on the floor and its backrest against the side wall, and the table's back edge; creases behind a bench do not show through it |
-| 3     | 3.4  | review  | the shade's open bottom glows; a cone of saturated warm light down the wall from it (`light_poly`), brightest near the shade, a pool on the panel and on the top of the right-hand backrest by the wall |
-| 3     | 3.5  | pending |                                                                                                                                                                                                                                            |
+| 3     | 3.4  | done    | the shade's open bottom glows; a cone of saturated warm light down the wall from it (`light_poly`), brightest near the shade, a pool on the panel and on the top of the right-hand backrest by the wall |
+| 3     | 3.5  | review  | window curtains as two round folds each, reflected edge, core shadow, half-tone, highlight, lit from their own light's side; `rim()` in `room.py` lays a thin edge of a light's colour on the side facing it (neon magenta, lamp warm) on the benches, curtains, luggage and cup; earlier in the stage the tube's sockets and the lamp's mount were given depth |
 | 3     | 3.6  | pending |                                                                                                                                                                                                                                            |
 | 4     | 4.1  | pending |                                                                                                                                                                                                                                            |
 | 4     | 4.2  | pending |                                                                                                                                                                                                                                            |
@@ -910,7 +910,7 @@ Done so far in stage 1, beyond what the step table names:
   behind the rack's rail this way.
 
 Stage 1 passed its gate and is merged. Stage 2 passed its gate and is merged.
-Stage 3 is under way: the value plan (3.1) passed its gate; cast shadows (3.2) passed review, with the tube's sockets and the lamp's mount given depth along the way; occlusion (3.3) passed review; the lamp's light (3.4) is built and waiting for review.
+Stage 3 is under way: the value plan (3.1) passed its gate; cast shadows (3.2) passed review, with the tube's sockets and the lamp's mount given depth along the way; occlusion (3.3) passed review; the lamp's light (3.4) passed review; core shadows and rim light (3.5) are built and waiting for review.
 
 ## Keep in sync
 

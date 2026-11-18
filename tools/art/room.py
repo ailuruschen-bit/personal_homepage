@@ -526,8 +526,8 @@ def rack(g, rnd, over_rack=True):
     # rack's level. From below, its underside shows between its front and the wall.
     # It is also flattened: bags laid on a rack are lower than they are wide.
     D = WALL_DIST
-    lug = g.flatten(LUGGAGE_FLAT, 92).at(0, -3).depth(LUGGAGE_Z[-1])
-    bx = lug.at(24, 0)
+    lug = g.flatten(LUGGAGE_FLAT, 92).at(0, -3, '_rim').depth(LUGGAGE_Z[-1])
+    bx = lug.at(24, 0, '_rim')
     um = g.flatten(LUGGAGE_FLAT, 92).at(2, -3).depth(LUGGAGE_Z[1])
     # x0, x1, height as written, colour, silhouette tag
     pieces = ((52, 88, 20, (176, 138, 98), None, 0), (96, 151, 24, (60, 140, 138), None, 7),
@@ -684,11 +684,17 @@ def window(g, rnd):
         g.rect(x + 2, 104, 5, 1, (130, 96, 50))
     # curtains, tied back on both sides
     cc = (58, 110, 96)
+    # Each curtain is two round folds. Across a fold, from the side away from
+    # its light: a reflected edge, the core shadow, the half-tone, the
+    # highlight and back (docs/13, L-03). The left curtain is lit from the
+    # neon on its left, the right one from the lamp on its right.
+    FOLDS = [0.78, 0.58, 0.86, 1.16, 1.32, 1.08, 0.74, 0.82, 0.6, 0.94, 1.24, 1.12, 0.76]
     for x0 in (123, 344):
         g.shadow(x0 - 1, 106, 16, 168, 0.62)
+        folds = FOLDS[::-1] if x0 < 240 else FOLDS
+        cg = g.at(0, 0, '_rim')
         for i in range(13):
-            k = [0.72, 0.9, 1.15, 1.3, 1.05, 0.8, 0.66, 0.84, 1.1, 1.26, 1.0, 0.78, 0.62][i]
-            g.rect(x0 + i, 104, 1, 164, mul(cc, k))
+            cg.rect(x0 + i, 104, 1, 164, mul(cc, folds[i]))
         for x in range(x0, x0 + 13, 2):
             g.rect(x, 100, 1, 5, (150, 112, 56))
         # tieback
@@ -1608,6 +1614,35 @@ def occlusion(a, bench, front, k):
     a[..., :3] = (a[..., :3] * (1 - OCCLUSION_STRENGTH * m)[..., None]).astype(np.uint8)
 
 
+# Rim light (docs/13, L-03): a thin edge of a light's colour on the side of a
+# rounded form that faces it. What a neon scene is lit by shows on its edges.
+# Each light: scene position, colour, strength, and reach in scene units.
+RIMS = [
+    ((97, 190), MAG, 1.3, 170),
+    ((384, 172), (255, 170, 90), 0.9, 100),
+]
+
+
+def rim(a, masks, k):
+    h, w = a.shape[:2]
+    m = np.zeros((h, w), bool)
+    for f in masks:
+        m |= np.asarray(f.resize((w, h), Image.NEAREST)) > 127
+    ys, xs = np.mgrid[0:h, 0:w].astype(np.float32)
+    sx, sy = xs / k - OX, ys / k
+    add = np.zeros((h, w, 3), np.float32)
+    for (lx, ly), c, strength, reach in RIMS:
+        dx, dy = lx - sx, ly - sy
+        dist = np.hypot(dx, dy) + 1e-6
+        fall = np.clip(1 - dist / reach, 0, 1) ** 2 * strength
+        # the neighbour two pixels toward the light: an edge if it is outside
+        ox, oy = np.rint(dx / dist * 2).astype(int), np.rint(dy / dist * 2).astype(int)
+        nx, ny = np.clip(xs.astype(int) + ox, 0, w - 1), np.clip(ys.astype(int) + oy, 0, h - 1)
+        edge = m & ~m[ny, nx]
+        add += (edge * fall)[..., None] * np.array(c, np.float32)
+    a[..., :3] = np.clip(a[..., :3] + add, 0, 255).astype(np.uint8)
+
+
 def build_room(seed=21, over_rack=True):
     """The carriage as one RGBA image at output resolution, and the silhouette
     mask of every interactive object at 1x, keyed by object id. A key ending in
@@ -1669,6 +1704,7 @@ def build_room(seed=21, over_rack=True):
     near = [g.masks.pop(t) for t in ('_bench', '_table', '_cup')]
     occlusion(a, near[0], near[1:] + [g.masks[t] for t in ('projects', 'about', 'journey')], k)
     value_plan(a, near, [g.masks[t] for t in ('projects', 'about', 'journey')], k)
+    rim(a, [g.masks.pop('_rim'), near[0], near[2], g.masks['stack']], k)
     # The page lays a vignette over the 480 scene (scene.css .vig) and must not
     # be made to cover the side extensions as well: overlays wider than the
     # scene, and gradients painted inside the extensions, both flickered in
