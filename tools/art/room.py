@@ -704,30 +704,66 @@ def window(g, rnd):
         g.px(x + 2, 99, (255, 240, 190))
         g.px(x + 3, 99, (255, 240, 190))
         g.rect(x + 2, 104, 5, 1, (130, 96, 50))
-    # curtains, tied back on both sides
+    # Curtains (docs/13, O-03), tied back on both sides: gathered on rings at
+    # the rod, pinched at the tie-back, flaring below it to a hem. The outer
+    # edge hangs straight; the inner edge follows the gathering. Across the
+    # cloth run three folds of different widths, each shaded from the side away
+    # from its light: reflected edge, core shadow, half-tone, highlight (L-03).
+    # The left curtain is lit from the neon on its left, the right from the lamp.
     cc = (58, 110, 96)
-    # Each curtain is two round folds. Across a fold, from the side away from
-    # its light: a reflected edge, the core shadow, the half-tone, the
-    # highlight and back (docs/13, L-03). The left curtain is lit from the
-    # neon on its left, the right one from the lamp on its right.
-    FOLDS = [0.78, 0.58, 0.86, 1.16, 1.32, 1.08, 0.74, 0.82, 0.6, 0.94, 1.24, 1.12, 0.76]
-    for x0 in (123, 344):
-        g.shadow(x0 - 1, 106, 16, 168, 0.62)
-        folds = FOLDS[::-1] if x0 < 240 else FOLDS
+    PROFILE = [0.8, 0.58, 0.86, 1.18, 1.32, 1.1, 0.8]
+    FOLD_EDGES = [0.0, 0.42, 0.7, 1.0]
+    TIE, TOP, HEM = 197, 104, 270
+
+    def width(y):
+        if y <= TIE:
+            return 16 - 7 * ((y - TOP) / (TIE - TOP)) ** 1.6
+        t = (y - TIE) / (HEM - TIE)
+        return 9 + 8 * (1 - (1 - t) ** 2)
+
+    def shade(f):
+        # smoothly across each fold, so the folds run as clean bands down the
+        # cloth instead of breaking into steps as the width changes
+        for a, b in zip(FOLD_EDGES, FOLD_EDGES[1:]):
+            if f <= b:
+                t = (f - a) / (b - a) * (len(PROFILE) - 1)
+                i = min(int(t), len(PROFILE) - 2)
+                return PROFILE[i] + (PROFILE[i + 1] - PROFILE[i]) * (t - i)
+        return PROFILE[-1]
+
+    for side, outer in ((-1, 120), (1, 360)):
         cg = g.at(0, 0, '_rim')
-        for i in range(13):
-            cg.rect(x0 + i, 104, 1, 164, mul(cc, folds[i]))
-        for x in range(x0, x0 + 13, 2):
-            g.rect(x, 100, 1, 5, (150, 112, 56))
-        # tieback
-        g.rect(x0, 196, 13, 3, BRASS)
-        g.rect(x0, 196, 13, 1, (255, 232, 160))
-        g.rect(x0, 200, 13, 2, mul(cc, 0.5))
-        for i in range(13):
-            hh = [0, 2, 4, 5, 4, 2, 0, 1, 3, 5, 4, 2, 0][i]
-            g.rect(x0 + i, 268, 1, hh + 1, mul(cc, 0.9))
-        g.rect(x0 + 6, 199, 1, 6, (190, 146, 70))
-        g.rect(x0 + 5, 205, 3, 3, (230, 190, 100))
+        g.shadow(outer - 2 if side < 0 else outer - 17, 106, 19, 168, 0.62)
+        for y in range(TOP, HEM + 1):
+            w = width(y)
+            n = max(1, round(w))
+            for i in range(n):
+                # 0 at the outer edge; both lights stand beyond the window's
+                # edges, so both curtains are lit from their outer side
+                k = shade((i + 0.5) / n)
+                x = outer + i if side < 0 else outer - i
+                k = k * (0.92 if y > HEM - 3 else 1.0)  # the hem's turned edge
+                cg.rect(x, y, 1, 1, mul(cc, k))
+        # the hem: a pale line where the cloth turns, and its shadow
+        w = round(width(HEM))
+        xa = outer if side < 0 else outer - w + 1
+        g.rect(xa, HEM - 3, w, 1, mul(cc, 1.25))
+        g.rect(xa, HEM + 1, w, 1, mul(cc, 0.45))
+        # rings on the rod
+        wt = round(width(TOP))
+        for k in range(0, wt, 3):
+            x = outer + k if side < 0 else outer - k
+            g.rect(x, 100, 2, 4, (150, 112, 56))
+            g.px(x, 100, (255, 226, 150))
+        # the tie-back, pinching the cloth, and its tassel
+        wt = round(width(TIE))
+        xa = outer if side < 0 else outer - wt + 1
+        g.rect(xa - 1, TIE - 1, wt + 2, 3, BRASS)
+        g.rect(xa - 1, TIE - 1, wt + 2, 1, (255, 232, 160))
+        g.rect(xa, TIE + 2, wt, 1, mul(cc, 0.5))
+        tx = xa + wt // 2
+        g.rect(tx, TIE + 2, 1, 6, (190, 146, 70))
+        g.rect(tx - 1, TIE + 8, 3, 3, (230, 190, 100))
     # window frame
     fr = (104, 118, 158)
     g.shadow(133, 108, 214, 174, 0.55)
