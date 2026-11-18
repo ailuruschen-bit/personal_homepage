@@ -104,7 +104,7 @@ def P(X, Y, Z):
 
 # The cup and saucer were drawn too large for the laptop beside them: they are
 # drawn at COFFEE_SCALE about the middle of the saucer's foot.
-COFFEE_AT = (283, 360)
+COFFEE_AT = (283, 367)
 COFFEE_SCALE = 0.62
 
 # Small animated things the page lays over the art, each x y relative to what
