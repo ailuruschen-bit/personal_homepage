@@ -536,10 +536,14 @@ def rack(g, rnd, over_rack=True):
     bx.shade(60, 72, 4, 20, 0.8)
     # holdall
     c = (60, 140, 138)
+    # rounded at the far end only: the near end meets its side face square,
+    # or the corner between them opens up
     lug.rrect(96, 68, 55, 24, 7, c)
+    lug.rect(140, 68, 11, 24, c)
     lug.rrect(98, 69, 51, 8, 4, mul(c, 1.28))
-    lug.rect(100, 84, 47, 7, mul(c, 0.74))
-    lug.rect(98, 77, 51, 1, mul(c, 0.6))
+    lug.rect(140, 69, 11, 8, mul(c, 1.28))
+    lug.rect(100, 84, 51, 7, mul(c, 0.74))
+    lug.rect(98, 77, 53, 1, mul(c, 0.6))
     for x in (110, 134):
         lug.rect(x, 68, 4, 24, mul(c, 0.62))
         lug.rect(x, 68, 1, 24, mul(c, 0.9))
