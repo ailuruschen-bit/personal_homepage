@@ -500,9 +500,9 @@ def rack(g, rnd, over_rack=True):
     bx = lug.at(24, 0)
     um = g.flatten(LUGGAGE_FLAT, 92).at(2, -3).depth(LUGGAGE_Z[1])
     # x0, x1, height as written, colour, silhouette tag
-    pieces = ((52, 88, 20, (176, 138, 98), None), (96, 151, 24, (60, 140, 138), None),
-              (326, 394, 34, (150, 96, 62), 'stack'), (400, 448, 4, (44, 50, 84), None))
-    for x0, x1, h, c, tag in pieces:
+    pieces = ((52, 88, 20, (176, 138, 98), None, 0), (96, 151, 24, (60, 140, 138), None, 1),
+              (326, 394, 34, (150, 96, 62), 'stack', 0), (400, 448, 4, (44, 50, 84), None, 0))
+    for x0, x1, h, c, tag, r_ in pieces:
         xa, xb = (x0 - 240) / WALL_SCALE, (x1 - 240) / WALL_SCALE
         zl = LUGGAGE_Z[-1 if x1 < 240 else 1]
         quad(g, [(xa, RACK_Y, D), (xb, RACK_Y, D), (xb, RACK_Y, zl), (xa, RACK_Y, zl)], mul(c, 0.34))
@@ -513,13 +513,22 @@ def rack(g, rnd, over_rack=True):
     # each piece's side that faces the middle of the compartment, running back
     # to the wall: its body colour in shade, a lit top edge, and a band or two
     # carried round from the front
-    for x0, x1, h, c, tag in pieces:
+    for x0, x1, h, c, tag, r_ in pieces:
         xs = (x1 if x1 < 240 else x0)
         zl = LUGGAGE_Z[-1 if x1 < 240 else 1]
         X, top = (xs - 240) / WALL_SCALE, RACK_Y + h * LUGGAGE_FLAT / WALL_SCALE
         t = g.at(0, 0, tag) if tag else g
-        quad(t, [(X, RACK_Y, D), (X, top, D), (X, top, zl), (X, RACK_Y, zl)], mul(c, 0.6))
-        t.line([ri(P(X, top, D)), ri(P(X, top, zl))], mul(c, 0.95))
+        # a piece rounded at its corners (the holdall) is a rounded section
+        # carried back to the wall: the flat side stops short of the top
+        # corner, and the rounded edge runs back as a strip
+        rd = (7 if r_ else 0) / WALL_SCALE
+        I = -1 if x1 < 240 else 1  # toward the piece's inside
+        # Seen from below, only the upper rounded edge matters: the rack's rail
+        # hides the lower one.
+        quad(t, [(X, RACK_Y, D), (X, top - rd, D), (X, top - rd, zl), (X, RACK_Y, zl)], mul(c, 0.6))
+        if rd:
+            quad(t, [(X + I * rd, top, D), (X, top - rd, D), (X, top - rd, zl), (X + I * rd, top, zl)], mul(c, 0.95))
+        t.line([ri(P(X + I * rd, top, D)), ri(P(X + I * rd, top, zl))], mul(c, 0.95))
         t.line([ri(P(X, RACK_Y + 0.004, D)), ri(P(X, RACK_Y + 0.004, zl))], mul(c, 0.4))
         if h >= 20:
             for f in (0.3, 0.7):
@@ -536,14 +545,10 @@ def rack(g, rnd, over_rack=True):
     bx.shade(60, 72, 4, 20, 0.8)
     # holdall
     c = (60, 140, 138)
-    # rounded at the far end only: the near end meets its side face square,
-    # or the corner between them opens up
     lug.rrect(96, 68, 55, 24, 7, c)
-    lug.rect(140, 68, 11, 24, c)
     lug.rrect(98, 69, 51, 8, 4, mul(c, 1.28))
-    lug.rect(140, 69, 11, 8, mul(c, 1.28))
-    lug.rect(100, 84, 51, 7, mul(c, 0.74))
-    lug.rect(98, 77, 53, 1, mul(c, 0.6))
+    lug.rect(100, 84, 47, 7, mul(c, 0.74))
+    lug.rect(98, 77, 51, 1, mul(c, 0.6))
     for x in (110, 134):
         lug.rect(x, 68, 4, 24, mul(c, 0.62))
         lug.rect(x, 68, 1, 24, mul(c, 0.9))
