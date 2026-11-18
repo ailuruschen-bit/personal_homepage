@@ -865,8 +865,8 @@ something else.
 | 2     | 2.1  | done    | cup and saucer drawn at 0.62 about the saucer's foot; pen lengthened to about 14 cm; steam and cursor positions generated                                                                                                                  |
 | 2     | 2.2  | done    | journey is a map along the back of the table, mostly rolled into a tube with a rubber band, the open strip askew, creased, a coffee ring, its near corner curling up; the cup stays where it was, in front of it, and is cut out of the map's sprite; the pen moves to the left of the laptop; the line display is a decoy with no hotspot; the rack keeps its box |
 | 2     | 2.3  | done    | business card behind the ticket, peeking out on the table side; ticket moved in from the edge; reserved: notebook at the table's front-left corner, hobby object in place of the holdall                                                   |
-| 3     | 3.1  | review  | value plan as a grade on the render (`VALUE_PLAN` in `room.py`): the window wall lifted 16% and cooled, fading out below the table; benches down 14%; headrest covers darker; the foreground was already darkest |
-| 3     | 3.2  | pending |                                                                                                                                                                                                                                            |
+| 3     | 3.1  | done    | value plan as a grade on the render (`VALUE_PLAN` in `room.py`): the window wall lifted 16% and cooled, fading out below the table; benches down 14%; headrest covers darker; the foreground was already darkest |
+| 3     | 3.2  | review  | `cast()` in `room.py`: each wall fitting's outline slid away from its nearest light, dark against the object and fading; the poster and photos away from the neon, the panel, hammer box and frame away from the lamp, a band under each rack from the ceiling strip |
 | 3     | 3.3  | pending |                                                                                                                                                                                                                                            |
 | 3     | 3.4  | pending |                                                                                                                                                                                                                                            |
 | 3     | 3.5  | pending |                                                                                                                                                                                                                                            |
@@ -910,7 +910,7 @@ Done so far in stage 1, beyond what the step table names:
   behind the rack's rail this way.
 
 Stage 1 passed its gate and is merged. Stage 2 passed its gate and is merged.
-Stage 3 has started: the value plan (3.1) is built and waiting at its gate.
+Stage 3 is under way: the value plan (3.1) passed its gate; cast shadows (3.2) are built and waiting for review.
 
 ## Keep in sync
 

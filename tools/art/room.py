@@ -773,8 +773,24 @@ def poster(g, x, y, w, h, kind):
     g.rect(x + w - 8, y + h - 8, 4, 5, (200, 70, 70))
 
 
+def cast(g, x, y, w, h, dx, dy, k=0.3, steps=6):
+    """The shadow an object standing off the wall throws on it (docs/13, L-01):
+    its outline (x, y, w, h) slid (dx, dy) away from the light that casts it,
+    darkest and hardest against the object and fading along its length. Draw
+    it before the object, which covers the part beneath itself."""
+    for i in range(steps, 0, -1):  # far and pale first; nearer steps cover them
+        t = i / steps
+        g.shadow(round(x + dx * t), round(y + dy * t), w, h, k + (1 - k) * 0.7 * t)
+
+
 def walls(g, rnd):
+    # Every fitting throws a shadow away from its nearest light: the neon tube
+    # on the left, the lamp on the right, the ceiling strip over the racks.
+    # ---- the racks' shadow on the wall below them, from the ceiling strip
+    for x0, x1 in ((24, 158), (322, 456)):
+        cast(g, x0, 86, x1 - x0, 5, 0, 9, 0.4)
     # ---- left wall
+    cast(g, 37, 115, 54, 76, -10, 4)  # the poster, left of the tube
     poster(g, 40, 118, 48, 70, 'sunset')
     # neon tube
     g.line([(97, 58), (97, 96)], (30, 30, 50))
@@ -790,12 +806,13 @@ def walls(g, rnd):
     g.light(56, 110, 84, 176, MAG, 0.6)
     # instant photos
     for x, y, c in ((106, 146, (90, 130, 170)), (109, 166, (190, 120, 90))):
-        g.shadow(x, y + 1, 13, 15, 0.7)
+        cast(g, x, y, 12, 14, 5, 2, 0.3, 3)  # right beside the tube: short, hard
         g.rect(x, y, 12, 14, (238, 234, 224))
         g.rect(x + 1, y + 1, 10, 9, c)
         g.rect(x + 1, y + 7, 10, 3, mul(c, 0.6))
         g.px(x + 6, y - 1, (220, 70, 70))
     # speaker
+    cast(g, 84, 264, 24, 16, -3, 6, 0.35, 4)
     g.rect(84, 264, 24, 16, (52, 58, 90))
     g.rect(84, 264, 24, 1, (110, 118, 156))
     for y in range(267, 278, 2):
@@ -822,7 +839,7 @@ def walls(g, rnd):
     g.light(348, 176, 72, 84, (255, 160, 80), 0.34)
     g.light(362, 116, 44, 30, (255, 160, 80), 0.2)
     # control panel (outside any focus region, decorative only)
-    g.shadow(365, 204, 42, 38, 0.6)
+    cast(g, 365, 203, 40, 36, 1, 9)  # straight under the lamp
     g.rect(365, 203, 40, 36, (92, 104, 142))
     g.rect(365, 203, 40, 1, (160, 172, 206))
     g.rect(365, 238, 40, 1, (44, 50, 80))
@@ -837,8 +854,9 @@ def walls(g, rnd):
     g.lrect(397, 231, 3, 3, (255, 80, 80), 0.8)
     g.lrect(392, 231, 3, 3, (90, 255, 150), 0.7)
     # small picture frame and emergency hammer
+    cast(g, 406, 110, 38, 34, 7, -6, 0.4)  # above and right of the lamp
     poster(g, 408, 112, 34, 30, 'moon')
-    g.shadow(423, 188, 26, 30, 0.6)
+    cast(g, 422, 186, 24, 28, 7, 7)  # below and right of it
     g.rect(422, 186, 24, 28, (196, 56, 62))
     g.rect(422, 186, 24, 1, (255, 120, 120))
     g.rect(422, 213, 24, 1, (110, 30, 40))
