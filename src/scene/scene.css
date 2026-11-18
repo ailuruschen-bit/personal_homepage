@@ -202,6 +202,17 @@
     0 0/300% 100%;
   animation: pass 1.5s linear infinite;
 }
+/* The carriage's art is pixel art at 2 pixels per scene unit and is shown
+   larger than that. Smooth scaling blurred every edge (docs/13, R-01), so the
+   carriage's images are scaled by nearest neighbour: .room, the side images,
+   and the objects' sprites and their fronts. */
+.room,
+.ext.l,
+.ext.r,
+.pop > i,
+.pop-front {
+  image-rendering: pixelated;
+}
 .room {
   position: absolute;
   inset: 0;
