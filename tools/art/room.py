@@ -9,7 +9,7 @@ import os
 import random
 
 import numpy as np
-from PIL import Image, ImageChops, ImageDraw
+from PIL import Image, ImageChops, ImageDraw, ImageFilter
 
 import parts
 import px
@@ -1542,6 +1542,59 @@ def value_plan(a, near, objects, k):
     a[..., :3] = np.clip(a[..., :3] * gain, 0, 255).astype(np.uint8)
 
 
+# Occlusion (docs/13, L-02): where two surfaces meet, each darkens the other.
+# The creases are written in compartment coordinates, (X, Y, Z) pairs, and
+# drawn as soft dark lines over the rendered picture. Things standing on the
+# table are left out of it: they are in front of every crease they overlap.
+OCCLUSION_STRENGTH = 0.5
+OCCLUSION_BLUR = 2.4  # scene units
+
+
+def creases():
+    HW, C, D, N = ROOM_HALF_WIDTH, ROOM_CEILING, WALL_DIST, Z_NEAR
+    # each crease: points, width, and whether the benches stand in front of it
+    lines = [
+        # the window wall's edges: floor, ceiling and the two corners
+        ([(-HW, 0, D), (HW, 0, D)], 3, True),
+        ([(-HW, C, D), (HW, C, D)], 3, True),
+        ([(-HW, 0, D), (-HW, C, D)], 3, True),
+        ([(HW, 0, D), (HW, C, D)], 3, True),
+    ]
+    for s in (-1, 1):
+        base = s * (SEAT_INNER + 0.04)
+        lines += [
+            # the side walls' ceiling edge, and the backrest's top against the side wall
+            ([(s * HW, C, D), (s * HW, C, N)], 3, True),
+            ([(s * HW, BACK_TOP, D), (s * HW, BACK_TOP, N)], 2, False),
+            # the bench's base on the floor
+            ([(base, 0, D), (base, 0, N)], 2, False),
+            # the bench's end against the window wall
+            ([(base, 0, D), (base, SEAT_H - 0.12, D), (s * SEAT_INNER, SEAT_H - 0.075, D),
+              (s * (SEAT_INNER + 0.16), SEAT_H, D), (s * BACK_FACE, SEAT_H, D),
+              (s * BACK_FACE, BACK_TOP - 0.05, D), (s * (BACK_FACE + 0.04), BACK_TOP, D),
+              (s * HW, BACK_TOP, D)], 3, False),
+        ]
+    return lines
+
+
+def occlusion(a, bench, front, k):
+    h, w = a.shape[:2]
+    up = lambda f: np.asarray(f.resize((w, h), Image.NEAREST)) > 127
+    to = lambda q: ((P(*q)[0] + OX) * k, P(*q)[1] * k)
+    layers = {True: Image.new('L', (w, h), 0), False: Image.new('L', (w, h), 0)}
+    for pts, width, behind in creases():
+        ImageDraw.Draw(layers[behind]).line([to(q) for q in pts], fill=255, width=round(width * k), joint='curve')
+    # the table's back edge against the wainscot (scene units)
+    ImageDraw.Draw(layers[True]).line([((150 + OX) * k, 327 * k), ((330 + OX) * k, 327 * k)], fill=200, width=2 * k)
+    blur = lambda im: np.asarray(im.filter(ImageFilter.GaussianBlur(OCCLUSION_BLUR * k)), np.float32) / 255
+    behind, on = blur(layers[True]), blur(layers[False])
+    behind[up(bench)] = 0  # creases behind the benches do not show through them
+    m = np.maximum(behind, on)
+    for f in front:
+        m[up(f)] = 0
+    a[..., :3] = (a[..., :3] * (1 - OCCLUSION_STRENGTH * m)[..., None]).astype(np.uint8)
+
+
 def build_room(seed=21, over_rack=True):
     """The carriage as one RGBA image at output resolution, and the silhouette
     mask of every interactive object at 1x, keyed by object id. A key ending in
@@ -1601,6 +1654,7 @@ def build_room(seed=21, over_rack=True):
     k = px.SCALE
     a = np.asarray(im).copy()
     near = [g.masks.pop(t) for t in ('_bench', '_table', '_cup')]
+    occlusion(a, near[0], near[1:] + [g.masks[t] for t in ('projects', 'about', 'journey')], k)
     value_plan(a, near, [g.masks[t] for t in ('projects', 'about', 'journey')], k)
     # The page lays a vignette over the 480 scene (scene.css .vig) and must not
     # be made to cover the side extensions as well: overlays wider than the

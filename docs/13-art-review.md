@@ -866,8 +866,8 @@ something else.
 | 2     | 2.2  | done    | journey is a map along the back of the table, mostly rolled into a tube with a rubber band, the open strip askew, creased, a coffee ring, its near corner curling up; the cup stays where it was, in front of it, and is cut out of the map's sprite; the pen moves to the left of the laptop; the line display is a decoy with no hotspot; the rack keeps its box |
 | 2     | 2.3  | done    | business card behind the ticket, peeking out on the table side; ticket moved in from the edge; reserved: notebook at the table's front-left corner, hobby object in place of the holdall                                                   |
 | 3     | 3.1  | done    | value plan as a grade on the render (`VALUE_PLAN` in `room.py`): the window wall lifted 16% and cooled, fading out below the table; benches down 14%; headrest covers darker; the foreground was already darkest |
-| 3     | 3.2  | review  | `cast()` in `room.py`: each wall fitting's outline slid away from its nearest light, dark against the object and fading; the poster and photos away from the neon, the panel, hammer box and frame away from the lamp, a band under each rack from the ceiling strip |
-| 3     | 3.3  | pending |                                                                                                                                                                                                                                            |
+| 3     | 3.2  | done    | `cast()` in `room.py`: each wall fitting's outline slid away from its nearest light, dark against the object and fading; the poster and photos away from the neon, the panel, hammer box and frame away from the lamp, a band under each rack from the ceiling strip |
+| 3     | 3.3  | review  | `occlusion()` in `room.py`: soft dark lines along the creases, written in compartment coordinates: the window wall's floor, ceiling and corners, the side walls' ceiling edge, each bench's end against the window wall, its base on the floor and its backrest against the side wall, and the table's back edge; creases behind a bench do not show through it |
 | 3     | 3.4  | pending |                                                                                                                                                                                                                                            |
 | 3     | 3.5  | pending |                                                                                                                                                                                                                                            |
 | 3     | 3.6  | pending |                                                                                                                                                                                                                                            |
@@ -910,7 +910,7 @@ Done so far in stage 1, beyond what the step table names:
   behind the rack's rail this way.
 
 Stage 1 passed its gate and is merged. Stage 2 passed its gate and is merged.
-Stage 3 is under way: the value plan (3.1) passed its gate; cast shadows (3.2) are built and waiting for review.
+Stage 3 is under way: the value plan (3.1) passed its gate; cast shadows (3.2) passed review, with the tube's sockets and the lamp's mount given depth along the way; occlusion (3.3) is built and waiting for review.
 
 ## Keep in sync
 
