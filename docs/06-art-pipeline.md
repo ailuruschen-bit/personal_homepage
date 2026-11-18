@@ -115,6 +115,13 @@ fine layer.
 
 ## The layers
 
+`Cv.fpoly()` (and `Off.fpoly()`, `Off.frect()`) draw filled shapes on the same
+layer, for objects whose outline is made of shallow diagonals: the laptop is
+drawn there whole. The fine layer lies over all the 1x art, so an object moved
+onto it has to move entirely, or its fine parts cover its 1x parts. Under a
+fine shape the 1x emission is cleared and the shadow canvas set to unshadowed,
+as under any solid.
+
 ### `street.py` + `city.py` — the mid distance (`c2.webp`)
 
 The longest strip and the most machinery. `build_c2` assembles:
@@ -238,4 +245,3 @@ only here and never become sprites. The window wall, everything not in front of
 it, takes the `far` gain and tint, which fades out below the table; the benches
 take the `bench` gain. Tune the numbers in `VALUE_PLAN`, and judge the result on
 `luma.png` from `npm run art:preview`.
-
