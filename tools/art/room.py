@@ -1650,6 +1650,37 @@ def rim(a, masks, k):
     a[..., :3] = np.clip(a[..., :3] + add, 0, 255).astype(np.uint8)
 
 
+# Reflections (docs/13, L-05) on the varnished table: the laptop screen's
+# light on the top in front of it, the lamp's sheen toward the back right, and
+# a specular along the brass front edge where those lights catch it. Each:
+# centre, radii in scene units, colour, strength. They are added to the
+# rendered picture on the table only, never on what stands on it. The floor's
+# reflections of the neon and the lamp would fall below the frame, and the
+# glass's lies under the blinds (scene.css .glass).
+TABLE_SHEEN = [
+    ((196, 360), (44, 9), (90, 130, 255), 0.42),
+    ((318, 334), (22, 5), (255, 196, 130), 0.34),
+    ((196, 372), (40, 1.6), (150, 190, 255), 0.6),
+    ((300, 372), (34, 1.6), (255, 220, 160), 0.7),
+]
+
+
+def reflections(a, table, front, k):
+    h, w = a.shape[:2]
+    up = lambda f: np.asarray(f.resize((w, h), Image.NEAREST)) > 127
+    on = up(table)
+    for f in front:
+        on &= ~up(f)
+    ys, xs = np.mgrid[0:h, 0:w].astype(np.float32)
+    sx, sy = xs / k - OX, ys / k
+    add = np.zeros((h, w, 3), np.float32)
+    for (cx, cy), (rx, ry), c, strength in TABLE_SHEEN:
+        f = np.exp(-(((sx - cx) / rx) ** 2 + ((sy - cy) / ry) ** 2)) * strength
+        add += f[..., None] * np.array(c, np.float32)
+    add *= on[..., None]
+    a[..., :3] = np.clip(a[..., :3] + add, 0, 255).astype(np.uint8)
+
+
 def build_room(seed=21, over_rack=True):
     """The carriage as one RGBA image at output resolution, and the silhouette
     mask of every interactive object at 1x, keyed by object id. A key ending in
@@ -1712,6 +1743,7 @@ def build_room(seed=21, over_rack=True):
     occlusion(a, near[0], near[1:] + [g.masks[t] for t in ('projects', 'about', 'journey')], k)
     value_plan(a, near, [g.masks[t] for t in ('projects', 'about', 'journey')], k)
     rim(a, [g.masks.pop('_rim'), near[0], near[2], g.masks['stack']], k)
+    reflections(a, near[1], [near[2]] + [g.masks[t] for t in ('projects', 'about', 'journey')], k)
     # The page lays a vignette over the 480 scene (scene.css .vig) and must not
     # be made to cover the side extensions as well: overlays wider than the
     # scene, and gradients painted inside the extensions, both flickered in
