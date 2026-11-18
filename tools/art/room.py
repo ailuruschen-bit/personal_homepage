@@ -354,6 +354,10 @@ class Off:
     def shadow(self, x, y, w, h, k=0.5, ell=False):
         self.cv.shadow(*self._r(x, y, w, h), k, ell)
 
+    def light_poly(self, pts, c, k=1.0):
+        """An invisible polygon of light, like light(): a cone, a beam."""
+        self.cv.l.polygon(self._p(pts), fill=mul(c, k))
+
     def shade(self, x, y, w, h, k):
         parts.shade(self.cv, *self._r(x, y, w, h), k)
 
@@ -859,11 +863,22 @@ def walls(g, rnd):
         g.line([(384 + (x - 384) * 0.62, 150), (x, 172)], (214, 150, 84))
     g.rect(364, 172, 40, 2, BRASS)
     g.rect(364, 172, 40, 1, (255, 236, 170))
-    g.lrect(376, 174, 16, 2, (255, 214, 150), 0.8, body=(255, 244, 214))
+    # the open bottom of the shade, seen from below: its bright inside
+    g.lpoly([(367, 174), (401, 174), (396, 177), (372, 177)], (255, 214, 150), 0.85, body=(255, 236, 196))
+    g.lrect(376, 174, 16, 2, (255, 230, 180), 0.9, body=(255, 248, 226))
     for y in range(176, 196, 2):
         g.px(400, y, (214, 180, 110))
     g.rect(399, 196, 3, 3, BRASS)
-    g.light(348, 176, 72, 84, (255, 160, 80), 0.34)
+    # The light it throws (docs/13, L-04): a cone down the wall from the open
+    # bottom of the shade, brightest near the shade, then a pool on the panel
+    # below and on the top of the right-hand backrest by the wall, and a little
+    # up the wall above the shade
+    warm = (255, 128, 40)  # saturated: the wall is blue, a paler warm only greys it
+    g.light_poly([(362, 176), (406, 176), (452, 330), (318, 330)], warm, 0.3)
+    g.light_poly([(366, 176), (402, 176), (434, 300), (336, 300)], warm, 0.46)
+    g.light_poly([(370, 176), (398, 176), (414, 250), (354, 250)], warm, 0.64)
+    g.light(348, 180, 72, 80, (255, 160, 80), 0.5)
+    g.light(404, 214, 70, 34, warm, 0.45)
     g.light(362, 116, 44, 30, (255, 160, 80), 0.2)
     # control panel (outside any focus region, decorative only)
     cast(g, 365, 203, 40, 36, 1, 9)  # straight under the lamp
