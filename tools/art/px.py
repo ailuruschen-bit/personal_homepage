@@ -245,12 +245,17 @@ def render(
     wrap=True,
     alpha_glow=1.6,
     scale=None,
+    bands=None,
 ):
     """Light and composite.
 
     final = albedo * (ambient + spill from the blurred emission) + emission + bloom
     fog: (colour, strength 0..1, or a per-row array) atmospheric haze for the mid
     and far distance.
+    bands: if given, the step between bands of light (docs/13, R-02). The light
+    falling on albedo is cut into bands of its strength, keeping its colour, with
+    an ordered dither between them on the 1x grid, so the light is made of the
+    same pixels as the things it falls on. Bloom and emission are left smooth.
     """
     k = SCALE if scale is None else scale
     alb8, em8 = np.asarray(cv.im), np.asarray(cv.em)
@@ -296,6 +301,13 @@ def render(
     shd = np.asarray(sh_im).astype(np.float32) / 255
     if shd.min() < 1:
         light = light * gaussian_filter(shd, shadow_blur)[..., None]
+    if bands:
+        bayer = np.array([[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]], np.float32) / 16 + 1 / 32
+        t = np.tile(bayer, (h // (4 * k) + 1, w // (4 * k) + 1))
+        t = np.repeat(np.repeat(t, k, axis=0), k, axis=1)[:h, :w, None]
+        m = light.max(axis=2, keepdims=True)
+        q = np.floor(m / bands + t) * bands
+        light = light * np.where(m > 1e-4, q / np.maximum(m, 1e-4), 1)
     # An emitter no longer picks up reflected light; otherwise a wall of lit windows
     # washes out into solid white
     emax = em.max(axis=2, keepdims=True)

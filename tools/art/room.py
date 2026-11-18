@@ -1681,6 +1681,10 @@ def reflections(a, table, front, k):
     a[..., :3] = np.clip(a[..., :3] + add, 0, 255).astype(np.uint8)
 
 
+# The step between bands of light on the room (px.render, docs/13 R-02)
+BANDS = float(os.environ.get('BANDS', '0.12')) or None
+
+
 def build_room(seed=21, over_rack=True):
     """The carriage as one RGBA image at output resolution, and the silhouette
     mask of every interactive object at 1x, keyed by object id. A key ending in
@@ -1736,6 +1740,7 @@ def build_room(seed=21, over_rack=True):
         haze=(0.2, 7.0),
         wrap=False,
         shadow_blur=2.6,
+        bands=BANDS,
     )
     k = px.SCALE
     a = np.asarray(im).copy()
