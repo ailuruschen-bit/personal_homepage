@@ -481,10 +481,10 @@ def rounded_side(g, xr, r, c, zl):
     for k in range(7):  # top corner, from the top round to the side
         a = math.radians(-90 + 15 * k)
         prof.append((xr - r + r * math.cos(a), y0 + r + r * math.sin(a), 'top' if k < 3 else 'edge'))
-    # then straight down: the lower corner sits on the rack, behind its rail,
-    # and the underside is not seen
-    prof.append((xr, y1, 'side'))
-    tone = {'top': 0.95, 'edge': 0.78, 'side': 0.6}
+    for k in range(7):  # bottom corner, from the side round to the bottom
+        a = math.radians(15 * k)
+        prof.append((xr - r + r * math.cos(a), y1 - r + r * math.sin(a), 'side' if k < 4 else 'under'))
+    tone = {'top': 0.95, 'edge': 0.78, 'side': 0.6, 'under': 0.48}
     sc = lambda o, x, y: (o._xy(x, y)[0] - OX, o._xy(x, y)[1])
     for (xa, ya, _), (xb, yb, kind) in zip(prof, prof[1:]):
         g.poly([sc(front, xa, ya), sc(front, xb, yb), sc(back, xb, yb), sc(back, xa, ya)], mul(c, tone[kind]))
@@ -554,6 +554,10 @@ def rack(g, rnd, over_rack=True):
             for f in (0.3, 0.7):
                 z = zl + (D - zl) * f
                 quad(t, [(X, RACK_Y, z), (X, top, z), (X, top, z + 0.025), (X, RACK_Y, z + 0.025)], mul(c, 0.42))
+    # Seen from below, the rack is nearer than the bottoms of the sides: what
+    # of them shows below the rail shows through the slats, behind the rail.
+    # The fronts, nearer still, are drawn after and stay over the rail.
+    rack_frame(g, -1)
     # cardboard box
     bx.rect(28, 72, 36, 20, (176, 138, 98))
     bx.rect(28, 72, 36, 2, (210, 174, 130))
