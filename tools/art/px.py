@@ -91,6 +91,30 @@ class Cv:
         if k:
             self.fe.line(p, fill=mul(c, k), width=w)
 
+    def _fine(self):
+        s = SCALE
+        if self.fi is None:
+            self.fi = Image.new('RGBA', (self.w * s, self.h * s), (0, 0, 0, 0))
+            self.fem = Image.new('RGB', (self.w * s, self.h * s), (0, 0, 0))
+            self.fd = ImageDraw.Draw(self.fi)
+            self.fe = ImageDraw.Draw(self.fem)
+        return s
+
+    def fpoly(self, pts, c, k=0.0, body=None):
+        """A polygon drawn at the output resolution, like fline(): for shapes
+        whose edges are shallow diagonals, which EPX tears into ragged steps
+        (docs/13, R-03). Coordinates are art pixels, fractional allowed. Under it
+        the 1x emission is cleared and the shadow canvas left alone, as a solid
+        would; k makes it emit."""
+        s = self._fine()
+        off = (s - 1) / 2
+        p = [(x * s + off, y * s + off) for x, y in pts]
+        self.fd.polygon(p, fill=tuple(body or c) + (255,))
+        self.fe.polygon(p, fill=mul(c, k) if k else (0, 0, 0))
+        q = [(round(x), round(y)) for x, y in pts]
+        self.e.polygon(q, fill=(0, 0, 0))
+        self.s.polygon(q, fill=255)
+
     def shadow(self, x, y, w, h, k=0.5, ell=False):
         """Lay down a soft shadow; lower k is darker. Solids drawn afterwards are unaffected."""
         box = [x, y, x + w - 1, y + h - 1]

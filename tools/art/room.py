@@ -333,6 +333,16 @@ class Off:
         self.cv.fline([self._xy(x, y) for x, y in pts], c, k, width * self.k, body)
         self._mline(pts, width)
 
+    def fpoly(self, pts, c, k=0.0, body=None):
+        """A polygon on the fine layer (Cv.fpoly), recorded in the silhouette."""
+        self.cv.fpoly([self._xy(x, y) for x, y in pts], c, k, body)
+        m = self._m()
+        if m:
+            m.polygon(self._p(pts), fill=255)
+
+    def frect(self, x, y, w, h, c, k=0.0):
+        self.fpoly([(x, y), (x + w - 1, y), (x + w - 1, y + h - 1), (x, y + h - 1)], c, k)
+
     def lpoly(self, pts, c, k=1.0, body=None):
         p = self._p(pts)
         self.cv.d.polygon(p, fill=tuple(body or c) + (255,))
@@ -1249,13 +1259,16 @@ def table(g, rnd):
     table_map(g, T)
     # ---- laptop (the projects object)
     o = place(g, 'projects', (148, 288))
+    # Drawn on the fine layer: its lid and base are shallow diagonals, which EPX
+    # tears into ragged steps (docs/13, R-03). Everything of it goes there, or
+    # the fine lid would cover the 1x screen.
     o.shadow(152, 350, 96, 20, 0.5)
     S = [(148, 292), (214, 288), (218, 343), (151, 348)]
-    o.poly(S, (44, 48, 76))
-    o.line([S[0], S[1]], (120, 128, 166))
-    o.line([S[0], S[3]], (84, 92, 130))
+    o.fpoly(S, (44, 48, 76))
+    o.fline([S[0], S[1]], (120, 128, 166))
+    o.fline([S[0], S[3]], (84, 92, 130))
     D = [(151, 295), (212, 291), (215, 340), (154, 345)]
-    o.lpoly(D, (40, 70, 160), 0.42, body=(22, 30, 62))
+    o.fpoly(D, (40, 70, 160), 0.42, body=(22, 30, 62))
     colors = [MAG, CYA, (255, 206, 110), (150, 255, 170), (226, 232, 255), (176, 130, 255)]
     tilt = (D[0][1] - D[1][1]) / (D[1][0] - D[0][0])  # follow the slope of the screen top edge
     for r in range(10):
@@ -1279,30 +1292,30 @@ def table(g, rnd):
             if x > 204:
                 break
     for r in range(10):
-        o.lpx(154, int(round(299 + r * 4.4)), (90, 110, 170), 0.5)
-    o.px(181, 290, (20, 22, 40))
+        o.frect(154, int(round(299 + r * 4.4)), 1, 1, (90, 110, 170), 0.5)
+    o.frect(181, 290, 1, 1, (20, 22, 40))
     # body
     Bq = [(151, 348), (218, 343), (241, 357), (170, 366)]
     # the base has a thickness: its front edge and the side toward the middle
     # of the room both show, and it sits on the table on a dark contact line
-    o.poly([(151, 348), (170, 366), (170, 370), (151, 351)], (60, 64, 94))
-    o.poly([(218, 343), (241, 357), (241, 361), (218, 346)], (74, 80, 112))
-    o.poly([(170, 366), (241, 357), (241, 361), (170, 370)], (96, 102, 138))
-    o.line([(170, 367), (241, 358)], (132, 140, 176))
-    o.line([(170, 371), (241, 362)], (20, 18, 30))
-    o.line([(241, 357), (241, 361)], (150, 158, 192))
-    o.poly(Bq, (160, 168, 198))
-    o.line([Bq[0], Bq[1]], (40, 44, 70))
+    o.fpoly([(151, 348), (170, 366), (170, 370), (151, 351)], (60, 64, 94))
+    o.fpoly([(218, 343), (241, 357), (241, 361), (218, 346)], (74, 80, 112))
+    o.fpoly([(170, 366), (241, 357), (241, 361), (170, 370)], (96, 102, 138))
+    o.fline([(170, 367), (241, 358)], (132, 140, 176))
+    o.fline([(170, 371), (241, 362)], (20, 18, 30))
+    o.fline([(241, 357), (241, 361)], (150, 158, 192))
+    o.fpoly(Bq, (160, 168, 198))
+    o.fline([Bq[0], Bq[1]], (40, 44, 70))
     for t in (0.14, 0.32, 0.5, 0.68):
         a, b = lerp(Bq[0], Bq[3], t), lerp(Bq[1], Bq[2], t)
         n = 13
         for i in range(n):
             p = lerp(a, b, (i + 0.5) / n)
             x, y = ri(p)
-            o.rect(x - 1, y, 3, 2, (104, 112, 148))
-            o.px(x - 1, y, (128, 136, 172))
+            o.frect(x - 1, y, 3, 2, (104, 112, 148))
+            o.frect(x - 1, y, 1, 1, (128, 136, 172))
     tp = lerp(lerp(Bq[0], Bq[3], 0.86), lerp(Bq[1], Bq[2], 0.86), 0.5)
-    o.rect(int(tp[0]) - 7, int(tp[1]) - 1, 14, 3, (182, 190, 216))
+    o.frect(int(tp[0]) - 7, int(tp[1]) - 1, 14, 3, (182, 190, 216))
     o.light(150, 336, 100, 40, (90, 150, 255), 0.5)
     o.light(146, 286, 76, 60, (80, 120, 255), 0.25)
     # ---- coffee
