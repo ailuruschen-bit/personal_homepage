@@ -1,15 +1,11 @@
 import type { SceneEls } from './dom';
 import type { Phase } from './opening';
 import { hotspotByTarget, hotspots, nearestHotspot, zoneDistance } from './hotspots';
-import { toScene, toScreen, unitSize, type Camera, type ScenePoint } from './units';
+import { toScene, unitSize, type Camera, type ScenePoint } from './units';
 import { CAMERA } from './geometry.gen';
 
 /** How many scene units beyond its region an object still snaps from */
 const SNAP_RANGE = 22;
-/** Pull range: within this distance the light drifts toward the nearest object */
-const PULL_RANGE = 78;
-/** How far the light leans toward the object at full pull, as a fraction */
-const PULL_MAX = 0.42;
 /** Distance must change by at least this much to count as movement; ignores jitter */
 const DIRECTION_EPSILON = 1.2;
 /** Scene y of .cam's zoom origin; geometry.gen.css sets the same point as its transform-origin */
@@ -21,7 +17,6 @@ const FREE_RADIUS = 30;
 const TAU = {
   camera: 0.34,
   parallax: 0.09,
-  pull: 0.07,
   poolMove: 0.045,
   poolShape: 0.04,
   dim: 0.12,
@@ -36,8 +31,10 @@ type Direction = -1 | 0 | 1; // -1 approaching, 1 moving away
  * Focus system.
  *
  * The camera holds one fixed wide framing and never pushes in with the pointer.
- * What snaps is the light and the object itself: the light is pulled in as the
- * pointer approaches, snaps the moment it enters range, and lets go on leaving.
+ * What snaps is the object and its pool of light: the object takes focus the
+ * moment the pointer enters range, and lets go on leaving. The pointer light
+ * itself always stays exactly under the pointer; it is never pulled toward an
+ * object, which made it drift away from the cursor.
  */
 export class FocusEngine {
   private focus: string | null = null;
@@ -53,8 +50,6 @@ export class FocusEngine {
   private lightAt: ScenePoint = { X: 240, Y: 240 };
   private distanceRef = new Map<string, number>();
   private direction = new Map<string, Direction>();
-  private pull = 0;
-  private pullTarget = 0;
   private lastFrame = 0;
   private raf = 0;
 
@@ -160,26 +155,10 @@ export class FocusEngine {
     return best;
   }
 
-  /** The light follows the pointer one to one, and is pulled toward an object as it nears */
+  /** The light follows the pointer one to one */
   private placeLight() {
     if (!this.pointer) return;
-    let { x, y } = this.pointer;
-
-    this.pullTarget = 0;
-    if (!this.focus) {
-      const { hotspot, distance } = nearestHotspot(toScene(x, y, this.camera));
-      const approaching = this.direction.get(hotspot.target) === -1;
-      if (distance < PULL_RANGE && approaching) {
-        const t = 1 - (distance - SNAP_RANGE) / (PULL_RANGE - SNAP_RANGE);
-        this.pullTarget = PULL_MAX * t * t;
-      }
-      if (this.pull > 0.002) {
-        const anchor = toScreen(hotspot.light.x, hotspot.light.y, this.camera);
-        x += (anchor.x - x) * this.pull;
-        y += (anchor.y - y) * this.pull;
-      }
-    }
-
+    const { x, y } = this.pointer;
     this.lightAt = toScene(x, y, this.camera);
     this.els.ml.style.transform = `translate3d(${x.toFixed(1)}px,${y.toFixed(1)}px,0)`;
   }
@@ -192,7 +171,6 @@ export class FocusEngine {
     this.syncFrame();
     this.updateParallax(dt);
 
-    this.pull += (this.pullTarget - this.pull) * smoothing(dt, TAU.pull);
     if (active && this.pointer) this.placeLight();
     this.els.ml.style.opacity = active && this.pointer ? '1' : '0';
 

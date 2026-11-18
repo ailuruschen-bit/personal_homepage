@@ -228,3 +228,14 @@ with the object. That is why none of it may be written by hand again.
   `scene.css`: if a city layer changes pixel size, the CSS has to follow.
 - Nothing positional — see [Geometry comes from the art](#geometry-comes-from-the-art).
   `npm run art:check` covers the city layers' sizes against `--tile` too.
+
+## Value plan
+
+After lighting, `value_plan()` in `room.py` grades the rendered picture by depth
+plane, so that the planes separate in value (docs/13, L-06). The benches, the
+table and the cup record silhouettes (`_bench`, `_table`, `_cup`) that are used
+only here and never become sprites. The window wall, everything not in front of
+it, takes the `far` gain and tint, which fades out below the table; the benches
+take the `bench` gain. Tune the numbers in `VALUE_PLAN`, and judge the result on
+`luma.png` from `npm run art:preview`.
+

@@ -29,8 +29,8 @@ export const CAMERA = { x: 240, y: 209.808 };
 /** Every focusable object, keyed by the section it opens */
 export const OBJECTS: Record<string, ObjectGeometry> = {
   cover: { zone: [142, 116, 338, 272], light: { x: 240, y: 194, rx: 108, ry: 84 } },
-  projects: { zone: [137, 279, 252, 376], light: { x: 195, y: 328, rx: 62, ry: 52 }, box: { x: 148, y: 288, w: 94, h: 81 }, sprite: '/assets/obj-projects.webp' },
+  projects: { zone: [137, 279, 252, 376], light: { x: 195, y: 328, rx: 62, ry: 52 }, box: { x: 148, y: 288, w: 94, h: 84 }, sprite: '/assets/obj-projects.webp' },
   about: { zone: [308, 344, 360, 378], light: { x: 334, y: 361, rx: 30, ry: 20 }, box: { x: 312, y: 347, w: 39, h: 23 }, sprite: '/assets/obj-about.webp' },
   stack: { zone: [318.7565, 36.95, 409.9482, 92.9085], light: { x: 364.3523, y: 67.0018, rx: 49.7409, ry: 29.0155 }, box: { x: 325, y: 46, w: 75, h: 44 }, sprite: '/assets/obj-stack.webp', front: { x: 322, y: 77, w: 85, h: 17, sprite: '/assets/obj-stack-front.webp' } },
-  journey: { zone: [227, 320, 310, 353], light: { x: 265, y: 336, rx: 38, ry: 14 }, box: { x: 233, y: 326, w: 65, h: 19 }, sprite: '/assets/obj-journey.webp' },
+  journey: { zone: [227, 317, 310, 348], light: { x: 265, y: 332, rx: 38, ry: 12 }, box: { x: 233, y: 323, w: 63, h: 18 }, sprite: '/assets/obj-journey.webp' },
 };

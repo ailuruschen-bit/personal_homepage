@@ -19,6 +19,24 @@ anything that is now load-bearing because of it.
 
 ---
 
+## F-004 Chrome: the return from outside stutters with more paint on the glass
+
+**Symptom.** After stage 3.6 added two faint edge gradients to `.glass` (a
+reflection of the neon and the lamp at the glass's edges), the camera's flight
+back from outside into the carriage stuttered badly in Chrome.
+
+**Cause.** Not traced to the frame, but the gradients were the only runtime
+change in that step; the art passes in it are baked into the image and the
+assets did not grow. `.glass` fills the window and scales with `.cam` through
+the whole return, and each extra layer is repainted at every scale.
+
+**Fix.** `.glass` went back to its single streak gradient, and the stutter went
+away. The reflection made little visible difference and was dropped.
+
+**Load-bearing.** Keep `.win` and everything in it as light to paint as it is:
+no added gradients, shadows or filters on elements that scale with the camera's
+flight. Effects for the glass belong in the art or nowhere.
+
 ## F-003 Chrome: focus shading flicker and slow pointer light
 
 **Fixed for the current scene; manual Chrome checks passed.** The exact browser

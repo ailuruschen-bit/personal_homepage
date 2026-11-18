@@ -44,8 +44,8 @@ size; `units.ts` does the conversion. Every position is defined once, in the art
 script that draws it, and generated for the page.
 
 **Focus, not zoom.** Pointing at the scene never moves the camera. What snaps
-is the light and the object: the light is pulled in as the pointer approaches,
-snaps on entering range, and lets go on leaving. The references are the iPadOS
+is the object and its pool of light: it snaps on entering range and lets go on
+leaving, while the pointer light stays under the pointer. The references are the iPadOS
 pointer and tvOS focus — lift and brighten the target rather than dimming
 everything else. (Scroll is a different matter — see below.)
 

@@ -4,11 +4,12 @@ Drawn on a 720x480 canvas covering scene x in [-120, 600), then cut into the
 central 480 plus a 120-wide extension on each side. The window wall is drawn
 face-on; everything that recedes is built from the perspective model below.
 """
+import math
 import os
 import random
 
 import numpy as np
-from PIL import Image, ImageChops, ImageDraw
+from PIL import Image, ImageChops, ImageDraw, ImageFilter
 
 import parts
 import px
@@ -42,7 +43,7 @@ OBJECTS = {
     'stack': dict(at=(326, 52), zone=(-10, -9, 78, 45), light=(34, 20, 48, 28), on_rack=1),
     # the map, half open on the table; the line display on the wall is the
     # railway's, and only a decoy
-    'journey': dict(at=(233, 326), zone=(-6, -6, 77, 27), light=(32, 10, 38, 14)),
+    'journey': dict(at=(233, 323), zone=(-6, -6, 77, 25), light=(32, 9, 38, 12)),
 }
 
 # The window opening (x y w h) and its corner radius. The page lays .win over it:
@@ -103,7 +104,7 @@ def P(X, Y, Z):
 
 # The cup and saucer were drawn too large for the laptop beside them: they are
 # drawn at COFFEE_SCALE about the middle of the saucer's foot.
-COFFEE_AT = (281, 356)
+COFFEE_AT = (283, 367)
 COFFEE_SCALE = 0.62
 
 # Small animated things the page lays over the art, each x y relative to what
@@ -353,6 +354,10 @@ class Off:
     def shadow(self, x, y, w, h, k=0.5, ell=False):
         self.cv.shadow(*self._r(x, y, w, h), k, ell)
 
+    def light_poly(self, pts, c, k=1.0):
+        """An invisible polygon of light, like light(): a cone, a beam."""
+        self.cv.l.polygon(self._p(pts), fill=mul(c, k))
+
     def shade(self, x, y, w, h, k):
         parts.shade(self.cv, *self._r(x, y, w, h), k)
 
@@ -466,6 +471,31 @@ def shell(g, rnd):
 
 
 # ------------------------------------------------------------------ Luggage rack
+def rounded_side(g, xr, r, c, zl):
+    """The end of a piece of luggage whose front is a rounded rectangle (the
+    holdall, written at x .. xr, y 68 .. 92 with corner radius r), carried back
+    from its front at depth zl to the wall. The profile is taken from the very
+    outline the front is drawn with, so the side meets the rounded corners
+    exactly: each step of the outline becomes a strip running back, shaded by
+    which way it faces."""
+    base = g.flatten(LUGGAGE_FLAT, 92).at(0, -3)
+    front, back = base.depth(zl), base
+    y0, y1 = 68, 92
+    prof = []
+    for k in range(7):  # top corner, from the top round to the side
+        a = math.radians(-90 + 15 * k)
+        prof.append((xr - r + r * math.cos(a), y0 + r + r * math.sin(a), 'top' if k < 3 else 'edge'))
+    for k in range(7):  # bottom corner, from the side round to the bottom
+        a = math.radians(15 * k)
+        prof.append((xr - r + r * math.cos(a), y1 - r + r * math.sin(a), 'side' if k < 4 else 'under'))
+    tone = {'top': 0.95, 'edge': 0.78, 'side': 0.6, 'under': 0.48}
+    sc = lambda o, x, y: (o._xy(x, y)[0] - OX, o._xy(x, y)[1])
+    for (xa, ya, _), (xb, yb, kind) in zip(prof, prof[1:]):
+        g.poly([sc(front, xa, ya), sc(front, xb, yb), sc(back, xb, yb), sc(back, xa, ya)], mul(c, tone[kind]))
+    # the lit line along the top of the rounded edge
+    g.line([ri(sc(front, xr - r, y0)), ri(sc(back, xr - r, y0))], mul(c, 1.05))
+
+
 def rack(g, rnd, over_rack=True):
     # the railway's line display: a decoy, not an object
     o = g
@@ -496,13 +526,13 @@ def rack(g, rnd, over_rack=True):
     # rack's level. From below, its underside shows between its front and the wall.
     # It is also flattened: bags laid on a rack are lower than they are wide.
     D = WALL_DIST
-    lug = g.flatten(LUGGAGE_FLAT, 92).at(0, -3).depth(LUGGAGE_Z[-1])
-    bx = lug.at(24, 0)
+    lug = g.flatten(LUGGAGE_FLAT, 92).at(0, -3, '_rim').depth(LUGGAGE_Z[-1])
+    bx = lug.at(24, 0, '_rim')
     um = g.flatten(LUGGAGE_FLAT, 92).at(2, -3).depth(LUGGAGE_Z[1])
     # x0, x1, height as written, colour, silhouette tag
-    pieces = ((52, 88, 20, (176, 138, 98), None), (96, 151, 24, (60, 140, 138), None),
-              (326, 394, 34, (150, 96, 62), 'stack'), (400, 448, 4, (44, 50, 84), None))
-    for x0, x1, h, c, tag in pieces:
+    pieces = ((52, 88, 20, (176, 138, 98), None, 0), (96, 151, 24, (60, 140, 138), None, 7),
+              (326, 394, 34, (150, 96, 62), 'stack', 0), (400, 448, 4, (44, 50, 84), None, 0))
+    for x0, x1, h, c, tag, r_ in pieces:
         xa, xb = (x0 - 240) / WALL_SCALE, (x1 - 240) / WALL_SCALE
         zl = LUGGAGE_Z[-1 if x1 < 240 else 1]
         quad(g, [(xa, RACK_Y, D), (xb, RACK_Y, D), (xb, RACK_Y, zl), (xa, RACK_Y, zl)], mul(c, 0.34))
@@ -513,11 +543,14 @@ def rack(g, rnd, over_rack=True):
     # each piece's side that faces the middle of the compartment, running back
     # to the wall: its body colour in shade, a lit top edge, and a band or two
     # carried round from the front
-    for x0, x1, h, c, tag in pieces:
+    for x0, x1, h, c, tag, r_ in pieces:
         xs = (x1 if x1 < 240 else x0)
         zl = LUGGAGE_Z[-1 if x1 < 240 else 1]
         X, top = (xs - 240) / WALL_SCALE, RACK_Y + h * LUGGAGE_FLAT / WALL_SCALE
         t = g.at(0, 0, tag) if tag else g
+        if r_:
+            rounded_side(g, x1, r_, c, zl)
+            continue
         quad(t, [(X, RACK_Y, D), (X, top, D), (X, top, zl), (X, RACK_Y, zl)], mul(c, 0.6))
         t.line([ri(P(X, top, D)), ri(P(X, top, zl))], mul(c, 0.95))
         t.line([ri(P(X, RACK_Y + 0.004, D)), ri(P(X, RACK_Y + 0.004, zl))], mul(c, 0.4))
@@ -525,6 +558,10 @@ def rack(g, rnd, over_rack=True):
             for f in (0.3, 0.7):
                 z = zl + (D - zl) * f
                 quad(t, [(X, RACK_Y, z), (X, top, z), (X, top, z + 0.025), (X, RACK_Y, z + 0.025)], mul(c, 0.42))
+    # Seen from below, the rack is nearer than the bottoms of the sides: what
+    # of them shows below the rail shows through the slats, behind the rail.
+    # The fronts, nearer still, are drawn after and stay over the rail.
+    rack_frame(g, -1)
     # cardboard box
     bx.rect(28, 72, 36, 20, (176, 138, 98))
     bx.rect(28, 72, 36, 2, (210, 174, 130))
@@ -647,11 +684,17 @@ def window(g, rnd):
         g.rect(x + 2, 104, 5, 1, (130, 96, 50))
     # curtains, tied back on both sides
     cc = (58, 110, 96)
+    # Each curtain is two round folds. Across a fold, from the side away from
+    # its light: a reflected edge, the core shadow, the half-tone, the
+    # highlight and back (docs/13, L-03). The left curtain is lit from the
+    # neon on its left, the right one from the lamp on its right.
+    FOLDS = [0.78, 0.58, 0.86, 1.16, 1.32, 1.08, 0.74, 0.82, 0.6, 0.94, 1.24, 1.12, 0.76]
     for x0 in (123, 344):
         g.shadow(x0 - 1, 106, 16, 168, 0.62)
+        folds = FOLDS[::-1] if x0 < 240 else FOLDS
+        cg = g.at(0, 0, '_rim')
         for i in range(13):
-            k = [0.72, 0.9, 1.15, 1.3, 1.05, 0.8, 0.66, 0.84, 1.1, 1.26, 1.0, 0.78, 0.62][i]
-            g.rect(x0 + i, 104, 1, 164, mul(cc, k))
+            cg.rect(x0 + i, 104, 1, 164, mul(cc, folds[i]))
         for x in range(x0, x0 + 13, 2):
             g.rect(x, 100, 1, 5, (150, 112, 56))
         # tieback
@@ -740,29 +783,63 @@ def poster(g, x, y, w, h, kind):
     g.rect(x + w - 8, y + h - 8, 4, 5, (200, 70, 70))
 
 
+def cast(g, x, y, w, h, dx, dy, k=0.3, steps=6):
+    """The shadow an object standing off the wall throws on it (docs/13, L-01):
+    its outline (x, y, w, h) slid (dx, dy) away from the light that casts it,
+    darkest and hardest against the object and fading along its length. Draw
+    it before the object, which covers the part beneath itself."""
+    for i in range(steps, 0, -1):  # far and pale first; nearer steps cover them
+        t = i / steps
+        g.shadow(round(x + dx * t), round(y + dy * t), w, h, k + (1 - k) * 0.7 * t)
+
+
 def walls(g, rnd):
+    # Every fitting throws a shadow away from its nearest light: the neon tube
+    # on the left, the lamp on the right, the ceiling strip over the racks.
+    # ---- the racks' shadow on the wall below them, from the ceiling strip
+    for x0, x1 in ((24, 158), (322, 456)):
+        cast(g, x0, 86, x1 - x0, 5, 0, 9, 0.4)
     # ---- left wall
+    cast(g, 37, 115, 54, 76, -10, 4)  # the poster, left of the tube
     poster(g, 40, 118, 48, 70, 'sunset')
     # neon tube
     g.line([(97, 58), (97, 96)], (30, 30, 50))
     g.line([(97, 104), (97, 123)], (30, 30, 50))
-    g.rect(91, 121, 12, 8, (64, 68, 100))
-    g.rect(91, 121, 12, 1, (120, 126, 162))
-    g.rect(91, 252, 12, 8, (64, 68, 100))
+    # The two sockets are shallow boxes on the wall, so the tube sits close to
+    # it. The tube is left of and
+    # level with the vanishing point, so each shows its face, its side toward
+    # the middle of the room, and the face toward the tube: the underside of
+    # the top one and the top of the bottom one, lit by the tube itself.
+    cap, side, rim = (64, 68, 100), (38, 40, 66), (120, 126, 162)
+    # top socket
+    g.poly([(103, 121), (104, 122), (104, 130), (103, 129)], side)
+    g.poly([(91, 129), (103, 129), (104, 130), (92, 130)], (150, 104, 170))
+    g.rect(91, 121, 12, 8, cap)
+    g.rect(91, 121, 12, 1, rim)
+    g.rect(91, 121, 1, 8, mul(cap, 1.25))
+    g.rect(91, 128, 12, 1, mul(cap, 0.7))
+    g.px(103, 121, rim)
+    # bottom socket
+    g.poly([(103, 252), (104, 251), (104, 259), (103, 260)], side)
+    g.poly([(91, 252), (103, 252), (104, 251), (92, 251)], (176, 116, 190))
+    g.rect(91, 252, 12, 8, cap)
+    g.rect(91, 252, 12, 1, (210, 150, 220))
+    g.rect(91, 252, 1, 8, mul(cap, 1.25))
     g.rect(91, 259, 12, 1, (30, 32, 54))
     g.rect(90, 130, 1, 122, (44, 48, 76))
-    g.lrect(93, 129, 8, 123, MAG, 0.95, body=(255, 150, 215))
-    g.lrect(95, 129, 4, 123, (255, 200, 235), 1.0, body=(255, 226, 244))
-    g.lrect(96, 131, 2, 119, (255, 255, 255), 1.0)
+    g.lrect(94, 129, 8, 123, MAG, 0.95, body=(255, 150, 215))
+    g.lrect(96, 129, 4, 123, (255, 200, 235), 1.0, body=(255, 226, 244))
+    g.lrect(97, 131, 2, 119, (255, 255, 255), 1.0)
     g.light(56, 110, 84, 176, MAG, 0.6)
     # instant photos
     for x, y, c in ((106, 146, (90, 130, 170)), (109, 166, (190, 120, 90))):
-        g.shadow(x, y + 1, 13, 15, 0.7)
+        cast(g, x, y, 12, 14, 5, 2, 0.3, 3)  # right beside the tube: short, hard
         g.rect(x, y, 12, 14, (238, 234, 224))
         g.rect(x + 1, y + 1, 10, 9, c)
         g.rect(x + 1, y + 7, 10, 3, mul(c, 0.6))
         g.px(x + 6, y - 1, (220, 70, 70))
     # speaker
+    cast(g, 84, 264, 24, 16, -3, 6, 0.35, 4)
     g.rect(84, 264, 24, 16, (52, 58, 90))
     g.rect(84, 264, 24, 1, (110, 118, 156))
     for y in range(267, 278, 2):
@@ -770,10 +847,20 @@ def walls(g, rnd):
             g.px(x + (y // 2) % 2, y, (22, 24, 42))
     # ---- right wall
     # wall lamp
-    g.rect(379, 132, 10, 7, (84, 90, 126))
+    # its wall plate, a box right of and above the vanishing point: its face,
+    # the side toward the middle of the room, and its underside, warm from the
+    # shade below; then the stem as a round rod, and a collar where they meet
+    plate = (84, 90, 126)
+    g.poly([(379, 132), (376, 135), (376, 142), (379, 139)], (48, 52, 80))
+    g.poly([(379, 139), (389, 139), (386, 142), (376, 142)], (128, 104, 96))
+    g.rect(379, 132, 10, 7, plate)
     g.rect(379, 132, 10, 1, (150, 156, 190))
-    g.rect(382, 139, 4, 9, (150, 116, 60))
-    g.rect(382, 139, 1, 9, (230, 190, 110))
+    g.rect(388, 132, 1, 7, mul(plate, 1.2))
+    g.rect(379, 138, 10, 1, mul(plate, 0.72))
+    for x, c in ((382, (120, 90, 46)), (383, (240, 204, 124)), (384, (200, 160, 88)), (385, (128, 96, 50))):
+        g.rect(x, 140, 1, 8, c)
+    g.rect(381, 139, 6, 2, mul(BRASS, 0.7))
+    g.rect(382, 139, 4, 1, BRASS)
     g.rect(370, 147, 28, 3, BRASS)
     g.rect(370, 147, 28, 1, (255, 236, 170))
     g.lpoly([(372, 150), (396, 150), (403, 172), (365, 172)], (255, 176, 90), 0.5, body=(250, 196, 120))
@@ -786,10 +873,19 @@ def walls(g, rnd):
     for y in range(176, 196, 2):
         g.px(400, y, (214, 180, 110))
     g.rect(399, 196, 3, 3, BRASS)
+    # The light it throws (docs/13, L-04): a cone down the wall from the open
+    # bottom of the shade, starting just below it so the lamp itself stays as
+    # it was, brightest near the shade; a pool on the panel below and on the
+    # top of the right-hand backrest by the wall, and a little up the wall
+    warm = (255, 128, 40)  # saturated: the wall is blue, a paler warm only greys it
+    g.light_poly([(360, 184), (408, 184), (452, 330), (318, 330)], warm, 0.3)
+    g.light_poly([(364, 184), (404, 184), (434, 300), (336, 300)], warm, 0.46)
+    g.light_poly([(368, 184), (400, 184), (414, 250), (354, 250)], warm, 0.64)
     g.light(348, 176, 72, 84, (255, 160, 80), 0.34)
+    g.light(404, 214, 70, 34, warm, 0.45)
     g.light(362, 116, 44, 30, (255, 160, 80), 0.2)
     # control panel (outside any focus region, decorative only)
-    g.shadow(365, 204, 42, 38, 0.6)
+    cast(g, 365, 203, 40, 36, 1, 9)  # straight under the lamp
     g.rect(365, 203, 40, 36, (92, 104, 142))
     g.rect(365, 203, 40, 1, (160, 172, 206))
     g.rect(365, 238, 40, 1, (44, 50, 80))
@@ -804,8 +900,9 @@ def walls(g, rnd):
     g.lrect(397, 231, 3, 3, (255, 80, 80), 0.8)
     g.lrect(392, 231, 3, 3, (90, 255, 150), 0.7)
     # small picture frame and emergency hammer
+    cast(g, 406, 110, 38, 34, 7, -6, 0.4)  # above and right of the lamp
     poster(g, 408, 112, 34, 30, 'moon')
-    g.shadow(423, 188, 26, 30, 0.6)
+    cast(g, 422, 186, 24, 28, 7, 7)  # below and right of it
     g.rect(422, 186, 24, 28, (196, 56, 62))
     g.rect(422, 186, 24, 1, (255, 120, 120))
     g.rect(422, 213, 24, 1, (110, 30, 40))
@@ -985,7 +1082,7 @@ def table_map(g, T):
     o = g.at(0, 0, 'journey')
     paper = (232, 222, 196)
     # the flat sheet, a little askew
-    A, B, C, D = T(0.47, 0.14), T(0.77, 0.11), T(0.78, 0.35), T(0.48, 0.38)
+    A, B, C, D = T(0.47, 0.08), T(0.77, 0.05), T(0.78, 0.28), T(0.48, 0.31)
     o.poly([A, B, C, D], paper)
     g.line([(D[0], D[1] + 1), (C[0], C[1] + 1)], mul(WOOD, 0.55))  # its shadow on the wood
 
@@ -1094,7 +1191,7 @@ def bench(g, s):
 
     # headrest covers: one per seat, draped over the roll so they follow its
     # curve, with a hem along the bottom
-    cloth = (204, 198, 222)
+    cloth = (178, 172, 198)  # held below the wall in value (L-06)
     drape = [(BACK_FACE, BACK_TOP - 0.25), (BACK_FACE, BACK_TOP - 0.225)] + [(x - 0.004, y + 0.004) for x, y in BACK_ROLL]
     drape[2] = (BACK_FACE - 0.004, BACK_TOP - 0.05)
     tones = [0.7, 0.9] + [0.96, 1.04, 1.12, 1.2, 1.14]
@@ -1186,9 +1283,16 @@ def table(g, rnd):
     o.px(181, 290, (20, 22, 40))
     # body
     Bq = [(151, 348), (218, 343), (241, 357), (170, 366)]
+    # the base has a thickness: its front edge and the side toward the middle
+    # of the room both show, and it sits on the table on a dark contact line
+    o.poly([(151, 348), (170, 366), (170, 370), (151, 351)], (60, 64, 94))
+    o.poly([(218, 343), (241, 357), (241, 361), (218, 346)], (74, 80, 112))
+    o.poly([(170, 366), (241, 357), (241, 361), (170, 370)], (96, 102, 138))
+    o.line([(170, 367), (241, 358)], (132, 140, 176))
+    o.line([(170, 371), (241, 362)], (20, 18, 30))
+    o.line([(241, 357), (241, 361)], (150, 158, 192))
     o.poly(Bq, (160, 168, 198))
     o.line([Bq[0], Bq[1]], (40, 44, 70))
-    o.poly([(170, 366), (241, 357), (241, 359), (170, 368)], (92, 98, 132))
     for t in (0.14, 0.32, 0.5, 0.68):
         a, b = lerp(Bq[0], Bq[3], t), lerp(Bq[1], Bq[2], t)
         n = 13
@@ -1235,7 +1339,7 @@ def table(g, rnd):
     cg.ellipse(279, 331, 13, 3, (196, 130, 84))
     cg.px(284, 331, (236, 190, 140))
     cg.px(293, 333, (150, 96, 70))
-    cup = g.masks.pop('_cup')
+    cup = g.masks['_cup']
     g.masks['journey'] = ImageChops.multiply(g.masks['journey'], ImageChops.invert(cup))
     # ---- ticket (the about object)
     o = place(g, 'about', (316, 344))
@@ -1427,6 +1531,156 @@ def foreground(g, style=None):
         cv.sh.paste(255, (x0, 0, x0 + 120, H))
 
 
+# The value plan (docs/13, L-06): each depth plane keeps to its own band of
+# values, judged on the luminance view. The window wall is the lightest plane
+# and the coolest; the benches sit a step below it; the foreground (the side
+# images) is the darkest and is already drawn that way. The brightest values are
+# kept for the window and the light sources, which only clip if pushed.
+# Gains on the rendered picture: (multiplier, per-channel tint).
+VALUE_PLAN = {
+    'far': (1.16, (0.96, 1.0, 1.06)),
+    'bench': (0.86, (1.0, 1.0, 1.0)),
+}
+FAR_WALL = (24, 26, 456)  # the window wall's left, top and right, in scene units
+FAR_FADE = (326, 400)  # below the table the wall goes into shade: the lift fades out
+
+
+def value_plan(a, near, objects, k):
+    """near: silhouettes of the benches, the table and the cup, which stand in
+    front of the wall; objects: the table's interactive objects."""
+    h, w = a.shape[:2]
+    up = lambda m: np.asarray(m.resize((w, h), Image.NEAREST)) > 127
+    bench = up(near[0])
+    front = np.zeros((h, w), bool)
+    for m in near + objects:
+        front |= up(m)
+    x0, y0, x1 = FAR_WALL
+    ys = (np.arange(h, dtype=np.float32) + 0.5) / k
+    fade = np.clip((FAR_FADE[1] - ys) / (FAR_FADE[1] - FAR_FADE[0]), 0, 1)[:, None]
+    far = np.zeros((h, w), np.float32)
+    far[y0 * k :, (OX + x0) * k : (OX + x1) * k] = 1
+    far = far * fade * ~front
+    gain = np.ones((h, w, 3), np.float32)
+    g_, tint = VALUE_PLAN['far']
+    gain += far[..., None] * (g_ * np.array(tint, np.float32) - 1)
+    g_, tint = VALUE_PLAN['bench']
+    gain[bench] = g_ * np.array(tint, np.float32)
+    a[..., :3] = np.clip(a[..., :3] * gain, 0, 255).astype(np.uint8)
+
+
+# Occlusion (docs/13, L-02): where two surfaces meet, each darkens the other.
+# The creases are written in compartment coordinates, (X, Y, Z) pairs, and
+# drawn as soft dark lines over the rendered picture. Things standing on the
+# table are left out of it: they are in front of every crease they overlap.
+OCCLUSION_STRENGTH = 0.5
+OCCLUSION_BLUR = 2.4  # scene units
+
+
+def creases():
+    HW, C, D, N = ROOM_HALF_WIDTH, ROOM_CEILING, WALL_DIST, Z_NEAR
+    # each crease: points, width, and whether the benches stand in front of it
+    lines = [
+        # the window wall's edges: floor, ceiling and the two corners
+        ([(-HW, 0, D), (HW, 0, D)], 3, True),
+        ([(-HW, C, D), (HW, C, D)], 3, True),
+        ([(-HW, 0, D), (-HW, C, D)], 3, True),
+        ([(HW, 0, D), (HW, C, D)], 3, True),
+    ]
+    for s in (-1, 1):
+        base = s * (SEAT_INNER + 0.04)
+        lines += [
+            # the side walls' ceiling edge, and the backrest's top against the side wall
+            ([(s * HW, C, D), (s * HW, C, N)], 3, True),
+            ([(s * HW, BACK_TOP, D), (s * HW, BACK_TOP, N)], 2, False),
+            # the bench's base on the floor
+            ([(base, 0, D), (base, 0, N)], 2, False),
+            # the bench's end against the window wall
+            ([(base, 0, D), (base, SEAT_H - 0.12, D), (s * SEAT_INNER, SEAT_H - 0.075, D),
+              (s * (SEAT_INNER + 0.16), SEAT_H, D), (s * BACK_FACE, SEAT_H, D),
+              (s * BACK_FACE, BACK_TOP - 0.05, D), (s * (BACK_FACE + 0.04), BACK_TOP, D),
+              (s * HW, BACK_TOP, D)], 3, False),
+        ]
+    return lines
+
+
+def occlusion(a, bench, front, k):
+    h, w = a.shape[:2]
+    up = lambda f: np.asarray(f.resize((w, h), Image.NEAREST)) > 127
+    to = lambda q: ((P(*q)[0] + OX) * k, P(*q)[1] * k)
+    layers = {True: Image.new('L', (w, h), 0), False: Image.new('L', (w, h), 0)}
+    for pts, width, behind in creases():
+        ImageDraw.Draw(layers[behind]).line([to(q) for q in pts], fill=255, width=round(width * k), joint='curve')
+    # the table's back edge against the wainscot (scene units)
+    ImageDraw.Draw(layers[True]).line([((150 + OX) * k, 327 * k), ((330 + OX) * k, 327 * k)], fill=200, width=2 * k)
+    blur = lambda im: np.asarray(im.filter(ImageFilter.GaussianBlur(OCCLUSION_BLUR * k)), np.float32) / 255
+    behind, on = blur(layers[True]), blur(layers[False])
+    behind[up(bench)] = 0  # creases behind the benches do not show through them
+    m = np.maximum(behind, on)
+    for f in front:
+        m[up(f)] = 0
+    a[..., :3] = (a[..., :3] * (1 - OCCLUSION_STRENGTH * m)[..., None]).astype(np.uint8)
+
+
+# Rim light (docs/13, L-03): a thin edge of a light's colour on the side of a
+# rounded form that faces it. What a neon scene is lit by shows on its edges.
+# Each light: scene position, colour, strength, and reach in scene units.
+RIMS = [
+    ((97, 190), MAG, 1.3, 170),
+    ((384, 172), (255, 170, 90), 0.9, 100),
+]
+
+
+def rim(a, masks, k):
+    h, w = a.shape[:2]
+    m = np.zeros((h, w), bool)
+    for f in masks:
+        m |= np.asarray(f.resize((w, h), Image.NEAREST)) > 127
+    ys, xs = np.mgrid[0:h, 0:w].astype(np.float32)
+    sx, sy = xs / k - OX, ys / k
+    add = np.zeros((h, w, 3), np.float32)
+    for (lx, ly), c, strength, reach in RIMS:
+        dx, dy = lx - sx, ly - sy
+        dist = np.hypot(dx, dy) + 1e-6
+        fall = np.clip(1 - dist / reach, 0, 1) ** 2 * strength
+        # the neighbour two pixels toward the light: an edge if it is outside
+        ox, oy = np.rint(dx / dist * 2).astype(int), np.rint(dy / dist * 2).astype(int)
+        nx, ny = np.clip(xs.astype(int) + ox, 0, w - 1), np.clip(ys.astype(int) + oy, 0, h - 1)
+        edge = m & ~m[ny, nx]
+        add += (edge * fall)[..., None] * np.array(c, np.float32)
+    a[..., :3] = np.clip(a[..., :3] + add, 0, 255).astype(np.uint8)
+
+
+# Reflections (docs/13, L-05) on the varnished table: the laptop screen's
+# light on the top in front of it, the lamp's sheen toward the back right, and
+# a specular along the brass front edge where those lights catch it. Each:
+# centre, radii in scene units, colour, strength. They are added to the
+# rendered picture on the table only, never on what stands on it. The floor's
+# reflections of the neon and the lamp would fall below the frame, and the
+# glass's lies under the blinds (scene.css .glass).
+TABLE_SHEEN = [
+    ((196, 360), (44, 9), (90, 130, 255), 0.42),
+    ((318, 334), (22, 5), (255, 196, 130), 0.34),
+    ((196, 372), (40, 1.6), (150, 190, 255), 0.6),
+    ((300, 372), (34, 1.6), (255, 220, 160), 0.7),
+]
+
+
+def reflections(a, table, front, k):
+    h, w = a.shape[:2]
+    up = lambda f: np.asarray(f.resize((w, h), Image.NEAREST)) > 127
+    on = up(table)
+    for f in front:
+        on &= ~up(f)
+    ys, xs = np.mgrid[0:h, 0:w].astype(np.float32)
+    sx, sy = xs / k - OX, ys / k
+    add = np.zeros((h, w, 3), np.float32)
+    for (cx, cy), (rx, ry), c, strength in TABLE_SHEEN:
+        f = np.exp(-(((sx - cx) / rx) ** 2 + ((sy - cy) / ry) ** 2)) * strength
+        add += f[..., None] * np.array(c, np.float32)
+    add *= on[..., None]
+    a[..., :3] = np.clip(a[..., :3] + add, 0, 255).astype(np.uint8)
+
+
 def build_room(seed=21, over_rack=True):
     """The carriage as one RGBA image at output resolution, and the silhouette
     mask of every interactive object at 1x, keyed by object id. A key ending in
@@ -1446,9 +1700,10 @@ def build_room(seed=21, over_rack=True):
     floor_and_ceiling(g)
     side_wall(g, -1)
     side_wall(g, 1)
-    bench(g, -1)
-    bench(g, 1)
-    table(g, rng('table'))
+    # the benches record a silhouette for the value plan below
+    bench(g.at(0, 0, '_bench'), -1)
+    bench(g.at(0, 0, '_bench'), 1)
+    table(g.at(0, 0, '_table'), rng('table'))
     # Overall lighting: the ceiling strip washing the walls, cold light from outside
     g.light(-120, 40, 720, 50, (255, 214, 160), 0.26)
     wx, wy, ww, wh = WINDOW
@@ -1484,6 +1739,11 @@ def build_room(seed=21, over_rack=True):
     )
     k = px.SCALE
     a = np.asarray(im).copy()
+    near = [g.masks.pop(t) for t in ('_bench', '_table', '_cup')]
+    occlusion(a, near[0], near[1:] + [g.masks[t] for t in ('projects', 'about', 'journey')], k)
+    value_plan(a, near, [g.masks[t] for t in ('projects', 'about', 'journey')], k)
+    rim(a, [g.masks.pop('_rim'), near[0], near[2], g.masks['stack']], k)
+    reflections(a, near[1], [near[2]] + [g.masks[t] for t in ('projects', 'about', 'journey')], k)
     # The page lays a vignette over the 480 scene (scene.css .vig) and must not
     # be made to cover the side extensions as well: overlays wider than the
     # scene, and gradients painted inside the extensions, both flickered in
