@@ -1379,6 +1379,16 @@ def table(g, rnd):
     g.line([(BL[0], BL[1] + 1), (BR[0], BR[1] + 1)], mul(WOOD, 0.8))
     g.line([BL, FL], mul(WOOD, 1.25))
     g.line([BR, FR], mul(WOOD, 0.7))
+    # (docs/13, O-05) wear along the near edge, where arms rest: the varnish
+    # rubbed paler; and the rings old cups have left
+    TT = lambda u, v: lerp(lerp(BL, BR, u), lerp(FL, FR, u), v)
+    g.poly([TT(0.2, 0.88), TT(0.8, 0.88), TT(0.83, 1.0), TT(0.17, 1.0)], mul(WOOD, 1.07))
+    for _ in range(40):
+        u, v = rnd.uniform(0.2, 0.8), rnd.uniform(0.9, 1.0)
+        g.px(*ri(TT(u, v)), mul(WOOD, rnd.choice([1.14, 1.2])))
+    for cx_, cy_, rx, ry in ((338, 335, 5, 2), (134, 346, 4, 1.6)):
+        ring = [(cx_ + rx * math.cos(t / 12 * math.tau), cy_ + ry * math.sin(t / 12 * math.tau)) for t in range(13)]
+        g.fline(ring, mul(WOOD, 0.8))
     # edging and apron
     g.rect(118, 372, 245, 2, BRASS)
     g.rect(118, 372, 245, 1, (255, 236, 170))
@@ -1507,6 +1517,10 @@ def table(g, rnd):
     cg.rect(276, 333, 2, 22, (222, 220, 240))
     cg.rect(297, 333, 5, 19, (206, 204, 230))
     cg.rect(292, 335, 2, 12, (255, 255, 255))
+    # (docs/13, O-07) the core shadow before the far edge turns, and the
+    # neon's magenta caught down the near side
+    cg.rect(295, 335, 2, 17, (198, 196, 226))
+    cg.rect(278, 335, 1, 16, (244, 206, 244))
     cg.rect(273, 346, 28, 2, (150, 120, 206))
     cg.rect(273, 346, 3, 2, (120, 96, 176))
     cg.line([(275, 355), (280, 357), (294, 357), (299, 355)], (176, 174, 204))
@@ -1554,13 +1568,17 @@ def table(g, rnd):
     o.ellipse(round(hx) - 2, round(hy) - 1, 4, 3, mul(WOOD, 0.7))  # the punched hole
     for k in range(6):  # a barcode on the stub
         o.fline([Q(0.79 + k * 0.025, 0.58), Q(0.79 + k * 0.025, 0.86)], (60, 56, 76), width=0.5 + (k % 2) * 0.5)
-    # ---- pen, about 14 cm against the laptop, left of it
-    g.line([(124, 370), (150, 364)], (40, 60, 120), width=2)
-    g.line([(124, 371), (150, 365)], (24, 36, 80))
-    g.line([(125, 369), (143, 365)], (90, 110, 170))
-    g.line([(150, 364), (153, 363)], (200, 200, 214))
-    g.line([(128, 368), (135, 366)], BRASS)
-    g.px(124, 370, BRASS)
+    # ---- pen, about 14 cm against the laptop, left of it (docs/13, O-09): a
+    # barrel with a highlight down its lit side, a metal tip, a brass clip that
+    # stands off it, and its shadow on the table; on the fine layer
+    g.shadow(122, 369, 28, 3, 0.45)
+    g.fline([(123, 369.5), (147, 364.5)], (40, 60, 120), width=2)
+    g.fline([(123, 370.4), (147, 365.4)], (22, 32, 72))
+    g.fline([(124, 368.7), (144, 364.6)], (110, 132, 196))
+    g.fline([(147, 364.5), (150.5, 363.8)], (210, 212, 226), width=1.4)
+    g.fline([(127, 367.6), (135, 365.9)], BRASS, width=1)
+    g.fline([(127, 366.8), (133, 365.6)], (255, 236, 170), width=0.6)
+    g.fline([(122.6, 369.6), (124, 369.3)], BRASS, width=2)
 
 
 # ------------------------------------------------------------------ Foreground
