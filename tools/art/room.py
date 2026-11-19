@@ -776,8 +776,16 @@ def window(g, rnd):
     g.speckle(137, 111, 206, 166, 0.07, rnd, 0.3)
     g.line([(156, 112), (324, 112)], (176, 188, 220))
     g.line([(156, 276), (324, 276)], (60, 68, 104))
+    # the reveal's bevel (docs/13, O-01): lit along its top and on the left,
+    # where the neon is, in shadow along the right and the bottom
+    g.line([(158, 120), (322, 120)], mul(fr, 1.1))
+    g.line([(145, 133), (145, 256)], (150, 128, 196))
+    g.line([(146, 133), (146, 256)], mul(fr, 0.95))
+    g.line([(335, 133), (335, 256)], mul(fr, 0.62))
+    g.line([(158, 270), (322, 270)], mul(fr, 0.6))
     for x, y in ((145, 119), (334, 119), (145, 268), (334, 268), (240, 115), (240, 273), (141, 194), (338, 194)):
         g.rect(x, y, 2, 2, (190, 200, 228))
+        g.px(x, y, (246, 248, 255))
         g.px(x + 1, y + 2, (50, 56, 88))
         g.px(x + 2, y + 1, (50, 56, 88))
     # handle
@@ -790,12 +798,29 @@ def window(g, rnd):
     g.rect(130, 282, 220, 1, (50, 56, 88))
     g.rect(132, 283, 216, 2, (40, 46, 74))
     # odds and ends on the sill: a succulent and a coin
-    g.rect(154, 271, 9, 6, (176, 96, 70))
-    g.rect(153, 270, 11, 2, (208, 124, 90))
-    g.rect(155, 266, 2, 4, (86, 160, 110))
-    g.rect(158, 264, 3, 6, (106, 184, 124))
-    g.rect(161, 267, 2, 3, (76, 140, 100))
-    g.px(159, 263, (150, 220, 160))
+    # (docs/13, O-02) a terracotta pot, rim and soil, and a rosette of fat
+    # leaves, lit from the left; its shadow on the sill
+    g.shadow(155, 276, 14, 2, 0.5)
+    g.poly([(153, 270), (165, 270), (164, 277), (154, 277)], (176, 96, 70))
+    g.rect(154, 271, 2, 6, (206, 124, 90))
+    g.rect(162, 271, 2, 6, (140, 74, 56))
+    g.rect(152, 268, 14, 2, (214, 132, 96))
+    g.rect(152, 269, 14, 1, (160, 86, 64))
+    g.rect(153, 268, 12, 1, (70, 50, 44))
+    leaf, lit, dk = (96, 170, 116), (150, 214, 160), (60, 124, 86)
+    for pts, c in (
+        ([(154, 268), (151, 263), (153, 262), (157, 267)], dk),
+        ([(164, 268), (167, 263), (165, 262), (161, 267)], leaf),
+        ([(156, 267), (155, 260), (158, 259), (159, 267)], leaf),
+        ([(162, 267), (163, 260), (160, 259), (159, 267)], dk),
+        ([(158, 267), (158, 257), (160, 257), (160, 267)], lit),
+    ):
+        g.poly(pts, c)
+    g.px(158, 257, (200, 240, 200))
+    g.px(155, 260, (190, 232, 190))
+    # a coin by the pot
+    g.ellipse(170, 275, 4, 2, (200, 170, 96))
+    g.px(171, 275, (255, 236, 170))
     # nameplate
     g.rect(221, 284, 39, 6, (26, 28, 48))
     g.rect(221, 284, 39, 1, (70, 76, 110))
@@ -839,6 +864,19 @@ def poster(g, x, y, w, h, kind):
     g.rect(x + 4, y + h - 8, w - 14, 2, (70, 60, 70))
     g.rect(x + 4, y + h - 4, w - 22, 1, (150, 130, 130))
     g.rect(x + w - 8, y + h - 8, 4, 5, (200, 70, 70))
+    # (docs/13, O-15) tape over the top corners, the bottom corner on the side
+    # away from the light lifting off the wall, and a glare streak across the
+    # print from the light's side
+    for tx in (x - 3, x + w - 4):
+        g.poly([(tx, y - 1), (tx + 6, y - 3), (tx + 7, y), (tx + 1, y + 2)], (214, 210, 186))
+    lit_left = x > 240  # the small frame is lit by the lamp, on its left
+    cx = x + w - 1 if lit_left else x - 2  # the far bottom corner from the light
+    d = 1 if lit_left else -1
+    cy = y + h + 1
+    g.poly([(cx, cy), (cx, cy - 6), (cx - d * 6, cy)], (40, 36, 52))
+    g.poly([(cx - d * 1, cy - 1), (cx - d * 1, cy - 6), (cx - d * 6, cy - 1)], (200, 190, 170))
+    gx = x + 3 if lit_left else x + w - 10
+    g.line([(gx + 6, y + 3), (gx, y + 14)], mix((236, 226, 204), (255, 255, 255), 0.5))
 
 
 def cast(g, x, y, w, h, dx, dy, k=0.3, steps=6):
@@ -885,17 +923,33 @@ def walls(g, rnd):
     g.rect(91, 252, 1, 8, mul(cap, 1.25))
     g.rect(91, 259, 12, 1, (30, 32, 54))
     g.rect(90, 130, 1, 122, (44, 48, 76))
+    # its cable, out of the bottom socket and down behind the speaker (O-14)
+    g.line([(100, 260), (101, 262), (101, 264)], (24, 26, 42), width=2)
+    g.line([(100, 260), (100, 263)], (70, 74, 110))
     g.lrect(94, 129, 8, 123, MAG, 0.95, body=(255, 150, 215))
     g.lrect(96, 129, 4, 123, (255, 200, 235), 1.0, body=(255, 226, 244))
     g.lrect(97, 131, 2, 119, (255, 255, 255), 1.0)
     g.light(56, 110, 84, 176, MAG, 0.6)
     # instant photos
-    for x, y, c in ((106, 146, (90, 130, 170)), (109, 166, (190, 120, 90))):
+    # (docs/13, O-16) each tilted a little, a white border with its edge
+    # showing on the side away from the tube, a pin through the top
+    for x, y, c, tilt in ((106, 146, (90, 130, 170), -6), (109, 166, (190, 120, 90), 5)):
         cast(g, x, y, 12, 14, 5, 2, 0.3, 3)  # right beside the tube: short, hard
-        g.rect(x, y, 12, 14, (238, 234, 224))
-        g.rect(x + 1, y + 1, 10, 9, c)
-        g.rect(x + 1, y + 7, 10, 3, mul(c, 0.6))
-        g.px(x + 6, y - 1, (220, 70, 70))
+        a = math.radians(tilt)
+        cx_, cy_ = x + 6, y + 7
+
+        def rot(px_, py_):
+            dx, dy = px_ - cx_, py_ - cy_
+            return (cx_ + dx * math.cos(a) - dy * math.sin(a), cy_ + dx * math.sin(a) + dy * math.cos(a))
+
+        R = lambda x0, y0, x1, y1: [rot(x0, y0), rot(x1, y0), rot(x1, y1), rot(x0, y1)]
+        g.poly(R(x + 1, y + 1, x + 13, y + 15), (150, 146, 140))  # its edge
+        g.poly(R(x, y, x + 12, y + 14), (238, 234, 224))
+        g.poly(R(x + 1, y + 1, x + 11, y + 10), c)
+        g.poly(R(x + 1, y + 7, x + 11, y + 10), mul(c, 0.6))
+        px_, py_ = rot(x + 6, y)
+        g.rect(round(px_) - 1, round(py_) - 1, 2, 2, (220, 70, 70))
+        g.px(round(px_) - 1, round(py_) - 1, (255, 170, 170))
     # speaker
     cast(g, 84, 264, 24, 16, -3, 6, 0.35, 4)
     g.rect(84, 264, 24, 16, (52, 58, 90))
@@ -946,6 +1000,9 @@ def walls(g, rnd):
     g.light(362, 116, 44, 30, (255, 160, 80), 0.2)
     # control panel (outside any focus region, decorative only)
     cast(g, 365, 203, 40, 36, 1, 9)  # straight under the lamp
+    # a raised housing (O-18): its side toward the room and its underside
+    g.poly([(365, 203), (362, 205), (362, 241), (365, 239)], (54, 60, 92))
+    g.poly([(365, 239), (405, 239), (402, 241), (362, 241)], (40, 44, 72))
     g.rect(365, 203, 40, 36, (92, 104, 142))
     g.rect(365, 203, 40, 1, (160, 172, 206))
     g.rect(365, 238, 40, 1, (44, 50, 80))
@@ -959,10 +1016,16 @@ def walls(g, rnd):
     g.lrect(371, 232, 20, 1, (130, 140, 190), 0.35)
     g.lrect(397, 231, 3, 3, (255, 80, 80), 0.8)
     g.lrect(392, 231, 3, 3, (90, 255, 150), 0.7)
+    for x, y in ((366, 204), (402, 204), (366, 236), (402, 236)):  # screws
+        g.rect(x, y, 2, 2, (150, 160, 196))
+        g.px(x + 1, y + 1, (50, 56, 88))
+    g.lrect(367, 205, 36, 1, (95, 242, 230), 0.12)  # the screens' glow on the frame
     # small picture frame and emergency hammer
     cast(g, 406, 110, 38, 34, 7, -6, 0.4)  # above and right of the lamp
     poster(g, 408, 112, 34, 30, 'moon')
     cast(g, 422, 186, 24, 28, 7, 7)  # below and right of it
+    # a box standing off the wall (O-19): its side toward the room
+    g.poly([(422, 186), (419, 188), (419, 216), (422, 214)], (120, 32, 42))
     g.rect(422, 186, 24, 28, (196, 56, 62))
     g.rect(422, 186, 24, 1, (255, 120, 120))
     g.rect(422, 213, 24, 1, (110, 30, 40))
@@ -973,6 +1036,9 @@ def walls(g, rnd):
     g.rect(425, 207, 18, 4, (240, 232, 226))
     g.rect(427, 208, 10, 1, (150, 50, 50))
     g.rect(427, 210, 6, 1, (150, 50, 50))
+    # the glass over the hammer: a glare streak, and its edge
+    g.line([(437, 190), (441, 190), (436, 204), (432, 204)], (255, 200, 210))
+    g.line([(426, 190), (427, 190)], (255, 220, 225))
 
 
 # ------------------------------------------------------------------ Structure
