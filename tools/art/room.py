@@ -1919,6 +1919,43 @@ def reflections(a, table, front, k):
 BANDS = float(os.environ.get('BANDS', '0.2')) or None
 
 
+# The near layer (docs/13, S-08, stage 6): things right at the lens, dark,
+# large and a little soft, so the picture has a foreground inside the room as
+# well as at its sides: the end of the left-hand bench's armrest in the lower
+# left corner, and a grab strap hanging from the ceiling at the upper right.
+# Drawn into the room's picture, not as a layer of its own (D-03), and clear of
+# every object, whose sprites are cut from the same picture.
+NEAR_BLUR = 2.2  # scene units: soft, being out of focus so near the lens
+
+
+def near_layer(a, k):
+    h, w = a.shape[:2]
+    lay = Image.new('RGBA', (w, h), (0, 0, 0, 0))
+    d = ImageDraw.Draw(lay)
+    to = lambda pts: [((x + OX) * k, y * k) for x, y in pts]
+    # the armrest: the bench's padded end, near the camera, its top edge
+    # catching the neon
+    arm = [(-60, 480), (-60, 336), (0, 318), (54, 322), (92, 344), (100, 372), (98, 480)]
+    d.polygon(to(arm), fill=(20, 12, 24, 255))
+    d.line(to([(-60, 336), (0, 318), (54, 322), (92, 344)]), fill=(130, 58, 118, 255), width=round(2 * k))
+    d.line(to([(-60, 342), (0, 325), (52, 329), (86, 348)]), fill=(46, 22, 46, 255), width=round(3 * k))
+    for x, y in ((10, 344), (48, 350), (28, 372), (70, 376)):  # buttons in its quilting
+        d.ellipse(to([(x - 2, y - 1.4), (x + 2, y + 1.4)]), fill=(8, 4, 12, 255))
+    # the grab strap: leather from the ceiling right by the lens, a loop at its
+    # foot, its edge toward the lamp catching it
+    strap = [(466, -4), (490, -4), (488, 132), (468, 132)]
+    d.polygon(to(strap), fill=(26, 16, 18, 255))
+    d.line(to([(467, -4), (468, 132)]), fill=(130, 76, 50, 255), width=round(1.5 * k))
+    d.rectangle(to([(464, 52), (492, 60)]), fill=(76, 54, 32, 255))
+    d.line(to([(464, 52), (492, 52)]), fill=(150, 116, 70, 255), width=round(1 * k))
+    d.ellipse(to([(452, 122), (504, 178)]), outline=(26, 16, 18, 255), width=round(8 * k))
+    d.arc(to([(452, 122), (504, 178)]), 120, 235, fill=(130, 76, 50, 255), width=round(1.5 * k))
+    lay = lay.filter(ImageFilter.GaussianBlur(NEAR_BLUR * k))
+    la = np.asarray(lay).astype(np.float32)
+    al = la[..., 3:4] / 255
+    a[..., :3] = (a[..., :3] * (1 - al) + la[..., :3] * al).astype(np.uint8)
+
+
 def build_room(seed=21, over_rack=True):
     """The carriage as one RGBA image at output resolution, and the silhouette
     mask of every interactive object at 1x, keyed by object id. A key ending in
@@ -1983,6 +2020,7 @@ def build_room(seed=21, over_rack=True):
     value_plan(a, near, [g.masks[t] for t in ('projects', 'about', 'journey')], k)
     rim(a, [g.masks.pop('_rim'), near[0], near[2], g.masks['stack']], k)
     reflections(a, near[1], [near[2]] + [g.masks[t] for t in ('projects', 'about', 'journey')], k)
+    near_layer(a, k)
     # The page lays a vignette over the 480 scene (scene.css .vig) and must not
     # be made to cover the side extensions as well: overlays wider than the
     # scene, and gradients painted inside the extensions, both flickered in
