@@ -435,6 +435,13 @@ def shell(g, rnd):
             g.px(x - 3, y + 1, mul(WALL, 0.6))
             g.px(x + 4, y, mul(WALL, 1.35))
             g.px(x + 4, y + 1, mul(WALL, 0.6))
+    # (docs/13, O-24) one panel, right of the lamp, replaced at some point:
+    # a shade off from its neighbours, its rivets brighter
+    g.shade(451, 59, 36, 229, 0.94)
+    for y in range(70, 288, 26):
+        g.px(454, y, mul(WALL, 1.5))
+        g.px(484, y, mul(WALL, 1.5))
+    g.line([(372, 150), (392, 141), (401, 139)], mul(WALL, 1.22))  # a long scratch
     # water stains and scratches
     for _ in range(60):
         x, y = rnd.randrange(L, 600), rnd.randrange(60, 250)
@@ -450,13 +457,21 @@ def shell(g, rnd):
     g.lrect(L, 296, Wd, 2, (95, 242, 230), 0.8, body=(170, 250, 244))
     # lower wall: vertical ribbed panelling
     g.rect(L, 298, Wd, 142, WALL_LO)
+    # (docs/13, O-20) each rib: a dark gap, a lit edge, a face turning away
     for x in range(L, 600, 6):
-        g.rect(x, 298, 1, 138, mul(WALL_LO, 0.84))
-        g.rect(x + 1, 298, 1, 138, mul(WALL_LO, 1.08))
+        for i, k in enumerate((0.72, 1.2, 1.06, 1.0, 0.95, 0.88)):
+            g.rect(x + i, 298, 1, 138, mul(WALL_LO, k))
     g.rect(L, 298, Wd, 2, mul(WALL_LO, 0.6))
     g.speckle(L, 298, Wd, 142, 0.08, rnd, 0.25)
     for x in (-8, 30, 116, 364, 450, 488):
         g.rect(x, 300, 2, 136, mul(WALL_LO, 0.6))
+    # scuffs where knees and bags have knocked it, by the benches' ends
+    for _ in range(18):
+        x = rnd.choice([rnd.randrange(108, 140), rnd.randrange(342, 372)])
+        y = rnd.randrange(304, 330)
+        g.line([(x, y), (x + rnd.randrange(2, 6), y + rnd.choice([-1, 0, 1]))], mul(WALL_LO, rnd.choice([1.3, 0.7])))
+    # the strip's light lying on the ribs just under it
+    g.light(L, 297, Wd, 8, (95, 242, 230), 0.32)
     # skirting and floor
     g.rect(L, 434, Wd, 6, (38, 42, 68))
     g.rect(L, 434, Wd, 1, (84, 90, 126))
@@ -468,13 +483,21 @@ def shell(g, rnd):
         g.rect(L, y, Wd, 1, (28, 30, 50))
     g.speckle(L, 440, Wd, 40, 0.12, rnd, 0.3)
     # heater grille
+    # (docs/13, O-21) a framed housing with a bevel, slats that have a lit top
+    # and a dark underside, and a warm glow between them, strongest mid-way
+    g.rect(166, 386, 150, 50, (40, 44, 72))
     g.rect(168, 388, 146, 46, (52, 58, 90))
-    g.rect(168, 388, 146, 1, (104, 112, 150))
+    g.rect(168, 388, 146, 1, (120, 128, 166))
+    g.rect(168, 388, 1, 46, (90, 98, 136))
+    g.rect(313, 388, 1, 46, (36, 40, 66))
+    g.rect(168, 433, 146, 1, (30, 32, 54))
     g.rect(171, 391, 140, 40, (20, 22, 40))
     for y in range(393, 430, 4):
+        for x0, x1, k in ((172, 200, 0.1), (200, 282, 0.2), (282, 310, 0.1)):
+            g.lrect(x0, y + 2, x1 - x0, 2, (255, 120, 50), k, body=(70, 36, 34))
         g.rect(172, y, 138, 2, (56, 62, 96))
-        g.rect(172, y, 138, 1, (84, 92, 130))
-        g.lrect(172, y + 2, 138, 1, (255, 120, 50), 0.16, body=(70, 36, 34))
+        g.rect(172, y, 138, 1, (100, 108, 146))
+        g.rect(172, y + 1, 138, 1, (40, 44, 72))
     for x in (171, 310):
         g.px(x, 391, (130, 138, 170))
         g.px(x, 430, (130, 138, 170))
@@ -640,6 +663,8 @@ def rack(g, rnd, over_rack=True):
     um.rect(398, 88, 42, 4, (44, 50, 84))
     um.rect(398, 88, 42, 1, (84, 92, 136))
     um.rect(412, 88, 2, 4, (150, 60, 70))
+    um.rect(428, 88, 2, 4, (150, 60, 70))  # (O-13) a second strap, its buckle
+    um.px(428, 89, (220, 200, 150))
     um.rect(394, 89, 4, 2, (160, 166, 190))
     um.line([(440, 89), (446, 89), (447, 86), (445, 84)], BRASS)
     # The briefcase stands inside the right rack, so the rack's floor and rail
