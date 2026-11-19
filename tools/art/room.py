@@ -39,11 +39,11 @@ AMBER = (255, 206, 110)
 # object moves its focus target with it.
 OBJECTS = {
     'projects': dict(at=(148, 288), zone=(-11, -9, 104, 88), light=(47, 40, 62, 52)),
-    'about': dict(at=(318, 352), zone=(-10, -8, 42, 26), light=(16, 9, 30, 20)),
+    'about': dict(at=(308, 344), zone=(-6, -6, 56, 34), light=(26, 14, 32, 22)),
     'stack': dict(at=(326, 52), zone=(-10, -9, 78, 45), light=(34, 20, 48, 28), on_rack=1),
     # the map, half open on the table; the line display on the wall is the
     # railway's, and only a decoy
-    'journey': dict(at=(233, 323), zone=(-6, -6, 77, 25), light=(32, 9, 38, 12)),
+    'journey': dict(at=(245, 323), zone=(-5, -6, 67, 25), light=(28, 9, 32, 12)),
 }
 
 # The window opening (x y w h) and its corner radius. The page lays .win over it:
@@ -435,6 +435,13 @@ def shell(g, rnd):
             g.px(x - 3, y + 1, mul(WALL, 0.6))
             g.px(x + 4, y, mul(WALL, 1.35))
             g.px(x + 4, y + 1, mul(WALL, 0.6))
+    # (docs/13, O-24) one panel, right of the lamp, replaced at some point:
+    # a shade off from its neighbours, its rivets brighter
+    g.shade(451, 59, 36, 229, 0.94)
+    for y in range(70, 288, 26):
+        g.px(454, y, mul(WALL, 1.5))
+        g.px(484, y, mul(WALL, 1.5))
+    g.line([(372, 150), (392, 141), (401, 139)], mul(WALL, 1.22))  # a long scratch
     # water stains and scratches
     for _ in range(60):
         x, y = rnd.randrange(L, 600), rnd.randrange(60, 250)
@@ -450,13 +457,21 @@ def shell(g, rnd):
     g.lrect(L, 296, Wd, 2, (95, 242, 230), 0.8, body=(170, 250, 244))
     # lower wall: vertical ribbed panelling
     g.rect(L, 298, Wd, 142, WALL_LO)
+    # (docs/13, O-20) each rib: a dark gap, a lit edge, a face turning away
     for x in range(L, 600, 6):
-        g.rect(x, 298, 1, 138, mul(WALL_LO, 0.84))
-        g.rect(x + 1, 298, 1, 138, mul(WALL_LO, 1.08))
+        for i, k in enumerate((0.72, 1.2, 1.06, 1.0, 0.95, 0.88)):
+            g.rect(x + i, 298, 1, 138, mul(WALL_LO, k))
     g.rect(L, 298, Wd, 2, mul(WALL_LO, 0.6))
     g.speckle(L, 298, Wd, 142, 0.08, rnd, 0.25)
     for x in (-8, 30, 116, 364, 450, 488):
         g.rect(x, 300, 2, 136, mul(WALL_LO, 0.6))
+    # scuffs where knees and bags have knocked it, by the benches' ends
+    for _ in range(18):
+        x = rnd.choice([rnd.randrange(108, 140), rnd.randrange(342, 372)])
+        y = rnd.randrange(304, 330)
+        g.line([(x, y), (x + rnd.randrange(2, 6), y + rnd.choice([-1, 0, 1]))], mul(WALL_LO, rnd.choice([1.3, 0.7])))
+    # the strip's light lying on the ribs just under it
+    g.light(L, 297, Wd, 8, (95, 242, 230), 0.32)
     # skirting and floor
     g.rect(L, 434, Wd, 6, (38, 42, 68))
     g.rect(L, 434, Wd, 1, (84, 90, 126))
@@ -468,13 +483,21 @@ def shell(g, rnd):
         g.rect(L, y, Wd, 1, (28, 30, 50))
     g.speckle(L, 440, Wd, 40, 0.12, rnd, 0.3)
     # heater grille
+    # (docs/13, O-21) a framed housing with a bevel, slats that have a lit top
+    # and a dark underside, and a warm glow between them, strongest mid-way
+    g.rect(166, 386, 150, 50, (40, 44, 72))
     g.rect(168, 388, 146, 46, (52, 58, 90))
-    g.rect(168, 388, 146, 1, (104, 112, 150))
+    g.rect(168, 388, 146, 1, (120, 128, 166))
+    g.rect(168, 388, 1, 46, (90, 98, 136))
+    g.rect(313, 388, 1, 46, (36, 40, 66))
+    g.rect(168, 433, 146, 1, (30, 32, 54))
     g.rect(171, 391, 140, 40, (20, 22, 40))
     for y in range(393, 430, 4):
+        for x0, x1, k in ((172, 200, 0.1), (200, 282, 0.2), (282, 310, 0.1)):
+            g.lrect(x0, y + 2, x1 - x0, 2, (255, 120, 50), k, body=(70, 36, 34))
         g.rect(172, y, 138, 2, (56, 62, 96))
-        g.rect(172, y, 138, 1, (84, 92, 130))
-        g.lrect(172, y + 2, 138, 1, (255, 120, 50), 0.16, body=(70, 36, 34))
+        g.rect(172, y, 138, 1, (100, 108, 146))
+        g.rect(172, y + 1, 138, 1, (40, 44, 72))
     for x in (171, 310):
         g.px(x, 391, (130, 138, 170))
         g.px(x, 430, (130, 138, 170))
@@ -640,6 +663,8 @@ def rack(g, rnd, over_rack=True):
     um.rect(398, 88, 42, 4, (44, 50, 84))
     um.rect(398, 88, 42, 1, (84, 92, 136))
     um.rect(412, 88, 2, 4, (150, 60, 70))
+    um.rect(428, 88, 2, 4, (150, 60, 70))  # (O-13) a second strap, its buckle
+    um.px(428, 89, (220, 200, 150))
     um.rect(394, 89, 4, 2, (160, 166, 190))
     um.line([(440, 89), (446, 89), (447, 86), (445, 84)], BRASS)
     # The briefcase stands inside the right rack, so the rack's floor and rail
@@ -704,30 +729,66 @@ def window(g, rnd):
         g.px(x + 2, 99, (255, 240, 190))
         g.px(x + 3, 99, (255, 240, 190))
         g.rect(x + 2, 104, 5, 1, (130, 96, 50))
-    # curtains, tied back on both sides
+    # Curtains (docs/13, O-03), tied back on both sides: gathered on rings at
+    # the rod, pinched at the tie-back, flaring below it to a hem. The outer
+    # edge hangs straight; the inner edge follows the gathering. Across the
+    # cloth run three folds of different widths, each shaded from the side away
+    # from its light: reflected edge, core shadow, half-tone, highlight (L-03).
+    # The left curtain is lit from the neon on its left, the right from the lamp.
     cc = (58, 110, 96)
-    # Each curtain is two round folds. Across a fold, from the side away from
-    # its light: a reflected edge, the core shadow, the half-tone, the
-    # highlight and back (docs/13, L-03). The left curtain is lit from the
-    # neon on its left, the right one from the lamp on its right.
-    FOLDS = [0.78, 0.58, 0.86, 1.16, 1.32, 1.08, 0.74, 0.82, 0.6, 0.94, 1.24, 1.12, 0.76]
-    for x0 in (123, 344):
-        g.shadow(x0 - 1, 106, 16, 168, 0.62)
-        folds = FOLDS[::-1] if x0 < 240 else FOLDS
+    PROFILE = [0.8, 0.58, 0.86, 1.18, 1.32, 1.1, 0.8]
+    FOLD_EDGES = [0.0, 0.42, 0.7, 1.0]
+    TIE, TOP, HEM = 197, 104, 270
+
+    def width(y):
+        if y <= TIE:
+            return 16 - 7 * ((y - TOP) / (TIE - TOP)) ** 1.6
+        t = (y - TIE) / (HEM - TIE)
+        return 9 + 8 * (1 - (1 - t) ** 2)
+
+    def shade(f):
+        # smoothly across each fold, so the folds run as clean bands down the
+        # cloth instead of breaking into steps as the width changes
+        for a, b in zip(FOLD_EDGES, FOLD_EDGES[1:]):
+            if f <= b:
+                t = (f - a) / (b - a) * (len(PROFILE) - 1)
+                i = min(int(t), len(PROFILE) - 2)
+                return PROFILE[i] + (PROFILE[i + 1] - PROFILE[i]) * (t - i)
+        return PROFILE[-1]
+
+    for side, outer in ((-1, 120), (1, 360)):
         cg = g.at(0, 0, '_rim')
-        for i in range(13):
-            cg.rect(x0 + i, 104, 1, 164, mul(cc, folds[i]))
-        for x in range(x0, x0 + 13, 2):
-            g.rect(x, 100, 1, 5, (150, 112, 56))
-        # tieback
-        g.rect(x0, 196, 13, 3, BRASS)
-        g.rect(x0, 196, 13, 1, (255, 232, 160))
-        g.rect(x0, 200, 13, 2, mul(cc, 0.5))
-        for i in range(13):
-            hh = [0, 2, 4, 5, 4, 2, 0, 1, 3, 5, 4, 2, 0][i]
-            g.rect(x0 + i, 268, 1, hh + 1, mul(cc, 0.9))
-        g.rect(x0 + 6, 199, 1, 6, (190, 146, 70))
-        g.rect(x0 + 5, 205, 3, 3, (230, 190, 100))
+        g.shadow(outer - 2 if side < 0 else outer - 17, 106, 19, 168, 0.62)
+        for y in range(TOP, HEM + 1):
+            w = width(y)
+            n = max(1, round(w))
+            for i in range(n):
+                # 0 at the outer edge; both lights stand beyond the window's
+                # edges, so both curtains are lit from their outer side
+                k = shade((i + 0.5) / n)
+                x = outer + i if side < 0 else outer - i
+                k = k * (0.92 if y > HEM - 3 else 1.0)  # the hem's turned edge
+                cg.rect(x, y, 1, 1, mul(cc, k))
+        # the hem: a pale line where the cloth turns, and its shadow
+        w = round(width(HEM))
+        xa = outer if side < 0 else outer - w + 1
+        g.rect(xa, HEM - 3, w, 1, mul(cc, 1.25))
+        g.rect(xa, HEM + 1, w, 1, mul(cc, 0.45))
+        # rings on the rod
+        wt = round(width(TOP))
+        for k in range(0, wt, 3):
+            x = outer + k if side < 0 else outer - k
+            g.rect(x, 100, 2, 4, (150, 112, 56))
+            g.px(x, 100, (255, 226, 150))
+        # the tie-back, pinching the cloth, and its tassel
+        wt = round(width(TIE))
+        xa = outer if side < 0 else outer - wt + 1
+        g.rect(xa - 1, TIE - 1, wt + 2, 3, BRASS)
+        g.rect(xa - 1, TIE - 1, wt + 2, 1, (255, 232, 160))
+        g.rect(xa, TIE + 2, wt, 1, mul(cc, 0.5))
+        tx = xa + wt // 2
+        g.rect(tx, TIE + 2, 1, 6, (190, 146, 70))
+        g.rect(tx - 1, TIE + 8, 3, 3, (230, 190, 100))
     # window frame
     fr = (104, 118, 158)
     g.shadow(133, 108, 214, 174, 0.55)
@@ -740,8 +801,16 @@ def window(g, rnd):
     g.speckle(137, 111, 206, 166, 0.07, rnd, 0.3)
     g.line([(156, 112), (324, 112)], (176, 188, 220))
     g.line([(156, 276), (324, 276)], (60, 68, 104))
+    # the reveal's bevel (docs/13, O-01): lit along its top and on the left,
+    # where the neon is, in shadow along the right and the bottom
+    g.line([(158, 120), (322, 120)], mul(fr, 1.1))
+    g.line([(145, 133), (145, 256)], (150, 128, 196))
+    g.line([(146, 133), (146, 256)], mul(fr, 0.95))
+    g.line([(335, 133), (335, 256)], mul(fr, 0.62))
+    g.line([(158, 270), (322, 270)], mul(fr, 0.6))
     for x, y in ((145, 119), (334, 119), (145, 268), (334, 268), (240, 115), (240, 273), (141, 194), (338, 194)):
         g.rect(x, y, 2, 2, (190, 200, 228))
+        g.px(x, y, (246, 248, 255))
         g.px(x + 1, y + 2, (50, 56, 88))
         g.px(x + 2, y + 1, (50, 56, 88))
     # handle
@@ -754,12 +823,29 @@ def window(g, rnd):
     g.rect(130, 282, 220, 1, (50, 56, 88))
     g.rect(132, 283, 216, 2, (40, 46, 74))
     # odds and ends on the sill: a succulent and a coin
-    g.rect(154, 271, 9, 6, (176, 96, 70))
-    g.rect(153, 270, 11, 2, (208, 124, 90))
-    g.rect(155, 266, 2, 4, (86, 160, 110))
-    g.rect(158, 264, 3, 6, (106, 184, 124))
-    g.rect(161, 267, 2, 3, (76, 140, 100))
-    g.px(159, 263, (150, 220, 160))
+    # (docs/13, O-02) a terracotta pot, rim and soil, and a rosette of fat
+    # leaves, lit from the left; its shadow on the sill
+    g.shadow(155, 276, 14, 2, 0.5)
+    g.poly([(153, 270), (165, 270), (164, 277), (154, 277)], (176, 96, 70))
+    g.rect(154, 271, 2, 6, (206, 124, 90))
+    g.rect(162, 271, 2, 6, (140, 74, 56))
+    g.rect(152, 268, 14, 2, (214, 132, 96))
+    g.rect(152, 269, 14, 1, (160, 86, 64))
+    g.rect(153, 268, 12, 1, (70, 50, 44))
+    leaf, lit, dk = (96, 170, 116), (150, 214, 160), (60, 124, 86)
+    for pts, c in (
+        ([(154, 268), (151, 263), (153, 262), (157, 267)], dk),
+        ([(164, 268), (167, 263), (165, 262), (161, 267)], leaf),
+        ([(156, 267), (155, 260), (158, 259), (159, 267)], leaf),
+        ([(162, 267), (163, 260), (160, 259), (159, 267)], dk),
+        ([(158, 267), (158, 257), (160, 257), (160, 267)], lit),
+    ):
+        g.poly(pts, c)
+    g.px(158, 257, (200, 240, 200))
+    g.px(155, 260, (190, 232, 190))
+    # a coin by the pot
+    g.ellipse(170, 275, 4, 2, (200, 170, 96))
+    g.px(171, 275, (255, 236, 170))
     # nameplate
     g.rect(221, 284, 39, 6, (26, 28, 48))
     g.rect(221, 284, 39, 1, (70, 76, 110))
@@ -803,6 +889,19 @@ def poster(g, x, y, w, h, kind):
     g.rect(x + 4, y + h - 8, w - 14, 2, (70, 60, 70))
     g.rect(x + 4, y + h - 4, w - 22, 1, (150, 130, 130))
     g.rect(x + w - 8, y + h - 8, 4, 5, (200, 70, 70))
+    # (docs/13, O-15) tape over the top corners, the bottom corner on the side
+    # away from the light lifting off the wall, and a glare streak across the
+    # print from the light's side
+    for tx in (x - 3, x + w - 4):
+        g.poly([(tx, y - 1), (tx + 6, y - 3), (tx + 7, y), (tx + 1, y + 2)], (214, 210, 186))
+    lit_left = x > 240  # the small frame is lit by the lamp, on its left
+    cx = x + w - 1 if lit_left else x - 2  # the far bottom corner from the light
+    d = 1 if lit_left else -1
+    cy = y + h + 1
+    g.poly([(cx, cy), (cx, cy - 6), (cx - d * 6, cy)], (40, 36, 52))
+    g.poly([(cx - d * 1, cy - 1), (cx - d * 1, cy - 6), (cx - d * 6, cy - 1)], (200, 190, 170))
+    gx = x + 3 if lit_left else x + w - 10
+    g.line([(gx + 6, y + 3), (gx, y + 14)], mix((236, 226, 204), (255, 255, 255), 0.5))
 
 
 def cast(g, x, y, w, h, dx, dy, k=0.3, steps=6):
@@ -849,17 +948,33 @@ def walls(g, rnd):
     g.rect(91, 252, 1, 8, mul(cap, 1.25))
     g.rect(91, 259, 12, 1, (30, 32, 54))
     g.rect(90, 130, 1, 122, (44, 48, 76))
+    # its cable, out of the bottom socket and down behind the speaker (O-14)
+    g.line([(100, 260), (101, 262), (101, 264)], (24, 26, 42), width=2)
+    g.line([(100, 260), (100, 263)], (70, 74, 110))
     g.lrect(94, 129, 8, 123, MAG, 0.95, body=(255, 150, 215))
     g.lrect(96, 129, 4, 123, (255, 200, 235), 1.0, body=(255, 226, 244))
     g.lrect(97, 131, 2, 119, (255, 255, 255), 1.0)
     g.light(56, 110, 84, 176, MAG, 0.6)
     # instant photos
-    for x, y, c in ((106, 146, (90, 130, 170)), (109, 166, (190, 120, 90))):
+    # (docs/13, O-16) each tilted a little, a white border with its edge
+    # showing on the side away from the tube, a pin through the top
+    for x, y, c, tilt in ((106, 146, (90, 130, 170), -6), (109, 166, (190, 120, 90), 5)):
         cast(g, x, y, 12, 14, 5, 2, 0.3, 3)  # right beside the tube: short, hard
-        g.rect(x, y, 12, 14, (238, 234, 224))
-        g.rect(x + 1, y + 1, 10, 9, c)
-        g.rect(x + 1, y + 7, 10, 3, mul(c, 0.6))
-        g.px(x + 6, y - 1, (220, 70, 70))
+        a = math.radians(tilt)
+        cx_, cy_ = x + 6, y + 7
+
+        def rot(px_, py_):
+            dx, dy = px_ - cx_, py_ - cy_
+            return (cx_ + dx * math.cos(a) - dy * math.sin(a), cy_ + dx * math.sin(a) + dy * math.cos(a))
+
+        R = lambda x0, y0, x1, y1: [rot(x0, y0), rot(x1, y0), rot(x1, y1), rot(x0, y1)]
+        g.poly(R(x + 1, y + 1, x + 13, y + 15), (150, 146, 140))  # its edge
+        g.poly(R(x, y, x + 12, y + 14), (238, 234, 224))
+        g.poly(R(x + 1, y + 1, x + 11, y + 10), c)
+        g.poly(R(x + 1, y + 7, x + 11, y + 10), mul(c, 0.6))
+        px_, py_ = rot(x + 6, y)
+        g.rect(round(px_) - 1, round(py_) - 1, 2, 2, (220, 70, 70))
+        g.px(round(px_) - 1, round(py_) - 1, (255, 170, 170))
     # speaker
     cast(g, 84, 264, 24, 16, -3, 6, 0.35, 4)
     g.rect(84, 264, 24, 16, (52, 58, 90))
@@ -910,6 +1025,9 @@ def walls(g, rnd):
     g.light(362, 116, 44, 30, (255, 160, 80), 0.2)
     # control panel (outside any focus region, decorative only)
     cast(g, 365, 203, 40, 36, 1, 9)  # straight under the lamp
+    # a raised housing (O-18): its side toward the room and its underside
+    g.poly([(365, 203), (362, 205), (362, 241), (365, 239)], (54, 60, 92))
+    g.poly([(365, 239), (405, 239), (402, 241), (362, 241)], (40, 44, 72))
     g.rect(365, 203, 40, 36, (92, 104, 142))
     g.rect(365, 203, 40, 1, (160, 172, 206))
     g.rect(365, 238, 40, 1, (44, 50, 80))
@@ -923,10 +1041,16 @@ def walls(g, rnd):
     g.lrect(371, 232, 20, 1, (130, 140, 190), 0.35)
     g.lrect(397, 231, 3, 3, (255, 80, 80), 0.8)
     g.lrect(392, 231, 3, 3, (90, 255, 150), 0.7)
+    for x, y in ((366, 204), (402, 204), (366, 236), (402, 236)):  # screws
+        g.rect(x, y, 2, 2, (150, 160, 196))
+        g.px(x + 1, y + 1, (50, 56, 88))
+    g.lrect(367, 205, 36, 1, (95, 242, 230), 0.12)  # the screens' glow on the frame
     # small picture frame and emergency hammer
     cast(g, 406, 110, 38, 34, 7, -6, 0.4)  # above and right of the lamp
     poster(g, 408, 112, 34, 30, 'moon')
     cast(g, 422, 186, 24, 28, 7, 7)  # below and right of it
+    # a box standing off the wall (O-19): its side toward the room
+    g.poly([(422, 186), (419, 188), (419, 216), (422, 214)], (120, 32, 42))
     g.rect(422, 186, 24, 28, (196, 56, 62))
     g.rect(422, 186, 24, 1, (255, 120, 120))
     g.rect(422, 213, 24, 1, (110, 30, 40))
@@ -937,6 +1061,9 @@ def walls(g, rnd):
     g.rect(425, 207, 18, 4, (240, 232, 226))
     g.rect(427, 208, 10, 1, (150, 50, 50))
     g.rect(427, 210, 6, 1, (150, 50, 50))
+    # the glass over the hammer: a glare streak, and its edge
+    g.line([(437, 190), (441, 190), (436, 204), (432, 204)], (255, 200, 210))
+    g.line([(426, 190), (427, 190)], (255, 220, 225))
 
 
 # ------------------------------------------------------------------ Structure
@@ -1045,11 +1172,14 @@ def side_wall(g, s):
     else:
         # net pocket: a frame on the wall, the net drawn as a lattice over the
         # dark wall behind it, and a folded timetable standing out of it
+        # its shadow on the partition, down from the ceiling's light
+        poly([(1.9, 1.14), (1.9, 1.33), (1.58, 1.33), (1.58, 1.14)], mul(wall, 0.62))
         poly([(1.88, 1.18), (1.88, 1.36), (1.56, 1.36), (1.56, 1.18)], (36, 40, 66))
         for k in range(1, 9):
             z = 1.88 - k * 0.04
             g.line([ri(w(z, 1.18, 0.02)), ri(w(z + 0.04, 1.33, 0.02))], (88, 96, 132))
             g.line([ri(w(z + 0.04, 1.18, 0.02)), ri(w(z, 1.33, 0.02))], (70, 78, 112))
+        poly([(1.79, 1.31, 0.005), (1.79, 1.41, 0.005), (1.65, 1.41, 0.005), (1.65, 1.31, 0.005)], (24, 28, 48))
         poly([(1.80, 1.30, 0.01), (1.80, 1.43, 0.01), (1.66, 1.43, 0.01), (1.66, 1.30, 0.01)], (226, 220, 200))
         for y in (1.405, 1.385, 1.365):
             g.line([ri(w(1.78, y, 0.012)), ri(w(1.69, y, 0.012))], (150, 120, 120))
@@ -1061,10 +1191,23 @@ def floor_and_ceiling(g):
     read as planes with depth."""
     HW, C, D = ROOM_HALF_WIDTH, ROOM_CEILING, WALL_DIST
     dark = (30, 32, 54)
-    for x in (-0.3, 0.0, 0.3):
-        g.line([ri(P(x, 0, D)), ri(P(x, 0, Z_NEAR))], dark)
-    for z in (1.7, 1.42, 1.18, 0.98, 0.82):
+    # Floor tiles (docs/13, O-22), 15 cm square, in two tones, with a worn path
+    # down the aisle where the tiles are paler and smoother; little of the
+    # floor is in the frame, so they are small enough to read in it
+    base, t = (46, 48, 76), 0.15
+    for i in range(-8, 8):
+        for j, z0 in enumerate((2.0, 1.85, 1.7, 1.55, 1.4)):
+            x0 = i * t
+            k = 0.9 if (i + j) % 2 else 1.06
+            if -0.3 <= x0 < 0.3:
+                k *= 1.12
+            quad(g, [(x0, 0, z0), (x0 + t, 0, z0), (x0 + t, 0, z0 - t), (x0, 0, z0 - t)], mul(base, k))
+    for i in range(-8, 9):
+        g.line([ri(P(i * t, 0, D)), ri(P(i * t, 0, 1.25))], dark)
+    for z in (1.85, 1.7, 1.55, 1.4):
         g.line([ri(P(-HW, 0, z)), ri(P(HW, 0, z))], dark)
+    # the table's shadow on the floor beneath it
+    g.shadow(120, 440, 240, 40, 0.55)
     for x in (-0.6, 0.0, 0.6):
         g.line([ri(P(x, C, D)), ri(P(x, C, Z_NEAR))], mul(CEIL, 0.7))
     for z in (1.6, 1.25):
@@ -1106,7 +1249,7 @@ def table_map(g, T):
     o = g.at(0, 0, 'journey')
     paper = (232, 222, 196)
     # the flat sheet, a little askew
-    A, B, C, D = T(0.47, 0.08), T(0.77, 0.05), T(0.78, 0.28), T(0.48, 0.31)
+    A, B, C, D = T(0.53, 0.08), T(0.8, 0.05), T(0.81, 0.28), T(0.54, 0.31)
     o.poly([A, B, C, D], paper)
     g.line([(D[0], D[1] + 1), (C[0], C[1] + 1)], mul(WOOD, 0.55))  # its shadow on the wood
 
@@ -1261,6 +1404,16 @@ def table(g, rnd):
     g.line([(BL[0], BL[1] + 1), (BR[0], BR[1] + 1)], mul(WOOD, 0.8))
     g.line([BL, FL], mul(WOOD, 1.25))
     g.line([BR, FR], mul(WOOD, 0.7))
+    # (docs/13, O-05) wear along the near edge, where arms rest: the varnish
+    # rubbed paler; and the rings old cups have left
+    TT = lambda u, v: lerp(lerp(BL, BR, u), lerp(FL, FR, u), v)
+    g.poly([TT(0.2, 0.88), TT(0.8, 0.88), TT(0.83, 1.0), TT(0.17, 1.0)], mul(WOOD, 1.07))
+    for _ in range(40):
+        u, v = rnd.uniform(0.2, 0.8), rnd.uniform(0.9, 1.0)
+        g.px(*ri(TT(u, v)), mul(WOOD, rnd.choice([1.14, 1.2])))
+    for cx_, cy_, rx, ry in ((338, 335, 5, 2), (134, 346, 4, 1.6)):
+        ring = [(cx_ + rx * math.cos(t / 12 * math.tau), cy_ + ry * math.sin(t / 12 * math.tau)) for t in range(13)]
+        g.fline(ring, mul(WOOD, 0.8))
     # edging and apron
     g.rect(118, 372, 245, 2, BRASS)
     g.rect(118, 372, 245, 1, (255, 236, 170))
@@ -1277,66 +1430,93 @@ def table(g, rnd):
     T = lambda u, v: lerp(lerp(BL, BR, u), lerp(FL, FR, u), v)
     table_map(g, T)
     # ---- laptop (the projects object)
+    # Built in the compartment model, in metres, and projected with P(), so it
+    # keeps true perspective however it is turned: the table top is 1.0 m wide,
+    # 0.555 m deep and 0.629 m high (from its corners on screen). The laptop is
+    # turned a little toward the left-hand seat, as if someone had just been
+    # working at it from there. All of it on the fine layer, whose straight
+    # edges EPX would tear (docs/13, R-03, O-06).
     o = place(g, 'projects', (148, 288))
-    # Drawn on the fine layer: its lid and base are shallow diagonals, which EPX
-    # tears into ragged steps (docs/13, R-03). Everything of it goes there, or
-    # the fine lid would cover the 1x screen.
-    o.shadow(152, 350, 96, 20, 0.5)
-    S = [(148, 292), (214, 288), (218, 343), (151, 348)]
-    o.fpoly(S, (44, 48, 76))
-    o.fline([S[0], S[1]], (120, 128, 166))
-    o.fline([S[0], S[3]], (84, 92, 130))
-    D = [(151, 295), (212, 291), (215, 340), (154, 345)]
-    o.fpoly(D, (40, 70, 160), 0.42, body=(22, 30, 62))
-    colors = [MAG, CYA, (255, 206, 110), (150, 255, 170), (226, 232, 255), (176, 130, 255)]
-    tilt = (D[0][1] - D[1][1]) / (D[1][0] - D[0][0])  # follow the slope of the screen top edge
-    for r in range(10):
-        y0 = 299 + r * 4.4
-        x = 157 + rnd.choice([0, 0, 4, 8, 4])
-        n = rnd.choice([2, 3, 3, 4])
-        if r == 8:
-            x, n = 157, 2
-        for _ in range(n):
-            ln = rnd.randrange(4, 13)
-            if r == 8 and x + ln > 190:
-                break
-            c = rnd.choice(colors)
-            x1 = min(x + ln, 210) - 1
-            # Each run is horizontal in itself and the row sinks run by run with the
-            # perspective. Sloping within a run would add a hard step and read as a
-            # bent line instead.
-            yc = y0 - ((x + x1) / 2 - 157) * tilt
-            o.fline([(x, yc), (x1, yc)], c, 0.95)
-            x += ln + 2
-            if x > 204:
-                break
-    for r in range(10):
-        o.frect(154, int(round(299 + r * 4.4)), 1, 1, (90, 110, 170), 0.5)
-    o.frect(181, 290, 1, 1, (20, 22, 40))
-    # body
-    Bq = [(151, 348), (218, 343), (241, 357), (170, 366)]
-    # the base has a thickness: its front edge and the side toward the middle
-    # of the room both show, and it sits on the table on a dark contact line
-    o.fpoly([(151, 348), (170, 366), (170, 370), (151, 351)], (60, 64, 94))
-    o.fpoly([(218, 343), (241, 357), (241, 361), (218, 346)], (74, 80, 112))
-    o.fpoly([(170, 366), (241, 357), (241, 361), (170, 370)], (96, 102, 138))
-    o.fline([(170, 367), (241, 358)], (132, 140, 176))
-    o.fline([(170, 371), (241, 362)], (20, 18, 30))
-    o.fline([(241, 357), (241, 361)], (150, 158, 192))
-    o.fpoly(Bq, (160, 168, 198))
-    o.fline([Bq[0], Bq[1]], (40, 44, 70))
-    for t in (0.14, 0.32, 0.5, 0.68):
-        a, b = lerp(Bq[0], Bq[3], t), lerp(Bq[1], Bq[2], t)
-        n = 13
+    TY = EYE - (327 - vanishing_point()[1]) / WALL_SCALE  # the table top's height
+    cx, cz, turn = -0.2, 1.665, math.radians(-11)
+    w, d, th = 0.33, 0.225, 0.016  # base width, depth, thickness
+    lid_h, lean = 0.215, math.radians(12)
+
+    def at(lx, ly, lz):
+        """A point in the laptop's own frame: x across, y up from the table, z
+        back from the base's middle, turned and placed on the table."""
+        x = lx * math.cos(turn) - lz * math.sin(turn)
+        z = lx * math.sin(turn) + lz * math.cos(turn)
+        return P(cx + x, TY + ly, cz + z)
+
+    K = lambda a, b: at((a - 0.5) * w, th, (0.5 - b) * d)  # on the base's top, b from the back
+    BLb, BRb, FRb, FLb = K(0, 0), K(1, 0), K(1, 1), K(0, 1)
+    gl = lambda a, b: at((a - 0.5) * w, 0, (0.5 - b) * d)  # the same on the table
+    # contact shadow along its front edge and its left side
+    xs = [q[0] for q in (gl(0, 0), gl(1, 0), gl(1, 1), gl(0, 1))]
+    ys = [q[1] for q in (gl(0, 0), gl(1, 0), gl(1, 1), gl(0, 1))]
+    o.shadow(round(min(xs)) - 3, round(max(ys)) - 3, round(max(xs) - min(xs)) + 6, 6, 0.45)
+    o.shadow(round(min(xs)) - 4, round(min(ys)), 7, round(max(ys) - min(ys)), 0.6)
+    # the base: its front and the side toward the middle of the room, then its top
+    o.fpoly([FLb, FRb, gl(1, 1), gl(0, 1)], (88, 94, 130))
+    o.fpoly([BRb, FRb, gl(1, 1), gl(1, 0)], (68, 74, 106))
+    o.fline([gl(0, 1), gl(1, 1)], (18, 16, 28))
+    o.fpoly([BLb, BRb, FRb, FLb], (150, 158, 190))
+    o.fline([FLb, FRb], (132, 140, 176))
+    # the keyboard well, and the keys at their size: five rows
+    o.fpoly([K(0.06, 0.06), K(0.94, 0.06), K(0.95, 0.6), K(0.05, 0.6)], (92, 100, 138))
+    for r in range(5):
+        n = 15
         for i in range(n):
-            p = lerp(a, b, (i + 0.5) / n)
-            x, y = ri(p)
-            o.frect(x - 1, y, 3, 2, (104, 112, 148))
-            o.frect(x - 1, y, 1, 1, (128, 136, 172))
-    tp = lerp(lerp(Bq[0], Bq[3], 0.86), lerp(Bq[1], Bq[2], 0.86), 0.5)
-    o.frect(int(tp[0]) - 7, int(tp[1]) - 1, 14, 3, (182, 190, 216))
-    o.light(150, 336, 100, 40, (90, 150, 255), 0.5)
-    o.light(146, 286, 76, 60, (80, 120, 255), 0.25)
+            x, y = K(0.09 + (i + 0.5) * 0.82 / n, 0.1 + r * 0.1)
+            o.frect(round(x) - 1, round(y), 2, 1, (196, 204, 234))
+    o.fline([K(0.32, 0.56), K(0.68, 0.56)], (196, 204, 234))  # the space bar
+    # the trackpad
+    o.fpoly([K(0.355, 0.67), K(0.645, 0.67), K(0.65, 0.91), K(0.35, 0.91)], (110, 118, 154))
+    o.fpoly([K(0.36, 0.68), K(0.64, 0.68), K(0.645, 0.9), K(0.355, 0.9)], (172, 180, 212))
+    # the lid, hinged at the back edge and leaning back
+    Lp = lambda a, c: at((a - 0.5) * w, th + c * lid_h * math.cos(lean), d / 2 + c * lid_h * math.sin(lean))
+    L = [Lp(0, 1), Lp(1, 1), Lp(1, 0), Lp(0, 0)]
+    o.fpoly(L, (40, 44, 70))
+    o.fline([L[0], L[1]], (120, 128, 166))
+    o.fline([L[1], L[2]], (70, 76, 108))
+    # the screen inside a bezel: narrow at the sides and top, wider at the foot
+    D = [Lp(0.05, 0.93), Lp(0.95, 0.93), Lp(0.95, 0.13), Lp(0.05, 0.13)]
+    o.fpoly(D, (40, 70, 160), 0.42, body=(22, 30, 62))
+    Sp = lambda a, b: Lp(0.05 + 0.9 * a, 0.93 - 0.8 * b)
+    cam = Lp(0.5, 0.965)
+    o.frect(round(cam[0]), round(cam[1]), 1, 1, (16, 18, 30))
+    # hinge: a dark seam across the lid's foot, a barrel at each end
+    o.fline([Lp(0.02, 0.03), Lp(0.98, 0.03)], (22, 24, 38), width=1.5)
+    for a in (0.12, 0.8):
+        hx, hy = Lp(a, 0.02)
+        o.frect(round(hx), round(hy) - 1, 5, 2, (96, 102, 136))
+    # code on the screen, its rows following the screen's slope, each run level
+    # in itself at the height of its middle (a sloping run would show a step)
+    colors = [MAG, CYA, (255, 206, 110), (150, 255, 170), (226, 232, 255), (176, 130, 255)]
+    rows = 9
+    for r in range(rows):
+        b = 0.08 + r * 0.84 / (rows - 1)
+        nx, ny = Sp(0.03, b)
+        o.frect(round(nx), round(ny), 1, 1, (90, 110, 170), 0.5)
+        a = 0.09 + rnd.choice([0, 0, 0.06, 0.12, 0.06])
+        n = rnd.choice([2, 3, 3, 4])
+        if r == 7:
+            a, n = 0.09, 2
+        for _ in range(n):
+            ln = rnd.randrange(4, 13) / 62
+            if r == 7 and a + ln > 0.55:
+                break
+            a1 = min(a + ln, 0.96)
+            (xa, ya), (xb, yb) = Sp(a, b), Sp(a1, b)
+            o.fline([(xa, (ya + yb) / 2), (xb, (ya + yb) / 2)], rnd.choice(colors), 0.95)
+            a = a1 + 2 / 62
+            if a > 0.9:
+                break
+    # the screen's light on the keys and on the table in front
+    top = round(min(q[1] for q in L))
+    o.light(round(min(xs)), round(min(ys)) - 6, round(max(xs) - min(xs)), 30, (90, 150, 255), 0.5)
+    o.light(round(min(xs)) - 6, top - 6, round(max(xs) - min(xs)) + 12, round(min(ys)) - top + 12, (80, 120, 255), 0.25)
     # ---- coffee
     # the cup stands in front of the map; it is cut out of the map's sprite
     cg = scaled(g, COFFEE_SCALE, *COFFEE_AT).at(0, 0, '_cup')
@@ -1362,6 +1542,10 @@ def table(g, rnd):
     cg.rect(276, 333, 2, 22, (222, 220, 240))
     cg.rect(297, 333, 5, 19, (206, 204, 230))
     cg.rect(292, 335, 2, 12, (255, 255, 255))
+    # (docs/13, O-07) the core shadow before the far edge turns, and the
+    # neon's magenta caught down the near side
+    cg.rect(295, 335, 2, 17, (198, 196, 226))
+    cg.rect(278, 335, 1, 16, (244, 206, 244))
     cg.rect(273, 346, 28, 2, (150, 120, 206))
     cg.rect(273, 346, 3, 2, (120, 96, 176))
     cg.line([(275, 355), (280, 357), (294, 357), (299, 355)], (176, 174, 204))
@@ -1373,35 +1557,53 @@ def table(g, rnd):
     cg.px(293, 333, (150, 96, 70))
     cup = g.masks['_cup']
     g.masks['journey'] = ImageChops.multiply(g.masks['journey'], ImageChops.invert(cup))
-    # ---- ticket (the about object)
-    o = place(g, 'about', (316, 344))
-    o.shadow(318, 349, 32, 15, 0.6)
-    # the business card tucked behind it, one corner showing
-    C_ = [(310, 341), (334, 339), (337, 350), (313, 352)]
+    # ---- ticket (the about object), docs/13 O-08: larger, with a fold, print
+    # rows, a perforated stub with a punched hole, and the business card (N-01)
+    # under it, one corner showing
+    o = place(g, 'about', (308, 344))
+    TQ = [(316, 352), (352, 349), (356, 367), (320, 370)]  # far left, far right, near right, near left
+    Q = lambda a, b: lerp(lerp(TQ[0], TQ[1], a), lerp(TQ[3], TQ[2], a), b)
+    o.shadow(318, 356, 40, 16, 0.55)
+    C_ = [(308, 346), (336, 344), (339, 357), (311, 359)]
     o.poly(C_, (236, 236, 242))
     o.line([C_[0], C_[1]], (255, 255, 255))
     o.line([C_[0], C_[3]], (190, 190, 204))
-    o.fline([(312.5, 342.6), (322, 341.9)], (60, 60, 80))
-    o.fline([(313, 344.6), (320, 344.1)], (140, 140, 160))
-    T = [(316, 346), (344, 344), (348, 358), (320, 361)]
-    o.poly(T, (240, 228, 198))
-    o.line([T[0], T[1]], (255, 250, 232))
-    o.line([T[3], T[2]], (170, 156, 130))
-    o.fline([(319, 349.2), (336, 349.2)], (206, 60, 66), width=2)
-    o.fline([(321, 352.8), (333, 352.8)], (96, 90, 104))
-    o.fline([(322, 355.6), (330, 355.6)], (150, 140, 140))
-    for y in range(346, 359, 2):
-        o.px(338 + (y - 346) // 4, y, (170, 156, 130))
-    o.rect(341, 349, 4, 4, (60, 56, 76))
-    o.px(342, 350, (240, 228, 198))
-    o.px(344, 352, (240, 228, 198))
-    # ---- pen, about 14 cm against the laptop, left of it
-    g.line([(124, 370), (150, 364)], (40, 60, 120), width=2)
-    g.line([(124, 371), (150, 365)], (24, 36, 80))
-    g.line([(125, 369), (143, 365)], (90, 110, 170))
-    g.line([(150, 364), (153, 363)], (200, 200, 214))
-    g.line([(128, 368), (135, 366)], BRASS)
-    g.px(124, 370, BRASS)
+    o.fline([(310.5, 347.6), (322, 346.8)], (60, 60, 80))
+    o.fline([(311, 349.6), (319, 349)], (140, 140, 160))
+    paper = (240, 228, 198)
+    o.poly(TQ, paper)
+    # the fold: the half beyond it lies a little lower, a shade darker
+    o.poly([Q(0, 0), Q(0.38, 0), Q(0.38, 1), Q(0, 1)], mul(paper, 0.93))
+    o.fline([Q(0.38, 0.02), Q(0.38, 0.98)], mul(paper, 0.78))
+    o.fline([TQ[0], TQ[1]], (255, 250, 232))
+    o.fline([TQ[3], TQ[2]], (170, 156, 130))
+    # print: a red band, then rows of type
+    o.fline([Q(0.05, 0.22), Q(0.68, 0.22)], (206, 60, 66), width=2)
+    for b, a1, c in ((0.46, 0.5, (96, 90, 104)), (0.62, 0.62, (150, 140, 140)), (0.78, 0.4, (150, 140, 140))):
+        o.fline([Q(0.06, b), Q(a1, b)], c)
+    o.fline([Q(0.46, 0.46), Q(0.66, 0.46)], (96, 90, 104))
+    # the perforation, notched at both edges, and the stub beyond it
+    for k in range(9):
+        x, y = Q(0.74, 0.05 + k * 0.11)
+        o.frect(round(x), round(y), 1, 1, (176, 162, 136))
+    for b in (0.0, 1.0):
+        x, y = Q(0.74, b)
+        o.frect(round(x) - 1, round(y) - (0 if b == 0 else 1), 2, 1, mul(WOOD, 0.8))
+    hx, hy = Q(0.86, 0.36)
+    o.ellipse(round(hx) - 2, round(hy) - 1, 4, 3, mul(WOOD, 0.7))  # the punched hole
+    for k in range(6):  # a barcode on the stub
+        o.fline([Q(0.79 + k * 0.025, 0.58), Q(0.79 + k * 0.025, 0.86)], (60, 56, 76), width=0.5 + (k % 2) * 0.5)
+    # ---- pen, about 14 cm against the laptop, left of it (docs/13, O-09): a
+    # barrel with a highlight down its lit side, a metal tip, a brass clip that
+    # stands off it, and its shadow on the table; on the fine layer
+    g.shadow(122, 369, 28, 3, 0.45)
+    g.fline([(123, 369.5), (147, 364.5)], (40, 60, 120), width=2)
+    g.fline([(123, 370.4), (147, 365.4)], (22, 32, 72))
+    g.fline([(124, 368.7), (144, 364.6)], (110, 132, 196))
+    g.fline([(147, 364.5), (150.5, 363.8)], (210, 212, 226), width=1.4)
+    g.fline([(127, 367.6), (135, 365.9)], BRASS, width=1)
+    g.fline([(127, 366.8), (133, 365.6)], (255, 236, 170), width=0.6)
+    g.fline([(122.6, 369.6), (124, 369.3)], BRASS, width=2)
 
 
 # ------------------------------------------------------------------ Foreground
