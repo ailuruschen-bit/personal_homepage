@@ -910,7 +910,7 @@ Done so far in stage 1, beyond what the step table names:
   behind the rack's rail this way.
 
 Stage 1 passed its gate and is merged. Stage 2 passed its gate and is merged.
-Stage 3 passed its gate and is merged. Stage 4 passed its gate and is merged: sharpness (4.1) was skipped after two attempts that stuttered or did not help (F-005 in 09), banded light (4.2), clean diagonals (4.3) and material marks (4.4) are done. Stage 5 passed its gate and is merged: the laptop (5.1), curtains (5.2), ticket, floor and side fittings (5.3) and the refines (5.4 to 5.6) are done. Stage 6 is next.
+Stage 3 passed its gate and is merged. Stage 4 passed its gate and is merged: sharpness (4.1) was skipped after two attempts that stuttered or did not help (F-005 in 09), banded light (4.2), clean diagonals (4.3) and material marks (4.4) are done. Stage 5 passed its gate and is merged: the laptop (5.1), curtains (5.2), ticket, floor and side fittings (5.3) and the refines (5.4 to 5.6) are done. Stage 6 was tried and skipped: an armrest end and a grab strap at the lens blocked the view, and a sleeper compartment has no grab straps; the side images, a pilaster and a curtain onto the corridor, are its foreground. Stage 7 is next.
 
 ## Keep in sync
 
