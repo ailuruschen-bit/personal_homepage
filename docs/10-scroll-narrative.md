@@ -159,7 +159,8 @@ Hotspot                aperture (scene units)       becomes
       on a backrest
 公文包 on the rack       the open lid's interior      the Stack panel
 电脑  on the table      the screen                   the Projects panel
-门                     the lit doorway              the chat
+门    no hotspot        none: text only, over the    the chat
+                       carriage as it stands
 ```
 
 Two things follow from this that are worth stating plainly:
@@ -184,7 +185,7 @@ own transform interpolates from its resting rect to a centred rect, and the
 carriage behind it blurs and dims.
 
 **Dolly** — the object stays exactly where it is and the camera goes to it. For
-anything that stays put: the laptop, the door. The object's
+anything that stays put: the laptop. The object's
 transform is identity throughout; the camera's framing interpolates to fit the
 aperture.
 
@@ -379,7 +380,7 @@ A survey, not an implementation plan. No code has been changed.
 | `scene/chapter.ts`   | new: per-chapter beat interpolation, carry and dolly                      |
 | `scene/focus.ts`     | add `--fx`; narrow pointer focus to the hub; expose `presence`            |
 | `scene/hotspots.ts`  | add `aperture` and `transit` per object; chapter order; decoys            |
-| `tools/art/room.py`  | draw the rolled map, the card behind the ticket, the books, the door      |
+| `tools/art/room.py`  | draw the rolled map, the card behind the ticket, the books                |
 | `scene/opening.ts`   | phases reduce to the locked segments; transport joins the machine         |
 | `scene/scene.css`    | remove transitions from anything scroll drives; `.cam` consumes `--fx`    |
 | `router.ts`          | routes resolve to offsets; manual scroll restoration                      |
@@ -396,8 +397,8 @@ A survey, not an implementation plan. No code has been changed.
    distinct by what the read beat drives, and it is the order the evidence
    would be found in — see
    [11](11-premise-and-voice.md#the-evidence-map). `chat` is last by
-   construction: it is the confrontation, and the only chapter whose aperture
-   opens onto a person.
+   construction: it is the confrontation, and the only chapter with no object
+   and no picture of its own: it is played as text over the carriage.
    `notes`, `hobby` and `chat` cannot become chapters until they have artwork
    and therefore an aperture.
 3. **Is the cover the top of the document?** Proposed yes: `s = 0` is outside,

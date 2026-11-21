@@ -26,7 +26,7 @@ because they are content rather than documentation.
 | Who  | What they are                                                   |
 | ---- | --------------------------------------------------------------- |
 | 侦探 | the reader. Hired, experienced, unimpressed. Heard, never seen. |
-| 他   | the occupant. A silhouette in a doorway, then a voice.          |
+| 他   | the occupant. Never drawn: only the lines he speaks.            |
 
 ## The setting
 
@@ -162,16 +162,15 @@ afterwards, and the hobby object is where.
 
 ## Scene 8 — The door
 
-**Camera:** the site's only cut-in — it turns to the door. **Chrome:** the
-timecode reads `00:09:47`.
+**Camera:** stays where it is. There is no cut-in and no new picture: the
+scene is text only, over the carriage as it stands. **Chrome:** the timecode
+reads `00:09:47`.
 
 ```
 [A] 门响了。
 [A] 干这行学会的第一件事：门响的时候，别回头。
 [A] ……我还是回头了。
 ```
-
-The third beat turns the camera.
 
 ```
 [A] 录像我关了。这段不能留。
