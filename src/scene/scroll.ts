@@ -239,8 +239,10 @@ export class ScrollStory {
     // while carried, the object is gone from where it lay: its sprite hides and
     // the patch of the room without it shows
     const away = sp.def.present === 'carry' && presence > 0.001;
-    for (const el of this.els.pops) el.style.opacity = away && el.dataset.pop === sp.def.id ? '0' : '';
-    for (const el of this.els.gones) el.style.opacity = away && el.dataset.gone === sp.def.id ? '1' : '0';
+    for (const el of this.els.pops)
+      el.style.opacity = away && el.dataset.pop === sp.def.id ? '0' : '';
+    for (const el of this.els.gones)
+      el.style.opacity = away && el.dataset.gone === sp.def.id ? '1' : '0';
 
     // the panel: fades in late in the open beat; its text moves through the read beat
     sp.panel.style.opacity = content.toFixed(3);

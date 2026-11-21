@@ -33,10 +33,19 @@ export interface Hotspot {
 }
 
 /** Where an object is, from the generated geometry */
-function geo(target: string): Pick<Hotspot, 'zone' | 'light' | 'box' | 'sprite' | 'front' | 'gone'> {
+function geo(
+  target: string,
+): Pick<Hotspot, 'zone' | 'light' | 'box' | 'sprite' | 'front' | 'gone'> {
   const g = OBJECTS[target];
   if (!g) throw new Error(`geometry.gen.ts has no object "${target}"`);
-  return { zone: g.zone, light: g.light, box: g.box, sprite: g.sprite, front: g.front, gone: g.gone };
+  return {
+    zone: g.zone,
+    light: g.light,
+    box: g.box,
+    sprite: g.sprite,
+    front: g.front,
+    gone: g.gone,
+  };
 }
 
 export const hotspots: Hotspot[] = [

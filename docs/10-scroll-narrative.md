@@ -1,6 +1,7 @@
 # 10 Scroll narrative
 
-**Status: proposed. Nothing in this page is implemented.** Pages 01-08 describe
+**Status: skeleton built** (`scene/scroll.ts`; see [Skeleton](#skeleton)).
+The rest is proposed. Pages 01-08 describe
 the site as it is; this one describes where it is going and is the reference for
 the refactor. It settles how the camera moves;
 [11 Premise and voice](11-premise-and-voice.md) settles what it moves through,
@@ -409,6 +410,46 @@ A survey, not an implementation plan. No code has been changed.
    interesting and more work.
 5. **Does the window transit stay locked in both directions?** Proposed yes.
    It is the one moment the site asks to be watched rather than driven.
+
+## Skeleton
+
+What `scene/scroll.ts` does now, and what it does not yet.
+
+Built:
+
+- Once seated (phase `hub`), `html.story` makes the document as tall as the map
+  (`.track`) and the scroll offset drives the scene. Leaving the hub phase (the
+  window, a replay) holds the page at the top again.
+- The axis starts at the hub (420 px), then about → journey → stack → projects,
+  each approach 560, open 420, read (content overflow + 600), close 360.
+- Carry for the ticket, the map and the briefcase: a `.carry` element, sized
+  once per chapter, is transformed from the object's resting rect to the middle
+  of the frame. Its sprite on the table hides and `.gone`, a patch of the room
+  rendered without it (`build.py`, `CARRIED`), shows where it lay. The carriage
+  dims around it through `.spot`.
+- Dolly for the laptop: the camera gains `--fx`, and `focus.ts` frames any scene
+  point at any zoom, capped at `DOLLY_MAX` 2.5.
+- Panels: one per chapter, always in the DOM, faded in over the last 45% of the
+  open beat and translated through the read. All layout is read in `layout()`,
+  on load and resize, never per frame.
+- Pointer focus and parallax are scaled by the hub weight, so they give way as
+  a chapter is approached.
+- Click, Esc and `#/id`: a transport, ≤ 800 ms, cancelled by wheel, touch or a
+  key. `#/id` on load lands with the chapter open and no opening. The hash
+  follows the open chapter by `replaceState`.
+
+Not yet:
+
+- The cover, porches and window transits on the axis; the opening still runs
+  on its own phases before the axis begins.
+- Overlapping handoffs: chapters follow one another with a moment of rest in
+  between, and there is one carry element, so two objects never move at once.
+- The transport scrolls through the chapters between, rather than moving the
+  camera once across the carriage.
+- The read beat's own motion per object, the open-state art (stage 7 in
+  [13](13-art-review.md)), the chat, the timecode and the spoken lines.
+- The plain-document fallback; the old section pages (`sections/layout.ts`)
+  are no longer reached.
 
 ## Keep in sync
 
