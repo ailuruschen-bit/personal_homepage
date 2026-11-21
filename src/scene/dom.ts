@@ -1,6 +1,7 @@
 import { site } from '../content/site';
 import { sectionById } from '../content/sections';
 import { CHAPTERS } from './scroll';
+import { without } from './probe';
 import { hotspots } from './hotspots';
 import { pct } from './units';
 
@@ -106,7 +107,7 @@ export function buildScene(root: HTMLElement): SceneEls {
 
     <div class="ext l"></div><div class="ext r"></div><div class="ext t"></div><div class="ext b"></div>
     <div class="room"></div>
-    ${gones}
+    ${without('gone') ? '' : gones}
     ${pops}
     ${fronts}
 
@@ -129,8 +130,12 @@ export function buildScene(root: HTMLElement): SceneEls {
   </div></div>
 
   <!-- The scroll story: the carried object, and the chapters' panels -->
-  <div class="carry" id="carry"></div>
-  <div class="panels">${panels}</div>
+  ${
+    without('panels')
+      ? ''
+      : `<div class="carry" id="carry"></div>
+  <div class="panels">${panels}</div>`
+  }
 
   <!-- Idle-state hint for getting back to the carriage -->
   <div class="ghost gt"></div><div class="ghost gb"></div>
@@ -157,7 +162,7 @@ export function buildScene(root: HTMLElement): SceneEls {
     ml: $('ml'),
     hint: $('hint'),
     pops: Array.from(root.querySelectorAll<HTMLElement>('.pop')),
-    carry: $('carry'),
+    carry: root.querySelector<HTMLElement>('#carry') ?? document.createElement('div'),
     gones: Array.from(root.querySelectorAll<HTMLElement>('.gone')),
     track: $('track'),
   };

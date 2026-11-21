@@ -1,6 +1,7 @@
 import type { SceneEls } from './dom';
 import { hotspotByTarget } from './hotspots';
 import { toScreen, toScene, unitSize, type Camera } from './units';
+import { without } from './probe';
 
 /**
  * The scroll story, docs/10: the scroll offset is the only clock once the
@@ -67,6 +68,13 @@ export interface StoryFrame {
   pool: { x: number; y: number; rx: number; ry: number } | null;
 }
 
+/** A stand-in panel outside the document, when panels are left out (probe.ts) */
+function detachedPanel(): HTMLElement {
+  const el = document.createElement('section');
+  el.append(document.createElement('div'));
+  return el;
+}
+
 const clamp = (v: number, lo = 0, hi = 1) => Math.max(lo, Math.min(hi, v));
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 const ease = (t: number) => t * t * (3 - 2 * t);
@@ -86,7 +94,8 @@ export class ScrollStory {
     private readonly track: HTMLElement,
   ) {
     for (const def of CHAPTERS) {
-      const panel = els.stage.querySelector<HTMLElement>(`.panel[data-ch="${def.id}"]`)!;
+      const panel =
+        els.stage.querySelector<HTMLElement>(`.panel[data-ch="${def.id}"]`) ?? detachedPanel();
       this.spans.push({
         def,
         start: 0,
@@ -135,6 +144,7 @@ export class ScrollStory {
 
   /** Seated: the document scrolls. Anywhere else the page is held at the top. */
   setEnabled(on: boolean) {
+    if (without('story')) return;
     if (on === this.enabled) return;
     this.enabled = on;
     document.documentElement.classList.toggle('story', on);
