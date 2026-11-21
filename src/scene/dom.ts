@@ -1,4 +1,6 @@
 import { site } from '../content/site';
+import { sectionById } from '../content/sections';
+import { CHAPTERS } from './scroll';
 import { hotspots } from './hotspots';
 import { pct } from './units';
 
@@ -14,6 +16,10 @@ export interface SceneEls {
   ml: HTMLElement;
   hint: HTMLElement;
   pops: HTMLElement[];
+  /** The object carried to the middle of the frame in a chapter (scroll.ts) */
+  carry: HTMLElement;
+  /** Makes the document as tall as the scroll story (scroll.ts) */
+  track: HTMLElement;
 }
 
 const BLIND_SLATS = 14;
@@ -56,6 +62,18 @@ export function buildScene(root: HTMLElement): SceneEls {
 
   const [l1, l2] = site.heroTitle.split('\n');
 
+  // One panel per chapter, in reading order and always in the DOM; the scroll
+  // story fades them in and moves their text (docs/10, Reading)
+  const panels = CHAPTERS.map((ch) => {
+    const sec = sectionById(ch.id);
+    if (!sec) return '';
+    const blocks = sec.blocks.map((b) => `<p class="panel__block">${b}</p>`).join('');
+    return `<section class="panel" data-ch="${ch.id}" aria-label="${sec.title}"><div class="panel__in">
+      <span class="panel__kicker">${ch.id.toUpperCase()}</span>
+      <h2>${sec.title}</h2><p class="panel__lede">${sec.lede}</p>${blocks}
+    </div></section>`;
+  }).join('');
+
   root.innerHTML = `
 <div class="stage intro" id="stage">
   <div class="sky"></div>
@@ -97,6 +115,10 @@ export function buildScene(root: HTMLElement): SceneEls {
     <p>${site.heroLede}</p>
   </div></div>
 
+  <!-- The scroll story: the carried object, and the chapters' panels -->
+  <div class="carry" id="carry"></div>
+  <div class="panels">${panels}</div>
+
   <!-- Idle-state hint for getting back to the carriage -->
   <div class="ghost gt"></div><div class="ghost gb"></div>
   <div class="lens"></div><div class="grain"></div>
@@ -106,7 +128,8 @@ export function buildScene(root: HTMLElement): SceneEls {
   <div class="ml" id="ml"><i></i></div>
   <div class="cap" id="cap"></div>
   <button class="re" id="re" type="button">↻ 重播开幕</button>
-</div>`;
+</div>
+<div class="track" id="track" aria-hidden="true"></div>`;
 
   const $ = <T extends HTMLElement>(id: string) => root.querySelector<T>(`#${id}`)!;
   return {
@@ -121,5 +144,7 @@ export function buildScene(root: HTMLElement): SceneEls {
     ml: $('ml'),
     hint: $('hint'),
     pops: Array.from(root.querySelectorAll<HTMLElement>('.pop')),
+    carry: $('carry'),
+    track: $('track'),
   };
 }

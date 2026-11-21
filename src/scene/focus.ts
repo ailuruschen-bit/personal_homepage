@@ -3,12 +3,14 @@ import type { Phase } from './opening';
 import { hotspotByTarget, hotspots, nearestHotspot, zoneDistance } from './hotspots';
 import { toScene, unitSize, type Camera, type ScenePoint } from './units';
 import { CAMERA } from './geometry.gen';
+import type { StoryFrame } from './scroll';
 
 /** How many scene units beyond its region an object still snaps from */
 const SNAP_RANGE = 22;
 /** Distance must change by at least this much to count as movement; ignores jitter */
 const DIRECTION_EPSILON = 1.2;
-/** Scene y of .cam's zoom origin; geometry.gen.css sets the same point as its transform-origin */
+/** Scene point of .cam's zoom origin; geometry.gen.css sets the same point as its transform-origin */
+const CAM_ORIGIN_X = CAMERA.x;
 const CAM_ORIGIN_Y = CAMERA.y;
 /** Radius of the free-floating pool in scene units; the snap animation grows from it */
 const FREE_RADIUS = 30;
@@ -52,6 +54,9 @@ export class FocusEngine {
   private direction = new Map<string, Direction>();
   private lastFrame = 0;
   private raf = 0;
+  /** The scroll story's frame, read once at the top of every tick (scroll.ts) */
+  story: (() => StoryFrame) | null = null;
+  private frame: StoryFrame = { hub: 1, camera: null, dim: 0, pool: null };
 
   constructor(
     private readonly els: SceneEls,
@@ -74,6 +79,12 @@ export class FocusEngine {
   get focused(): string | null {
     return this.focus;
   }
+
+  /** The hub framing, without the story's camera: where objects rest */
+  get hubCamera(): Camera {
+    return { ...this.hubCam, px: this.camera.px, py: this.camera.py };
+  }
+  private hubCam: Camera = { z: 1, by: 0, px: 0, py: 0 };
 
   movePointer(x: number, y: number) {
     this.pointer = { x, y };
@@ -166,7 +177,11 @@ export class FocusEngine {
   private tick(now: number) {
     const dt = Math.min(0.05, (now - this.lastFrame) / 1000 || 0.016);
     this.lastFrame = now;
-    const active = this.phase() === 'hub';
+    this.frame = this.story?.() ?? this.frame;
+    // Pointer focus belongs to the hub; inside a chapter the scroll owns the scene
+    const seatedAtHub = this.frame.hub > 0.5;
+    if (!seatedAtHub && this.focus) this.setFocus(null);
+    const active = this.phase() === 'hub' && seatedAtHub;
 
     this.syncFrame();
     this.updateParallax(dt);
@@ -191,19 +206,29 @@ export class FocusEngine {
     const u = unitSize();
     const framed = this.phase() !== 'intro';
 
-    const zoom = framed ? clamp(Math.min(vw / (u * 300), vh / (u * 335)), 0.72, 1) : 1;
-    const baseY = framed ? (240 - 216) * u * zoom : 0;
+    const hubZoom = framed ? clamp(Math.min(vw / (u * 300), vh / (u * 335)), 0.72, 1) : 1;
+    this.hubCam = { z: hubZoom, by: framed ? (240 - 216) * u * hubZoom : 0, px: 0, py: 0 };
+
+    // The story can ask for another framing (the dolly): a zoom and the scene
+    // point to put at the centre of the screen. The hub centres scene x 240 and y 216.
+    const story = framed && this.phase() === 'hub' ? this.frame.camera : null;
+    const zoom = story ? story.z : hubZoom;
+    const cx = story ? story.cx : 240;
+    const cy = story ? story.cy : framed ? 216 : 240;
     this.camera.z = zoom;
-    this.camera.by = baseY;
+    this.camera.by = (240 - cy) * u * zoom;
+    const bx = (240 - cx) * u * zoom;
 
     // .cam's zoom origin sits at the gap in the blinds rather than the centre of the
     // frame, so convert the framing offset into the equivalent translation
-    const shift = baseY + (240 - CAM_ORIGIN_Y) * u * (1 - zoom);
-    const key = `${zoom.toFixed(4)},${shift.toFixed(2)}`;
+    const shiftX = bx + (240 - CAM_ORIGIN_X) * u * (1 - zoom);
+    const shiftY = this.camera.by + (240 - CAM_ORIGIN_Y) * u * (1 - zoom);
+    const key = `${zoom.toFixed(4)},${shiftX.toFixed(2)},${shiftY.toFixed(2)}`;
     if (key === this.frameKey) return;
     this.frameKey = key;
     this.els.stage.style.setProperty('--fz', zoom.toFixed(4));
-    this.els.stage.style.setProperty('--fy', `${shift.toFixed(2)}px`);
+    this.els.stage.style.setProperty('--fx', `${shiftX.toFixed(2)}px`);
+    this.els.stage.style.setProperty('--fy', `${shiftY.toFixed(2)}px`);
   }
 
   /** A few pixels of pointer parallax: the carriage moves more, the city outside less */
@@ -211,8 +236,10 @@ export class FocusEngine {
     const phase = this.phase();
     const seated = phase === 'hub' || phase === 'back';
     const c = this.camera;
-    const tx = seated && this.pointer ? -(this.pointer.x - window.innerWidth / 2) * 0.02 : 0;
-    const ty = seated && this.pointer ? -(this.pointer.y - window.innerHeight / 2) * 0.02 : 0;
+    // damped to nothing as a chapter is approached, so the camera does not fight two inputs
+    const w = this.frame.hub;
+    const tx = seated && this.pointer ? -(this.pointer.x - window.innerWidth / 2) * 0.02 * w : 0;
+    const ty = seated && this.pointer ? -(this.pointer.y - window.innerHeight / 2) * 0.02 * w : 0;
 
     // .look is only updated per frame inside the hub, where it is its own compositing
     // layer. Touching it while the camera is still zooming would repaint the whole
@@ -247,6 +274,15 @@ export class FocusEngine {
     const light = active && this.focus ? hotspotByTarget(this.focus)?.light : undefined;
 
     let target = { x: p.x, y: p.y, rx: p.rx, ry: p.ry, alpha: 0 };
+    const story =
+      this.phase() === 'hub' && this.frame.pool && this.frame.dim > 0.001 ? this.frame : null;
+    if (story) {
+      // Inside a chapter the story places the light and sets the dimming directly:
+      // both are functions of the scroll, not eased
+      Object.assign(p, story.pool, { alpha: story.dim, dim: story.dim });
+      this.writePool();
+      return;
+    }
     if (light) {
       target = { ...light, alpha: 1 };
       if (this.pointer) {
@@ -272,6 +308,11 @@ export class FocusEngine {
     p.alpha += (target.alpha - p.alpha) * shape;
     p.dim += ((light ? 1 : 0) - p.dim) * smoothing(dt, TAU.dim);
 
+    this.writePool();
+  }
+
+  private writePool() {
+    const p = this.pool;
     this.els.beam.style.opacity = p.alpha.toFixed(3);
     // .spot dims the 480 scene around the focused object and stops at its
     // edges; the side images are a dark foreground, so the edge is where the

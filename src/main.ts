@@ -1,37 +1,18 @@
 import './styles/base.css';
-import { mountScene, type SceneHandle } from './scene';
-import { renderSection } from './sections/layout';
+import { mountScene } from './scene';
 import { sectionById } from './content/sections';
-import { go, onChange, parse, type Route } from './router';
+import { parse } from './router';
 
+/**
+ * One page: the carriage, and the chapters on its scroll (docs/10). A #/id link
+ * lands with that chapter open; the scene keeps the hash in step with the
+ * chapter being read, by replaceState, so following it later lands there too.
+ */
 const app = document.querySelector<HTMLElement>('#app')!;
-let scene: SceneHandle | null = null;
-/** Whether the opening has already played this visit; coming back from a section skips it */
-let openingSeen = false;
+const route = parse();
+mountScene(app, {
+  startAt: route.name === 'section' && sectionById(route.id) ? route.id : undefined,
+});
 
-function render(route: Route) {
-  scene?.destroy();
-  scene = null;
-  app.replaceChildren();
-
-  if (route.name === 'scene') {
-    scene = mountScene(app, {
-      onEnter: (id) => go({ name: 'section', id }),
-      skipOpening: openingSeen,
-    });
-    openingSeen = true;
-    return;
-  }
-
-  const section = sectionById(route.id);
-  if (!section) {
-    // TODO: 404 page
-    go({ name: 'scene' });
-    return;
-  }
-  openingSeen = true;
-  app.append(renderSection(section, () => go({ name: 'scene' })));
-}
-
-render(parse());
-onChange(render);
+// A link to another chapter while the page is open: land there the same way
+window.addEventListener('hashchange', () => location.reload());

@@ -5,20 +5,21 @@ import { buildScene } from './dom';
 import { FocusEngine } from './focus';
 import { COVER } from './hotspots';
 import { Opening } from './opening';
+import { ScrollStory } from './scroll';
 
 export interface SceneHandle {
   destroy(): void;
 }
 
 export interface SceneOptions {
-  /** Open the matching section once an object is chosen */
-  onEnter: (sectionId: string) => void;
-  /** Skip the opening and land straight in the carriage (used when returning from a section) */
+  /** Skip the opening and land straight in the carriage */
   skipOpening?: boolean;
+  /** Land with this chapter already open, skipping the opening (a #/id link) */
+  startAt?: string;
 }
 
 /** Mount the carriage scene: opening -> idle -> hub */
-export function mountScene(root: HTMLElement, { onEnter, skipOpening }: SceneOptions): SceneHandle {
+export function mountScene(root: HTMLElement, { skipOpening, startAt }: SceneOptions): SceneHandle {
   const els = buildScene(root);
   // ?debug=geometry overlays the generated geometry, ?debug=layers adds switches
   // that remove one layer at a time; both are loaded only when asked for
@@ -31,11 +32,26 @@ export function mountScene(root: HTMLElement, { onEnter, skipOpening }: SceneOpt
     () => opening.phase,
     (target) => (target === COVER ? '窗外' : (sectionById(target)?.title ?? target)),
   );
+  // The scroll story: once seated, the scroll offset drives the chapters (docs/10)
+  history.scrollRestoration = 'manual';
+  const story = new ScrollStory(els, els.track);
+  focus.story = () => story.update(focus.hubCamera);
   // Sync the framing the moment the phase changes, ahead of the style recalc in the same frame
-  opening.onPhase = () => focus.syncFrame();
-  if (skipOpening) opening.skip();
+  opening.onPhase = (p) => {
+    story.setEnabled(p === 'hub');
+    focus.syncFrame();
+  };
+  if (startAt) {
+    // A link straight to a chapter: no opening, no flash of the carriage, the
+    // chapter open on the first frame
+    opening.set('hub');
+    story.layout();
+    window.scrollTo(0, story.readStart(startAt));
+  } else if (skipOpening) opening.skip();
   focus.syncFrame();
   focus.start();
+  const onResize = () => story.layout();
+  window.addEventListener('resize', onResize);
 
   // Drop the grain's moving compositor layer before Chrome hides the tab, then
   // let the visible carriage paint twice before starting that layer again.
@@ -58,7 +74,7 @@ export function mountScene(root: HTMLElement, { onEnter, skipOpening }: SceneOpt
   const enter = (target: string | null) => {
     if (!target) return;
     if (target === COVER) opening.set('peek');
-    else onEnter(target);
+    else story.transportTo(story.readStart(target));
   };
 
   const onPointerMove = (e: PointerEvent) => {
@@ -101,6 +117,7 @@ export function mountScene(root: HTMLElement, { onEnter, skipOpening }: SceneOpt
   const onWheel = () => opening.back();
 
   const onKeyDown = (e: KeyboardEvent) => {
+    if (e.key === 'Escape' && opening.phase === 'hub' && story.offset > 0) story.transportTo(0);
     if (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') opening.back();
   };
 
@@ -118,6 +135,8 @@ export function mountScene(root: HTMLElement, { onEnter, skipOpening }: SceneOpt
       cancelAnimationFrame(grainResume);
       root.classList.remove('grain-suspended');
       focus.stop();
+      story.dispose();
+      window.removeEventListener('resize', onResize);
       opening.dispose();
       document.removeEventListener('keydown', onKeyDown);
       root.replaceChildren();
