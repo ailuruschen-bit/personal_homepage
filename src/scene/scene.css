@@ -945,6 +945,14 @@
   inset: 0;
   background-size: 100% 100%;
 }
+/* The room without a carried object, under the sprites; shown only while the
+   object is away (scroll.ts) */
+.gone {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0;
+  background-size: 100% 100%;
+}
 /* Static, above the sprites: see dom.ts */
 .pop-front {
   position: absolute;

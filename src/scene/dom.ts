@@ -18,6 +18,8 @@ export interface SceneEls {
   pops: HTMLElement[];
   /** The object carried to the middle of the frame in a chapter (scroll.ts) */
   carry: HTMLElement;
+  /** Patches of the room without each carried object (scroll.ts) */
+  gones: HTMLElement[];
   /** Makes the document as tall as the scroll story (scroll.ts) */
   track: HTMLElement;
 }
@@ -37,6 +39,16 @@ export function buildScene(root: HTMLElement): SceneEls {
       const b = h.box!;
       const box = `left:${pct(b.x)};top:${pct(b.y)};width:${pct(b.w)};height:${pct(b.h)};animation-delay:${i}s`;
       return `<div class="pop" data-pop="${h.target}" style="${box}"><i style="background-image:url(${h.sprite})"></i></div>`;
+    })
+    .join('');
+
+  // Where a carried object was, without it: under the sprites, shown only while
+  // the scroll story has the object in the middle of the frame (scroll.ts)
+  const gones = hotspots
+    .filter((h) => h.gone)
+    .map((h) => {
+      const f = h.gone!;
+      return `<div class="gone" data-gone="${h.target}" style="left:${pct(f.x)};top:${pct(f.y)};width:${pct(f.w)};height:${pct(f.h)};background-image:url(${f.sprite})"></div>`;
     })
     .join('');
 
@@ -94,6 +106,7 @@ export function buildScene(root: HTMLElement): SceneEls {
 
     <div class="ext l"></div><div class="ext r"></div><div class="ext t"></div><div class="ext b"></div>
     <div class="room"></div>
+    ${gones}
     ${pops}
     ${fronts}
 
@@ -145,6 +158,7 @@ export function buildScene(root: HTMLElement): SceneEls {
     hint: $('hint'),
     pops: Array.from(root.querySelectorAll<HTMLElement>('.pop')),
     carry: $('carry'),
+    gones: Array.from(root.querySelectorAll<HTMLElement>('.gone')),
     track: $('track'),
   };
 }
