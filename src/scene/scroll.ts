@@ -226,7 +226,7 @@ export class ScrollStory {
       const y = lerp(rest.y, vh / 2, ease(presence));
       const el = this.els.carry;
       el.style.transform = `translate3d(${(x - (box.w * u) / 2).toFixed(1)}px,${(y - (box.h * u) / 2).toFixed(1)}px,0) scale(${k.toFixed(4)})`;
-      el.style.opacity = presence > 0.001 ? '1' : '0';
+      el.classList.toggle('on', presence > 0.001);
       frame.dim = presence;
       const centre = toScene(vw / 2, vh / 2, hubCamera);
       frame.pool = {
@@ -278,7 +278,7 @@ export class ScrollStory {
       el.style.backgroundImage = `url(${hotspotByTarget(sp.def.id)!.sprite})`;
       this.sizeCarry();
     } else {
-      el.style.opacity = '0';
+      el.classList.remove('on');
       for (const p of this.els.pops) p.style.opacity = '';
       for (const p of this.els.gones) p.style.opacity = '0';
     }

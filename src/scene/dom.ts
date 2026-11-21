@@ -130,12 +130,8 @@ export function buildScene(root: HTMLElement): SceneEls {
   </div></div>
 
   <!-- The scroll story: the carried object, and the chapters' panels -->
-  ${
-    without('panels')
-      ? ''
-      : `<div class="carry" id="carry"></div>
-  <div class="panels">${panels}</div>`
-  }
+  ${without('carry') ? '' : '<div class="carry" id="carry"></div>'}
+  ${without('panel') ? '' : `<div class="panels">${panels}</div>`}
 
   <!-- Idle-state hint for getting back to the carriage -->
   <div class="ghost gt"></div><div class="ghost gb"></div>

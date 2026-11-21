@@ -1099,26 +1099,35 @@
    --------------------------------------------------------------------------- */
 /* The object carried to the middle of the frame: sized once per chapter, then
    only transformed */
+/* Hidden, not merely transparent, until a chapter carries it: an invisible
+   element over the carriage still takes part in Chrome's layer overlap tests,
+   and the first focus of each object then drew rectangular faults (docs/09) */
 .carry {
   position: absolute;
   z-index: 4;
   left: 0;
   top: 0;
   pointer-events: none;
-  opacity: 0;
+  visibility: hidden;
   background-size: 100% 100%;
   transform-origin: 50% 50%;
 }
+.carry.on {
+  visibility: visible;
+}
+/* No box of its own over the stage: each panel is positioned on the stage
+   directly, and hidden until its chapter shows it, for the same reason as
+   .carry above */
 .panels {
-  position: absolute;
-  z-index: 5;
-  inset: 0;
-  pointer-events: none;
+  display: contents;
 }
 /* A chapter's text, where the opened object's surface was. Not a nested
    scroller: its inner element is translated through the read beat */
 .panel {
   position: absolute;
+  z-index: 5;
+  visibility: hidden;
+  pointer-events: none;
   left: 50%;
   top: 50%;
   width: min(62vw, 720px);
@@ -1134,6 +1143,7 @@
   -webkit-user-select: text;
 }
 .panel.on {
+  visibility: visible;
   pointer-events: auto;
 }
 .panel__in {

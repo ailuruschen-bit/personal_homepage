@@ -6,6 +6,9 @@
  *   story   the document does not become scrollable when seated
  *   gone    no patches of the room without the carried objects
  *   panels  no chapter panels and no carried-object element
+ *   carry   no carried-object element only
+ *   panel   no chapter panels only
  */
 const off = new Set((new URLSearchParams(location.search).get('no') ?? '').split(','));
-export const without = (part: 'story' | 'gone' | 'panels') => off.has(part);
+export const without = (part: 'story' | 'gone' | 'panels' | 'carry' | 'panel') =>
+  off.has(part) || ((part === 'carry' || part === 'panel') && off.has('panels'));
