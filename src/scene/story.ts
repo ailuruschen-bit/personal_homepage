@@ -34,6 +34,8 @@ const FILL = 0.62;
 const FOLLOW = 0.06;
 /** Each cut: to black, and back from it, in ms */
 const FADE = 260;
+/** Wheel travel up past the hub that goes back out of the window */
+const OUT = 140;
 /** Wheel travel past a page's top or bottom that leaves it */
 const LEAVE = 160;
 /** A click's run to an object, at most */
@@ -84,6 +86,9 @@ export class Story {
   enabled = false;
   /** Called at each cut, so the scene can stop and start its loop */
   onMode: (mode: 'scene' | 'page') => void = () => {};
+  /** Scrolling up past the hub: out of the window again (index.ts) */
+  onOut: () => void = () => {};
+  private out = 0;
 
   constructor(private readonly els: SceneEls) {
     let s = 0;
@@ -174,6 +179,16 @@ export class Story {
     if (!this.enabled) return;
     cancelAnimationFrame(this.transport);
     this.transport = 0;
+    // pushing up at the hub, with the camera already home, goes back out of the window
+    if (dy < 0 && this.target <= 0 && this.p < 1) {
+      this.out -= dy;
+      if (this.out >= OUT) {
+        this.out = 0;
+        this.onOut();
+      }
+      return;
+    }
+    this.out = 0;
     this.target = clamp(this.target + dy, 0, this.end);
   }
 

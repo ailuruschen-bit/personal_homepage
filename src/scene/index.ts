@@ -39,6 +39,8 @@ export function mountScene(root: HTMLElement, { skipOpening, startAt }: SceneOpt
   focus.story = () => story.update(focus.hubCamera);
   // the carriage is not rendered while a page is read
   story.onMode = (mode) => (mode === 'page' ? focus.stop() : focus.start());
+  // scrolling up at the hub looks back out of the window; scrolling down out there returns
+  story.onOut = () => opening.set('peek');
   // Sync the framing the moment the phase changes, ahead of the style recalc in the same frame
   opening.onPhase = (p) => {
     story.enabled = p === 'hub';
@@ -116,7 +118,11 @@ export function mountScene(root: HTMLElement, { skipOpening, startAt }: SceneOpt
     if (target && opening.phase === 'hub' && el.matches(':focus-visible')) focus.setFocus(target);
   };
 
-  const onWheel = () => opening.back();
+  // Out of the window, scrolling down comes back in; up does nothing, so the
+  // tail of the scroll that took the visitor out does not bring them straight back
+  const onWheel = (e: WheelEvent) => {
+    if (e.deltaY > 0) opening.back();
+  };
 
   const onKeyDown = (e: KeyboardEvent) => {
     if (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') opening.back();

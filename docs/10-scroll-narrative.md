@@ -433,6 +433,9 @@ A survey, not an implementation plan. No code has been changed.
   bottom cuts back to just after the node, where the camera retreats and goes
   on to the next object; past its top, to just before the node, back toward
   the hub. Esc goes home.
+- Scrolling up at the hub, with the camera home, looks back out of the window
+  (`peek`); out there, scrolling down comes back in, and scrolling up does
+  nothing, so the tail of a scroll cannot bounce the visitor straight back.
 - Clicking an object at the hub runs the progress to it (≤ 900 ms) and cuts. A
   `#/id` link on load opens that page with no opening. The hash follows the
   page by `replaceState`.
