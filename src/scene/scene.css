@@ -1163,3 +1163,36 @@
   margin: 10vh 0 0;
   text-align: center;
 }
+/* The detective's line on the way to an object (story.ts): above the focus
+   caption, text only, no box */
+.sub {
+  position: absolute;
+  z-index: 8;
+  left: 8vw;
+  right: 8vw;
+  bottom: 7vh;
+  text-align: center;
+  pointer-events: none;
+  opacity: 0;
+  color: #f3f0fb;
+  text-shadow:
+    0 2px 0 rgba(5, 4, 14, 0.85),
+    0 0 16px rgba(5, 4, 14, 0.95);
+}
+.sub__line {
+  margin: 0;
+  font:
+    18px/1.6 'DotGothic16',
+    'Noto Sans SC',
+    monospace;
+  letter-spacing: 0.08em;
+}
+.sub__hint {
+  margin: 0.8em 0 0;
+  min-height: 1.4em;
+  font:
+    13px/1.4 'Noto Sans SC',
+    sans-serif;
+  letter-spacing: 0.15em;
+  color: rgba(243, 240, 251, 0.7);
+}

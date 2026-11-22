@@ -2,6 +2,7 @@ import type { SceneEls } from './dom';
 import { hotspotByTarget } from './hotspots';
 import { toScene, unitSize, type Camera } from './units';
 import { sectionById } from '../content/sections';
+import { nudge, objectLines } from '../content/lines';
 
 /**
  * The story, docs/10. Two modes that are never on screen together:
@@ -34,6 +35,8 @@ const FILL = 0.62;
 const FOLLOW = 0.06;
 /** Each cut: to black, and back from it, in ms */
 const FADE = 260;
+/** At the hub with nothing moving this long, the nudge shows, in ms */
+const NUDGE_AFTER = 1800;
 /** Wheel travel up past the hub that goes back out of the window */
 const OUT = 100;
 /** A pause in wheel input longer than this starts a new gesture, in ms */
@@ -93,6 +96,8 @@ export class Story {
   private armed = true;
   private lastInput = 0;
   private homeSince = 0;
+  private quietSince = performance.now();
+  private subKey = '';
 
   constructor(private readonly els: SceneEls) {
     let s = 0;
@@ -165,6 +170,7 @@ export class Story {
   };
 
   private input(dy: number) {
+    this.quietSince = performance.now();
     if (this.busy) return;
     if (this.mode === 'page') return this.pageInput(dy);
     if (!this.enabled) return;
@@ -240,6 +246,7 @@ export class Story {
     }
     // eased out, not in: the first of the wheel moves the camera most
     this.showObject(i, easeOut(clamp(t)), hub, frame);
+    this.showLines(i, clamp(t), i >= 0 && this.p > this.nodes[i]!, now);
     return frame;
   }
 
@@ -286,6 +293,44 @@ export class Story {
     const sx = vw / 2 + (box.x + box.w / 2 - cx) * u * z;
     const sy = vh / 2 + (box.y + box.h / 2 - cy) * u * z - lift * box.h * u * z;
     carry.style.transform = `translate3d(${(sx - (box.w * u) / 2).toFixed(1)}px,${(sy - (box.h * u) / 2).toFixed(1)}px,0) scale(${(z * (1 + lift)).toFixed(4)})`;
+  }
+
+  /** The detective's line on the way to an object, and what comes next. On the
+   *  way in: what it is and his first look, then a prompt to go on; on the way
+   *  out: his last word on it. At the hub, after a while, the nudge. */
+  private showLines(i: number, t: number, leaving: boolean, now: number) {
+    let key = '';
+    let line = '';
+    let hint = '';
+    let alpha = 0;
+    if (i >= 0 && t > 0.02) {
+      const id = CHAPTERS[i]!.id;
+      const l = objectLines[id];
+      const title = sectionById(id)?.title ?? id;
+      if (l && !leaving) {
+        const ready = t > 0.7;
+        key = `${id}:in:${ready}`;
+        line = `${l.name} · ${l.open}`;
+        hint = ready ? `↓ 继续，翻开看看：${title}` : '';
+        alpha = clamp((t - 0.08) / 0.2);
+      } else if (l) {
+        key = `${id}:out`;
+        line = l.close;
+        alpha = clamp((t - 0.35) / 0.3);
+      }
+    } else if (this.enabled && now - this.quietSince > NUDGE_AFTER) {
+      key = 'nudge';
+      line = nudge.line;
+      hint = nudge.hint;
+      alpha = 1;
+    }
+    const sub = this.els.sub;
+    if (key && key !== this.subKey) {
+      this.subKey = key;
+      sub.children[0]!.textContent = line;
+      sub.children[1]!.textContent = hint;
+    }
+    sub.style.opacity = alpha.toFixed(3);
   }
 
   /** Size the carried element again after a resize */
@@ -363,7 +408,7 @@ function renderPage(i: number): string {
   const blocks = (sec?.blocks ?? []).map((b) => `<p class="page__block">${b}</p>`).join('');
   return `<article class="page__in">
     <p class="page__hint">↑ 向上滚动，回到车厢</p>
-    <span class="page__kicker">${ch.id.toUpperCase()}</span>
+    <span class="page__kicker">${objectLines[ch.id]?.name ?? ''} · ${ch.id.toUpperCase()}</span>
     <h1>${sec?.title ?? ch.id}</h1>
     <p class="page__lede">${sec?.lede ?? ''}</p>
     ${blocks}

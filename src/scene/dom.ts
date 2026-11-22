@@ -11,6 +11,8 @@ export interface SceneEls {
   spot: HTMLElement;
   beam: HTMLElement;
   cap: HTMLElement;
+  /** The detective's line and what to do next, on the way to an object (story.ts) */
+  sub: HTMLElement;
   ml: HTMLElement;
   hint: HTMLElement;
   pops: HTMLElement[];
@@ -125,6 +127,7 @@ export function buildScene(root: HTMLElement): SceneEls {
   <button class="skip" id="skip" type="button">跳过 →</button>
   <div class="ml" id="ml"><i></i></div>
   <div class="cap" id="cap"></div>
+  <div class="sub" id="sub" aria-live="polite"><p class="sub__line"></p><p class="sub__hint"></p></div>
   <button class="re" id="re" type="button">↻ 重播开幕</button>
 </div>
 <main class="page" id="page" hidden></main>`;
@@ -139,6 +142,7 @@ export function buildScene(root: HTMLElement): SceneEls {
     spot: $('spot'),
     beam: $('beam'),
     cap: $('cap'),
+    sub: $('sub'),
     ml: $('ml'),
     hint: $('hint'),
     pops: Array.from(root.querySelectorAll<HTMLElement>('.pop')),
