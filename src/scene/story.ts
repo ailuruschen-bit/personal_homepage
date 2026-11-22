@@ -38,8 +38,6 @@ const FADE = 260;
 const OUT = 140;
 /** Wheel travel past a page's top or bottom that leaves it */
 const LEAVE = 160;
-/** A click's run to an object, at most */
-const TRANSPORT_MAX_MS = 900;
 
 export type Present = 'carry' | 'dolly';
 
@@ -64,7 +62,6 @@ export interface StoryFrame {
 
 const clamp = (v: number, lo = 0, hi = 1) => Math.max(lo, Math.min(hi, v));
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
-const ease = (t: number) => t * t * (3 - 2 * t);
 const easeOut = (t: number) => 1 - (1 - t) * (1 - t);
 const nextFrame = () => new Promise<void>((r) => requestAnimationFrame(() => r()));
 const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
@@ -79,7 +76,6 @@ export class Story {
   private busy = false;
   private chapter = -1;
   private leave = 0;
-  private transport = 0;
   private touchY: number | null = null;
   private last = performance.now();
   /** True while the carriage is seated (phase hub); scene input is ignored otherwise */
@@ -108,25 +104,12 @@ export class Story {
     return this.mode === 'scene' && !this.busy && this.p < AT_HUB;
   }
 
-  /** Clicking an object at the hub: a time-based run to it, then its page */
+  /** Clicking an object at the hub: straight to its page through black */
   goTo(id: string) {
     const i = CHAPTERS.findIndex((c) => c.id === id);
     if (i < 0 || this.busy || this.mode !== 'scene') return;
-    cancelAnimationFrame(this.transport);
-    const from = this.p;
-    const to = this.nodes[i]! - 1;
-    const duration = Math.min(TRANSPORT_MAX_MS, 400 + Math.abs(to - from) * 0.15);
-    const t0 = performance.now();
-    const step = (now: number) => {
-      const t = clamp((now - t0) / duration);
-      this.target = this.p = lerp(from, to, ease(t));
-      if (t < 1) this.transport = requestAnimationFrame(step);
-      else {
-        this.transport = 0;
-        void this.toPage(i);
-      }
-    };
-    this.transport = requestAnimationFrame(step);
+    this.p = this.target = this.nodes[i]!;
+    void this.toPage(i);
   }
 
   /** Back to the hub, from anywhere */
@@ -177,8 +160,6 @@ export class Story {
     if (this.busy) return;
     if (this.mode === 'page') return this.pageInput(dy);
     if (!this.enabled) return;
-    cancelAnimationFrame(this.transport);
-    this.transport = 0;
     // pushing up at the hub, with the camera already home, goes back out of the window
     if (dy < 0 && this.target <= 0 && this.p < 1) {
       this.out -= dy;
@@ -215,9 +196,9 @@ export class Story {
     if (this.mode !== 'scene') return frame;
 
     const prev = this.p;
-    if (!this.transport) this.p += (this.target - this.p) * (1 - Math.exp(-dt / FOLLOW));
+    this.p += (this.target - this.p) * (1 - Math.exp(-dt / FOLLOW));
     // Reaching a node going forward cuts to its page
-    if (!this.busy && !this.transport) {
+    if (!this.busy) {
       const i = this.nodes.findIndex((n) => prev < n && this.p >= n);
       if (i >= 0) {
         this.p = this.target = this.nodes[i]!;
@@ -347,7 +328,6 @@ export class Story {
     window.removeEventListener('touchstart', this.onTouchStart);
     window.removeEventListener('touchmove', this.onTouchMove);
     window.removeEventListener('keydown', this.onKey);
-    cancelAnimationFrame(this.transport);
   }
 }
 
