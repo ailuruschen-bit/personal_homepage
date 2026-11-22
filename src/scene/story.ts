@@ -19,10 +19,13 @@ import { sectionById } from '../content/sections';
  * Chrome draw rectangular faults (docs/09, F-006).
  */
 
-/** Spans on the progress axis, in wheel pixels */
-const HUB = 300;
-const APPROACH = 700;
+/** Spans on the progress axis, in wheel pixels. The first approach starts at
+ *  0: the camera answers the very first turn of the wheel, or a visitor takes
+ *  the carriage for a still that can only be clicked */
+const APPROACH = 600;
 const RETREAT = 500;
+/** Progress below which the carriage still counts as the hub: clicks and focus */
+const AT_HUB = 40;
 /** The camera never zooms the carriage further than this (docs/10, Performance) */
 const DOLLY_MAX = 2.5;
 /** Share of the viewport the reached object fills */
@@ -60,6 +63,7 @@ export interface StoryFrame {
 const clamp = (v: number, lo = 0, hi = 1) => Math.max(lo, Math.min(hi, v));
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 const ease = (t: number) => t * t * (3 - 2 * t);
+const easeOut = (t: number) => 1 - (1 - t) * (1 - t);
 const nextFrame = () => new Promise<void>((r) => requestAnimationFrame(() => r()));
 const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
@@ -82,7 +86,7 @@ export class Story {
   onMode: (mode: 'scene' | 'page') => void = () => {};
 
   constructor(private readonly els: SceneEls) {
-    let s = HUB;
+    let s = 0;
     for (let i = 0; i < CHAPTERS.length; i++) {
       this.nodes.push(s + APPROACH);
       s += APPROACH + RETREAT;
@@ -96,7 +100,7 @@ export class Story {
 
   /** At the hub: where pointer focus, clicks and the window belong */
   get atHub() {
-    return this.mode === 'scene' && !this.busy && this.p < HUB * 0.5;
+    return this.mode === 'scene' && !this.busy && this.p < AT_HUB;
   }
 
   /** Clicking an object at the hub: a time-based run to it, then its page */
@@ -214,7 +218,8 @@ export class Story {
       if (this.p >= n - APPROACH && this.p <= n) [i, t] = [k, (this.p - (n - APPROACH)) / APPROACH];
       else if (this.p > n && this.p <= n + RETREAT) [i, t] = [k, 1 - (this.p - n) / RETREAT];
     }
-    this.showObject(i, ease(clamp(t)), hub, frame);
+    // eased out, not in: the first of the wheel moves the camera most
+    this.showObject(i, easeOut(clamp(t)), hub, frame);
     return frame;
   }
 

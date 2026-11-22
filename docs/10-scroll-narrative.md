@@ -419,7 +419,7 @@ A survey, not an implementation plan. No code has been changed.
 
 - **Scene.** The carriage alone. Wheel, touch and the arrow and page keys move a
   progress value; there is no tall document and the page itself never scrolls.
-  The axis: the hub (300), then for each object an approach (700) to a node
+  The axis: for each object, from the very first turn of the wheel, an approach (600, eased out) to a node
   and a retreat (500), in the order about, journey, stack, projects. On the
   approach the camera closes on the object (zoom up to `DOLLY_MAX` 2.5, the
   object filling 62% of the frame), the carriage dims around it, and a
