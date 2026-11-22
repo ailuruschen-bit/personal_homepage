@@ -127,7 +127,7 @@ export function buildScene(root: HTMLElement): SceneEls {
   <button class="skip" id="skip" type="button">跳过 →</button>
   <div class="ml" id="ml"><i></i></div>
   <div class="cap" id="cap"></div>
-  <div class="talk" id="talk" aria-live="polite">
+  <div class="talk talk--${new URLSearchParams(location.search).get('talk') ?? 'on'}" id="talk" aria-live="polite">
     <span class="talk__who">侦探</span>
     <p class="talk__line"><b class="talk__obj"></b><span class="talk__text"></span><i class="talk__cur" aria-hidden="true"></i></p>
     <p class="talk__hint"></p>

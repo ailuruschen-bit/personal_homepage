@@ -1284,3 +1284,14 @@
   color: #f2c46d;
   animation: talk-blink 0.9s steps(1) infinite;
 }
+/* Diagnostics for docs/09 F-007, by ?talk=: off removes the bubble, static
+   keeps it on screen with no transition */
+.talk--off {
+  display: none;
+}
+.talk--static,
+.hub .talk--static.on {
+  opacity: 1;
+  transform: none;
+  transition: none;
+}
