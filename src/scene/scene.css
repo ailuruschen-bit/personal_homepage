@@ -1185,6 +1185,10 @@
   transition:
     opacity 0.25s,
     transform 0.25s;
+  /* A layer of its own from the first frame, never created later: a painted
+     panel over the carriage otherwise gets pulled into a new layer the first
+     time an object under it is focused, and Chrome draws faults (docs/09 F-007) */
+  will-change: opacity, transform;
   background: #161125;
   color: #f4f0fb;
   /* rim, notched corners and a hard shadow, all in box-shadow: no blur */
