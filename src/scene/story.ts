@@ -35,9 +35,11 @@ const FOLLOW = 0.06;
 /** Each cut: to black, and back from it, in ms */
 const FADE = 260;
 /** Wheel travel up past the hub that goes back out of the window */
-const OUT = 140;
+const OUT = 100;
 /** A pause in wheel input longer than this starts a new gesture, in ms */
-const GESTURE_GAP = 220;
+const GESTURE_GAP = 120;
+/** ...or the camera has been home this long, in ms */
+const HOME_HOLD = 450;
 /** Wheel travel past a page's top or bottom that leaves it */
 const LEAVE = 160;
 
@@ -87,9 +89,10 @@ export class Story {
   /** Scrolling up past the hub: out of the window again (index.ts) */
   onOut: () => void = () => {};
   private out = 0;
-  /** Going out takes a fresh gesture begun with the camera already home */
+  /** Going out takes a fresh gesture, or a moment, once the camera is home */
   private armed = true;
   private lastInput = 0;
+  private homeSince = 0;
 
   constructor(private readonly els: SceneEls) {
     let s = 0;
@@ -172,8 +175,15 @@ export class Story {
     const fresh = now - this.lastInput > GESTURE_GAP;
     this.lastInput = now;
     const home = this.target <= 0 && this.p < 1;
-    if (!home) this.armed = false;
-    else if (fresh) this.armed = true;
+    if (!home) {
+      this.armed = false;
+      this.homeSince = 0;
+    } else {
+      if (!this.homeSince) this.homeSince = now;
+      // a brief pause in the wheel, or a moment at home while it keeps going
+      // (a trackpad's inertia runs into the next swipe without a gap)
+      if (fresh || now - this.homeSince > HOME_HOLD) this.armed = true;
+    }
     if (dy < 0 && home) {
       if (!this.armed) return;
       this.out -= dy;
