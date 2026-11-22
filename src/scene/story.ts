@@ -330,7 +330,10 @@ export class Story {
       sub.children[0]!.textContent = line;
       sub.children[1]!.textContent = hint;
     }
-    sub.style.opacity = alpha.toFixed(3);
+    // shown and hidden by a class and a CSS transition, as the focus caption
+    // is, never by opacity written per frame: in Chrome that made the text a
+    // layer that came and went over the carriage (docs/09, F-007)
+    sub.classList.toggle('on', alpha > 0.5);
   }
 
   /** Size the carried element again after a resize */

@@ -1174,10 +1174,18 @@
   text-align: center;
   pointer-events: none;
   opacity: 0;
+  transform: translateY(6px);
+  transition:
+    opacity 0.35s,
+    transform 0.35s;
   color: #f3f0fb;
   text-shadow:
     0 2px 0 rgba(5, 4, 14, 0.85),
     0 0 16px rgba(5, 4, 14, 0.95);
+}
+.hub .sub.on {
+  opacity: 1;
+  transform: none;
 }
 .sub__line {
   margin: 0;
