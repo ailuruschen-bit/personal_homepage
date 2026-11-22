@@ -35,6 +35,8 @@ const FILL = 0.62;
 const FOLLOW = 0.06;
 /** Each cut: to black, and back from it, in ms */
 const FADE = 260;
+/** Typing speed of the speech bubble, ms per character */
+const CHAR_MS = 28;
 /** At the hub with nothing moving this long, the nudge shows, in ms */
 const NUDGE_AFTER = 1800;
 /** Wheel travel up past the hub that goes back out of the window */
@@ -97,7 +99,10 @@ export class Story {
   private lastInput = 0;
   private homeSince = 0;
   private quietSince = performance.now();
-  private subKey = '';
+  private talkKey = '';
+  private talkLine = '';
+  private typed = -1;
+  private typeStart = 0;
 
   constructor(private readonly els: SceneEls) {
     let s = 0;
@@ -295,45 +300,65 @@ export class Story {
     carry.style.transform = `translate3d(${(sx - (box.w * u) / 2).toFixed(1)}px,${(sy - (box.h * u) / 2).toFixed(1)}px,0) scale(${(z * (1 + lift)).toFixed(4)})`;
   }
 
-  /** The detective's line on the way to an object, and what comes next. On the
-   *  way in: what it is and his first look, then a prompt to go on; on the way
-   *  out: his last word on it. At the hub, after a while, the nudge. */
+  /** The detective's speech bubble on the way to an object. On the way in:
+   *  what it is and his first look, typed out, then a prompt to go on; on the
+   *  way out: his last word on it. At the hub, after a while, the nudge. */
   private showLines(i: number, t: number, leaving: boolean, now: number) {
     let key = '';
+    let obj = '';
     let line = '';
     let hint = '';
-    let alpha = 0;
+    let show = false;
     if (i >= 0 && t > 0.02) {
       const id = CHAPTERS[i]!.id;
       const l = objectLines[id];
-      const title = sectionById(id)?.title ?? id;
       if (l && !leaving) {
-        const ready = t > 0.7;
-        key = `${id}:in:${ready}`;
-        line = `${l.name} · ${l.open}`;
-        hint = ready ? `↓ 继续，翻开看看：${title}` : '';
-        alpha = clamp((t - 0.08) / 0.2);
+        key = `${id}:in`;
+        obj = l.name;
+        line = l.open;
+        if (t > 0.7) hint = `继续向下，翻开看看：${sectionById(id)?.title ?? id}`;
+        show = t > 0.15;
       } else if (l) {
         key = `${id}:out`;
         line = l.close;
-        alpha = clamp((t - 0.35) / 0.3);
+        show = t > 0.5;
       }
     } else if (this.enabled && now - this.quietSince > NUDGE_AFTER) {
       key = 'nudge';
       line = nudge.line;
       hint = nudge.hint;
-      alpha = 1;
+      show = true;
     }
-    const sub = this.els.sub;
-    if (key && key !== this.subKey) {
-      this.subKey = key;
-      sub.children[0]!.textContent = line;
-      sub.children[1]!.textContent = hint;
+    const talk = this.els.talk;
+    const [, lineEl, hintEl] = talk.children as unknown as HTMLElement[];
+    const [objEl, textEl] = lineEl!.children as unknown as HTMLElement[];
+    // a new line starts typing when the bubble shows it
+    if (show && key !== this.talkKey) {
+      this.talkKey = key;
+      this.talkLine = line;
+      this.typed = -1;
+      this.typeStart = now;
+      objEl!.textContent = obj;
+      textEl!.textContent = '';
     }
-    // shown and hidden by a class and a CSS transition, as the focus caption
-    // is, never by opacity written per frame: in Chrome that made the text a
-    // layer that came and went over the carriage (docs/09, F-007)
-    sub.classList.toggle('on', alpha > 0.5);
+    if (show) {
+      const n = Math.min(this.talkLine.length, Math.floor((now - this.typeStart) / CHAR_MS));
+      if (n !== this.typed) {
+        this.typed = n;
+        textEl!.textContent = this.talkLine.slice(0, n);
+      }
+      const done = n >= this.talkLine.length;
+      talk.classList.toggle('typing', !done);
+      // the prompt only once the line is out
+      const h = done ? hint : '';
+      if (hintEl!.textContent !== h) hintEl!.textContent = h;
+    } else if (this.talkKey && !show) {
+      this.talkKey = '';
+    }
+    // shown and hidden by a class and a CSS transition, never by opacity written
+    // per frame: in Chrome that made it a layer that came and went over the
+    // carriage (docs/09, F-007)
+    talk.classList.toggle('on', show);
   }
 
   /** Size the carried element again after a resize */

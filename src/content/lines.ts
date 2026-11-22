@@ -35,5 +35,5 @@ export const objectLines: Record<string, ObjectLines> = {
 /** At the hub, when nothing has moved for a while: the site's only nudge */
 export const nudge = {
   line: '我站着也不会有人替我翻。',
-  hint: '↓ 滚动，一件件看过去 · 或者直接点一件',
+  hint: '向下滚动，一件件看过去，或者直接点一件',
 };
