@@ -442,12 +442,14 @@ A survey, not an implementation plan. No code has been changed.
   `#/id` link on load opens that page with no opening. The hash follows the
   page by `replaceState`.
 
-On the way, the detective says what is coming (`.sub`, lines from
-`content/lines.ts`, after [12](12-script.md)): on the way in, the object's
-name and his first look, then from 70% of the approach a prompt naming the
-page ahead (`↓ 继续，翻开看看：档案`); on the way out, his last word on it. At the
-hub, after 1.8 s with nothing moving, the nudge (`我站着也不会有人替我翻。`) with
-a hint to scroll or click. The page's kicker names the object again.
+On the way, the detective says what is coming, in the focus caption that names
+objects at the hub (`.cap`; lines in `content/lines.ts`, after
+[12](12-script.md)): on the way in, the object's name with his first look typed
+out under it (28 ms a character), then a prompt in brass naming the page ahead
+(`继续下滑 ▼ 翻开档案`); on the way out, his last word on it. At the hub, after
+1.8 s with nothing moving and nothing in focus, the nudge. The caption takes no
+new layer and is never painted over: a speech bubble was tried and dropped
+(F-007 in [09](09-fix-log.md)). The page's kicker names the object again.
 
 Still to settle by testing: the cut's timing and colour, whether the camera
 goes from one object straight to the next instead of through the hub, and the

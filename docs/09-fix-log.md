@@ -19,6 +19,24 @@ anything that is now load-bearing because of it.
 
 ---
 
+## F-007 Chrome: any panel painted over the carriage faults
+
+**Symptom.** A speech bubble for the detective's lines (a dark panel with a
+rim and a shadow, over the lower middle of the carriage) brought back the
+rectangular faults on the first focus of each object and when its text first
+appeared. Safari was clean.
+
+**Cause.** Being over the carriage at all. `?talk=off` was clean; `?talk=static`,
+the bubble always shown with no transition, still faulted, and so did giving it
+its own layer from the first frame (`will-change`). Showing it by opacity
+written per frame, then by a class and a transition, made no difference.
+
+**Fix.** The bubble was dropped. The lines go into the focus caption, plain
+text that has always been clean, which only changes its text and its class.
+
+**Load-bearing.** Over the carriage: the caption's text and nothing painted
+behind it. No panels, boxes, backgrounds or shadows, however they are shown.
+
 ## F-006 Chrome: panels over the carriage fault on first focus
 
 **Symptom.** With the scroll skeleton, Chrome drew rectangular faults on the
