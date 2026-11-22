@@ -11,8 +11,6 @@ export interface SceneEls {
   spot: HTMLElement;
   beam: HTMLElement;
   cap: HTMLElement;
-  /** The detective's speech bubble: his line, typed out, and what to do next (story.ts) */
-  talk: HTMLElement;
   ml: HTMLElement;
   hint: HTMLElement;
   pops: HTMLElement[];
@@ -127,11 +125,6 @@ export function buildScene(root: HTMLElement): SceneEls {
   <button class="skip" id="skip" type="button">跳过 →</button>
   <div class="ml" id="ml"><i></i></div>
   <div class="cap" id="cap"></div>
-  <div class="talk talk--${new URLSearchParams(location.search).get('talk') ?? 'on'}" id="talk" aria-live="polite">
-    <span class="talk__who">侦探</span>
-    <p class="talk__line"><b class="talk__obj"></b><span class="talk__text"></span><i class="talk__cur" aria-hidden="true"></i></p>
-    <p class="talk__hint"></p>
-  </div>
   <button class="re" id="re" type="button">↻ 重播开幕</button>
 </div>
 <main class="page" id="page" hidden></main>`;
@@ -146,7 +139,6 @@ export function buildScene(root: HTMLElement): SceneEls {
     spot: $('spot'),
     beam: $('beam'),
     cap: $('cap'),
-    talk: $('talk'),
     ml: $('ml'),
     hint: $('hint'),
     pops: Array.from(root.querySelectorAll<HTMLElement>('.pop')),

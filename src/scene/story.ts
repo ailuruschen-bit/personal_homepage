@@ -91,6 +91,8 @@ export class Story {
   enabled = false;
   /** Called at each cut, so the scene can stop and start its loop */
   onMode: (mode: 'scene' | 'page') => void = () => {};
+  /** Whether the pointer has an object in focus at the hub (index.ts) */
+  focused: () => boolean = () => false;
   /** Scrolling up past the hub: out of the window again (index.ts) */
   onOut: () => void = () => {};
   private out = 0;
@@ -300,65 +302,63 @@ export class Story {
     carry.style.transform = `translate3d(${(sx - (box.w * u) / 2).toFixed(1)}px,${(sy - (box.h * u) / 2).toFixed(1)}px,0) scale(${(z * (1 + lift)).toFixed(4)})`;
   }
 
-  /** The detective's speech bubble on the way to an object. On the way in:
-   *  what it is and his first look, typed out, then a prompt to go on; on the
-   *  way out: his last word on it. At the hub, after a while, the nudge. */
+  /** The detective's line on the way to an object, in the focus caption that
+   *  names objects at the hub. On the way in: the object's name, his first
+   *  look typed out under it, then a prompt naming the page ahead; on the way
+   *  out: his last word on it. At the hub, after a while and with nothing in
+   *  focus, the nudge. The caption only ever changes its text and its `on`
+   *  class: anything painted over the carriage made Chrome fault (docs/09). */
   private showLines(i: number, t: number, leaving: boolean, now: number) {
     let key = '';
-    let obj = '';
+    let title = '';
     let line = '';
     let hint = '';
-    let show = false;
-    if (i >= 0 && t > 0.02) {
+    if (i >= 0 && t > 0.2) {
       const id = CHAPTERS[i]!.id;
       const l = objectLines[id];
       if (l && !leaving) {
         key = `${id}:in`;
-        obj = l.name;
+        title = l.name;
         line = l.open;
-        if (t > 0.7) hint = `继续向下，翻开看看：${sectionById(id)?.title ?? id}`;
-        show = t > 0.15;
-      } else if (l) {
+        if (t > 0.7) hint = `继续下滑 ▼ 翻开${sectionById(id)?.title ?? ''}`;
+      } else if (l && t > 0.5) {
         key = `${id}:out`;
         line = l.close;
-        show = t > 0.5;
       }
-    } else if (this.enabled && now - this.quietSince > NUDGE_AFTER) {
+    } else if (this.enabled && !this.focused() && now - this.quietSince > NUDGE_AFTER) {
       key = 'nudge';
       line = nudge.line;
       hint = nudge.hint;
-      show = true;
     }
-    const talk = this.els.talk;
-    const [, lineEl, hintEl] = talk.children as unknown as HTMLElement[];
-    const [objEl, textEl] = lineEl!.children as unknown as HTMLElement[];
-    // a new line starts typing when the bubble shows it
-    if (show && key !== this.talkKey) {
+    const cap = this.els.cap;
+    if (!key) {
+      if (this.talkKey) {
+        this.talkKey = '';
+        // the pointer may have taken the caption for an object meanwhile
+        if (!this.focused()) cap.classList.remove('on');
+      }
+      return;
+    }
+    if (key !== this.talkKey) {
       this.talkKey = key;
       this.talkLine = line;
       this.typed = -1;
       this.typeStart = now;
-      objEl!.textContent = obj;
-      textEl!.textContent = '';
+      const lineEl = document.createElement('small');
+      lineEl.className = 'cap__line';
+      const hintEl = document.createElement('small');
+      hintEl.className = 'cap__hint';
+      cap.replaceChildren(title, lineEl, hintEl);
+      cap.classList.add('on');
     }
-    if (show) {
-      const n = Math.min(this.talkLine.length, Math.floor((now - this.typeStart) / CHAR_MS));
-      if (n !== this.typed) {
-        this.typed = n;
-        textEl!.textContent = this.talkLine.slice(0, n);
-      }
-      const done = n >= this.talkLine.length;
-      talk.classList.toggle('typing', !done);
-      // the prompt only once the line is out
-      const h = done ? hint : '';
-      if (hintEl!.textContent !== h) hintEl!.textContent = h;
-    } else if (this.talkKey && !show) {
-      this.talkKey = '';
+    const [lineEl, hintEl] = Array.from(cap.querySelectorAll('small'));
+    const n = Math.min(this.talkLine.length, Math.floor((now - this.typeStart) / CHAR_MS));
+    if (n !== this.typed) {
+      this.typed = n;
+      lineEl!.textContent = this.talkLine.slice(0, n) + (n < this.talkLine.length ? '▍' : '');
     }
-    // shown and hidden by a class and a CSS transition, never by opacity written
-    // per frame: in Chrome that made it a layer that came and went over the
-    // carriage (docs/09, F-007)
-    talk.classList.toggle('on', show);
+    const h = n >= this.talkLine.length ? hint : '';
+    if (hintEl!.textContent !== h) hintEl!.textContent = h;
   }
 
   /** Size the carried element again after a resize */

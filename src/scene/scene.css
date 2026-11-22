@@ -1163,139 +1163,15 @@
   margin: 10vh 0 0;
   text-align: center;
 }
-/* The detective's speech bubble (story.ts). Pixel-cut like the rest of the
-   picture: a dark panel with a 2 px light rim, square corners notched by a
-   pixel, a hard offset shadow instead of a blur, a speaker tab in brass on its
-   top edge, a tail toward the bottom left, where the speaker stands in front
-   of the camera. Shown by a class and a transition, like the focus caption;
-   only its text changes while it types, and the cursor blinks by visibility,
-   which is not composited. */
-.talk {
-  position: absolute;
-  z-index: 8;
-  left: 50%;
-  bottom: 8vh;
-  width: min(620px, 84vw);
-  margin-left: calc(min(620px, 84vw) / -2);
-  padding: 18px 22px 16px;
-  box-sizing: border-box;
-  pointer-events: none;
-  opacity: 0;
-  transform: translateY(10px);
-  transition:
-    opacity 0.25s,
-    transform 0.25s;
-  /* A layer of its own from the first frame, never created later: a painted
-     panel over the carriage otherwise gets pulled into a new layer the first
-     time an object under it is focused, and Chrome draws faults (docs/09 F-007) */
-  will-change: opacity, transform;
-  background: #161125;
-  color: #f4f0fb;
-  /* rim, notched corners and a hard shadow, all in box-shadow: no blur */
-  box-shadow:
-    0 -2px 0 0 #e9e2f5,
-    0 2px 0 0 #e9e2f5,
-    -2px 0 0 0 #e9e2f5,
-    2px 0 0 0 #e9e2f5,
-    0 6px 0 0 #07060f,
-    6px 4px 0 0 #07060f;
-}
-.hub .talk.on {
-  opacity: 1;
-  transform: none;
-}
-/* the tail: two stepped blocks under the bottom left, rim then fill */
-.talk::before,
-.talk::after {
-  content: '';
-  position: absolute;
-  left: 34px;
-  top: 100%;
-  width: 0;
-  height: 0;
-  border-style: solid;
-}
-.talk::before {
-  margin-top: 2px;
-  border-width: 14px 14px 0 0;
-  border-color: #e9e2f5 transparent transparent transparent;
-}
-.talk::after {
-  left: 36px;
-  border-width: 10px 10px 0 0;
-  border-color: #161125 transparent transparent transparent;
-}
-.talk__who {
-  position: absolute;
-  left: 18px;
-  top: -13px;
-  padding: 2px 10px 3px;
-  background: #d9a44a;
-  color: #1a1224;
-  box-shadow: 0 0 0 2px #1a1224;
-  font:
-    13px/1.3 'DotGothic16',
-    'Noto Sans SC',
-    monospace;
-  letter-spacing: 0.2em;
-}
-.talk__line {
-  margin: 0;
-  min-height: 1.6em;
-  font:
-    19px/1.65 'DotGothic16',
-    'Noto Sans SC',
-    monospace;
-  letter-spacing: 0.06em;
-}
-.talk__obj {
-  margin-right: 0.6em;
-  font-weight: normal;
+/* The story's lines in the focus caption (story.ts): the detective's line in
+   the caption's small type, typed out, and a prompt in brass under it */
+.cap .cap__hint {
+  margin-top: 10px;
   color: #f2c46d;
 }
-.talk__obj:empty {
-  display: none;
-}
-.talk__cur {
-  display: inline-block;
-  width: 0.55em;
-  height: 1em;
-  margin-left: 2px;
-  vertical-align: -0.12em;
-  background: #f4f0fb;
-  animation: talk-blink 0.9s steps(1) infinite;
-}
-.talk.typing .talk__cur {
-  animation: none;
-}
-@keyframes talk-blink {
-  50% {
-    visibility: hidden;
-  }
-}
-.talk__hint {
-  margin: 8px 0 0;
-  min-height: 1.3em;
-  text-align: right;
-  font:
-    13px/1.3 'Noto Sans SC',
-    sans-serif;
+.cap .cap__line {
+  font-size: 14px;
+  line-height: 1.5;
   letter-spacing: 0.12em;
-  color: #b7aed0;
-}
-.talk__hint:not(:empty)::after {
-  content: ' ▼';
-  color: #f2c46d;
-  animation: talk-blink 0.9s steps(1) infinite;
-}
-/* Diagnostics for docs/09 F-007, by ?talk=: off removes the bubble, static
-   keeps it on screen with no transition */
-.talk--off {
-  display: none;
-}
-.talk--static,
-.hub .talk--static.on {
-  opacity: 1;
-  transform: none;
-  transition: none;
+  text-indent: 0;
 }

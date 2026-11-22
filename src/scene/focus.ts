@@ -179,7 +179,8 @@ export class FocusEngine {
     this.lastFrame = now;
     this.frame = this.story?.() ?? this.frame;
     // Pointer focus belongs to the hub; inside a chapter the scroll owns the scene
-    const seatedAtHub = this.frame.hub > 0.5;
+    // (the story takes the caption from 0.8 on, story.ts)
+    const seatedAtHub = this.frame.hub > 0.8;
     if (!seatedAtHub && this.focus) this.setFocus(null);
     const active = this.phase() === 'hub' && seatedAtHub;
 
