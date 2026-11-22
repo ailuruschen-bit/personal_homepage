@@ -26,7 +26,8 @@ import { nudge, objectLines } from '../content/lines';
 const APPROACH = 600;
 const RETREAT = 500;
 /** Progress below which the carriage still counts as the hub: clicks and focus */
-const AT_HUB = 40;
+/** Hub weight above which the scene counts as at the hub (focus.ts uses the same) */
+export const SEATED = 0.8;
 /** The camera never zooms the carriage further than this (docs/10, Performance) */
 const DOLLY_MAX = 2.5;
 /** Share of the viewport the reached object fills */
@@ -121,8 +122,12 @@ export class Story {
 
   /** At the hub: where pointer focus, clicks and the window belong */
   get atHub() {
-    return this.mode === 'scene' && !this.busy && this.p < AT_HUB;
+    return this.mode === 'scene' && !this.busy && this.seated;
   }
+  /** The camera is back at the hub framing: at the start, or between two
+   *  chapters. Pointer focus and clicks share this, so whatever lights up
+   *  under the pointer also answers a click */
+  private seated = true;
 
   /** Clicking an object at the hub: straight to its page through black */
   goTo(id: string) {
@@ -253,6 +258,7 @@ export class Story {
     }
     // eased out, not in: the first of the wheel moves the camera most
     this.showObject(i, easeOut(clamp(t)), hub, frame);
+    this.seated = frame.hub > SEATED;
     this.showLines(i, clamp(t), i >= 0 && this.p > this.nodes[i]!, now);
     return frame;
   }

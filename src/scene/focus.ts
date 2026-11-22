@@ -3,7 +3,7 @@ import type { Phase } from './opening';
 import { hotspotByTarget, hotspots, nearestHotspot, zoneDistance } from './hotspots';
 import { toScene, unitSize, type Camera, type ScenePoint } from './units';
 import { CAMERA } from './geometry.gen';
-import type { StoryFrame } from './story';
+import { SEATED, type StoryFrame } from './story';
 
 /** How many scene units beyond its region an object still snaps from */
 const SNAP_RANGE = 22;
@@ -65,6 +65,8 @@ export class FocusEngine {
   ) {}
 
   start() {
+    // never two loops at once: each would advance the story
+    cancelAnimationFrame(this.raf);
     const loop = (now: number) => {
       this.tick(now);
       this.raf = requestAnimationFrame(loop);
@@ -180,7 +182,7 @@ export class FocusEngine {
     this.frame = this.story?.() ?? this.frame;
     // Pointer focus belongs to the hub; inside a chapter the scroll owns the scene
     // (the story takes the caption from 0.8 on, story.ts)
-    const seatedAtHub = this.frame.hub > 0.8;
+    const seatedAtHub = this.frame.hub > SEATED;
     if (!seatedAtHub && this.focus) this.setFocus(null);
     const active = this.phase() === 'hub' && seatedAtHub;
 
