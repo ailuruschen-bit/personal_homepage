@@ -24,22 +24,13 @@ body {
   outline-offset: 3px;
 }
 
-/* Seated, the document is as tall as the scroll story (scene/scroll.ts) and the
-   page scrolls; the scene itself is fixed and reads the offset. The scrollbar is
-   hidden: it would narrow the viewport the scene is framed in. */
-html.story,
-html.story body {
+/* Reading a chapter's page (scene/story.ts), the document scrolls natively;
+   with the carriage on screen it does not scroll at all */
+html.reading,
+html.reading body {
   height: auto;
   overflow-y: auto;
-  scrollbar-width: none;
 }
-html.story::-webkit-scrollbar {
-  display: none;
-}
-html.story #app {
+html.reading #app {
   height: auto;
-}
-.track {
-  width: 1px;
-  pointer-events: none;
 }

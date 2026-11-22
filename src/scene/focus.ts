@@ -3,7 +3,7 @@ import type { Phase } from './opening';
 import { hotspotByTarget, hotspots, nearestHotspot, zoneDistance } from './hotspots';
 import { toScene, unitSize, type Camera, type ScenePoint } from './units';
 import { CAMERA } from './geometry.gen';
-import type { StoryFrame } from './scroll';
+import type { StoryFrame } from './story';
 
 /** How many scene units beyond its region an object still snaps from */
 const SNAP_RANGE = 22;
@@ -54,7 +54,7 @@ export class FocusEngine {
   private direction = new Map<string, Direction>();
   private lastFrame = 0;
   private raf = 0;
-  /** The scroll story's frame, read once at the top of every tick (scroll.ts) */
+  /** The story's frame, read once at the top of every tick (story.ts) */
   story: (() => StoryFrame) | null = null;
   private frame: StoryFrame = { hub: 1, camera: null, dim: 0, pool: null };
 

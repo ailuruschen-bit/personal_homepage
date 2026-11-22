@@ -1,7 +1,4 @@
 import { site } from '../content/site';
-import { sectionById } from '../content/sections';
-import { CHAPTERS } from './scroll';
-import { without } from './probe';
 import { hotspots } from './hotspots';
 import { pct } from './units';
 
@@ -17,12 +14,12 @@ export interface SceneEls {
   ml: HTMLElement;
   hint: HTMLElement;
   pops: HTMLElement[];
-  /** The object carried to the middle of the frame in a chapter (scroll.ts) */
+  /** The object lifted toward the lens as the camera reaches it (story.ts) */
   carry: HTMLElement;
-  /** Patches of the room without each carried object (scroll.ts) */
+  /** Patches of the room without each carried object (story.ts) */
   gones: HTMLElement[];
-  /** Makes the document as tall as the scroll story (scroll.ts) */
-  track: HTMLElement;
+  /** A chapter's page: an ordinary document, shown instead of the stage (story.ts) */
+  page: HTMLElement;
 }
 
 const BLIND_SLATS = 14;
@@ -75,18 +72,6 @@ export function buildScene(root: HTMLElement): SceneEls {
 
   const [l1, l2] = site.heroTitle.split('\n');
 
-  // One panel per chapter, in reading order and always in the DOM; the scroll
-  // story fades them in and moves their text (docs/10, Reading)
-  const panels = CHAPTERS.map((ch) => {
-    const sec = sectionById(ch.id);
-    if (!sec) return '';
-    const blocks = sec.blocks.map((b) => `<p class="panel__block">${b}</p>`).join('');
-    return `<section class="panel" data-ch="${ch.id}" aria-label="${sec.title}"><div class="panel__in">
-      <span class="panel__kicker">${ch.id.toUpperCase()}</span>
-      <h2>${sec.title}</h2><p class="panel__lede">${sec.lede}</p>${blocks}
-    </div></section>`;
-  }).join('');
-
   root.innerHTML = `
 <div class="stage intro" id="stage">
   <div class="sky"></div>
@@ -107,7 +92,7 @@ export function buildScene(root: HTMLElement): SceneEls {
 
     <div class="ext l"></div><div class="ext r"></div><div class="ext t"></div><div class="ext b"></div>
     <div class="room"></div>
-    ${without('gone') ? '' : gones}
+    ${gones}
     ${pops}
     ${fronts}
 
@@ -129,9 +114,8 @@ export function buildScene(root: HTMLElement): SceneEls {
     <p>${site.heroLede}</p>
   </div></div>
 
-  <!-- The scroll story: the carried object, and the chapters' panels -->
-  ${without('carry') ? '' : '<div class="carry" id="carry"></div>'}
-  ${without('panel') ? '' : `<div class="panels">${panels}</div>`}
+  <!-- The story: the object lifted toward the lens (story.ts) -->
+  <div class="carry" id="carry"></div>
 
   <!-- Idle-state hint for getting back to the carriage -->
   <div class="ghost gt"></div><div class="ghost gb"></div>
@@ -143,7 +127,7 @@ export function buildScene(root: HTMLElement): SceneEls {
   <div class="cap" id="cap"></div>
   <button class="re" id="re" type="button">↻ 重播开幕</button>
 </div>
-<div class="track" id="track" aria-hidden="true"></div>`;
+<main class="page" id="page" hidden></main>`;
 
   const $ = <T extends HTMLElement>(id: string) => root.querySelector<T>(`#${id}`)!;
   return {
@@ -158,8 +142,8 @@ export function buildScene(root: HTMLElement): SceneEls {
     ml: $('ml'),
     hint: $('hint'),
     pops: Array.from(root.querySelectorAll<HTMLElement>('.pop')),
-    carry: root.querySelector<HTMLElement>('#carry') ?? document.createElement('div'),
+    carry: $('carry'),
     gones: Array.from(root.querySelectorAll<HTMLElement>('.gone')),
-    track: $('track'),
+    page: $('page'),
   };
 }

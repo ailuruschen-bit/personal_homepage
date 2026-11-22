@@ -5,7 +5,7 @@ import { buildScene } from './dom';
 import { FocusEngine } from './focus';
 import { COVER } from './hotspots';
 import { Opening } from './opening';
-import { ScrollStory } from './scroll';
+import { Story } from './story';
 
 export interface SceneHandle {
   destroy(): void;
@@ -32,24 +32,25 @@ export function mountScene(root: HTMLElement, { skipOpening, startAt }: SceneOpt
     () => opening.phase,
     (target) => (target === COVER ? '窗外' : (sectionById(target)?.title ?? target)),
   );
-  // The scroll story: once seated, the scroll offset drives the chapters (docs/10)
+  // The story: once seated, wheel and touch walk the camera to each object,
+  // and reaching one cuts to its page (docs/10)
   history.scrollRestoration = 'manual';
-  const story = new ScrollStory(els, els.track);
+  const story = new Story(els);
   focus.story = () => story.update(focus.hubCamera);
+  // the carriage is not rendered while a page is read
+  story.onMode = (mode) => (mode === 'page' ? focus.stop() : focus.start());
   // Sync the framing the moment the phase changes, ahead of the style recalc in the same frame
   opening.onPhase = (p) => {
-    story.setEnabled(p === 'hub');
+    story.enabled = p === 'hub';
     focus.syncFrame();
   };
   if (startAt) {
-    // A link straight to a chapter: no opening, no flash of the carriage, the
-    // chapter open on the first frame
+    // A link straight to a chapter: no opening, its page on the first frame
     opening.set('hub');
-    story.layout();
-    window.scrollTo(0, story.readStart(startAt));
+    story.openNow(startAt);
   } else if (skipOpening) opening.skip();
   focus.syncFrame();
-  focus.start();
+  if (!startAt) focus.start();
   const onResize = () => story.layout();
   window.addEventListener('resize', onResize);
 
@@ -74,7 +75,7 @@ export function mountScene(root: HTMLElement, { skipOpening, startAt }: SceneOpt
   const enter = (target: string | null) => {
     if (!target) return;
     if (target === COVER) opening.set('peek');
-    else story.transportTo(story.readStart(target));
+    else story.goTo(target);
   };
 
   const onPointerMove = (e: PointerEvent) => {
@@ -96,6 +97,7 @@ export function mountScene(root: HTMLElement, { skipOpening, startAt }: SceneOpt
     if (el.id === 'skip') return opening.skip();
     if (el.id === 're') return opening.replay();
     if (opening.phase !== 'hub') return opening.back();
+    if (!story.atHub) return;
 
     if (pointerType === 'touch') {
       // Touch: the first tap focuses, the second one enters
@@ -117,7 +119,6 @@ export function mountScene(root: HTMLElement, { skipOpening, startAt }: SceneOpt
   const onWheel = () => opening.back();
 
   const onKeyDown = (e: KeyboardEvent) => {
-    if (e.key === 'Escape' && opening.phase === 'hub' && story.offset > 0) story.transportTo(0);
     if (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') opening.back();
   };
 
