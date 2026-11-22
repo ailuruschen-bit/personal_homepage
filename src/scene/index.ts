@@ -42,6 +42,8 @@ export function mountScene(root: HTMLElement, { skipOpening, startAt }: SceneOpt
   // scrolling up at the hub looks back out of the window; scrolling down out there returns
   story.onOut = () => opening.set('peek');
   story.focused = () => focus.focused !== null;
+  // for poking at the story from the console while developing
+  if (import.meta.env.DEV) Object.assign(window, { __story: story });
   // Sync the framing the moment the phase changes, ahead of the style recalc in the same frame
   opening.onPhase = (p) => {
     story.enabled = p === 'hub';
