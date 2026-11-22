@@ -106,6 +106,8 @@ export class Story {
   private talkLine = '';
   private typed = -1;
   private typeStart = 0;
+  private lineEl: HTMLElement | null = null;
+  private hintEl: HTMLElement | null = null;
 
   constructor(private readonly els: SceneEls) {
     let s = 0;
@@ -345,7 +347,8 @@ export class Story {
       }
       return;
     }
-    if (key !== this.talkKey) {
+    // the caption's own elements, rebuilt if anything else wrote the caption since
+    if (key !== this.talkKey || !this.lineEl?.isConnected || !this.hintEl?.isConnected) {
       this.talkKey = key;
       this.talkLine = line;
       this.typed = -1;
@@ -356,15 +359,18 @@ export class Story {
       hintEl.className = 'cap__hint';
       cap.replaceChildren(title, lineEl, hintEl);
       cap.classList.add('on');
+      this.lineEl = lineEl;
+      this.hintEl = hintEl;
     }
-    const [lineEl, hintEl] = Array.from(cap.querySelectorAll('small'));
+    const lineEl = this.lineEl!;
+    const hintEl = this.hintEl!;
     const n = Math.min(this.talkLine.length, Math.floor((now - this.typeStart) / CHAR_MS));
     if (n !== this.typed) {
       this.typed = n;
-      lineEl!.textContent = this.talkLine.slice(0, n) + (n < this.talkLine.length ? '▍' : '');
+      lineEl.textContent = this.talkLine.slice(0, n) + (n < this.talkLine.length ? '▍' : '');
     }
     const h = n >= this.talkLine.length ? hint : '';
-    if (hintEl!.textContent !== h) hintEl!.textContent = h;
+    if (hintEl.textContent !== h) hintEl.textContent = h;
   }
 
   /** Size the carried element again after a resize */

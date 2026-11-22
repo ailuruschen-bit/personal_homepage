@@ -68,8 +68,9 @@ export class FocusEngine {
     // never two loops at once: each would advance the story
     cancelAnimationFrame(this.raf);
     const loop = (now: number) => {
-      this.tick(now);
+      // schedule first: one bad frame must not stop the scene for good
       this.raf = requestAnimationFrame(loop);
+      this.tick(now);
     };
     this.raf = requestAnimationFrame(loop);
   }
@@ -90,6 +91,9 @@ export class FocusEngine {
 
   movePointer(x: number, y: number) {
     this.pointer = { x, y };
+    // On the way to an object the scroll owns the scene: the pointer only moves
+    // the parallax, it does not pick objects (nor take the caption)
+    if (this.frame.hub <= SEATED) return;
     this.setFocus(this.resolveFocus(toScene(x, y, this.camera)));
     this.placeLight();
   }
