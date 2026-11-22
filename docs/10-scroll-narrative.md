@@ -434,7 +434,8 @@ A survey, not an implementation plan. No code has been changed.
   on to the next object; past its top, to just before the node, back toward
   the hub. Esc goes home.
 - Scrolling up at the hub, with the camera home, looks back out of the window
-  (`peek`); out there, scrolling down comes back in, and scrolling up does
+  (`peek`), but only in a new gesture begun once the camera is home (after a
+  pause of 220 ms in wheel input): the scroll that brought it home stops there; out there, scrolling down comes back in, and scrolling up does
   nothing, so the tail of a scroll cannot bounce the visitor straight back.
 - Clicking an object at the hub cuts straight to its page through black. A
   `#/id` link on load opens that page with no opening. The hash follows the

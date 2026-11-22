@@ -36,6 +36,8 @@ const FOLLOW = 0.06;
 const FADE = 260;
 /** Wheel travel up past the hub that goes back out of the window */
 const OUT = 140;
+/** A pause in wheel input longer than this starts a new gesture, in ms */
+const GESTURE_GAP = 220;
 /** Wheel travel past a page's top or bottom that leaves it */
 const LEAVE = 160;
 
@@ -85,6 +87,9 @@ export class Story {
   /** Scrolling up past the hub: out of the window again (index.ts) */
   onOut: () => void = () => {};
   private out = 0;
+  /** Going out takes a fresh gesture begun with the camera already home */
+  private armed = true;
+  private lastInput = 0;
 
   constructor(private readonly els: SceneEls) {
     let s = 0;
@@ -160,8 +165,17 @@ export class Story {
     if (this.busy) return;
     if (this.mode === 'page') return this.pageInput(dy);
     if (!this.enabled) return;
-    // pushing up at the hub, with the camera already home, goes back out of the window
-    if (dy < 0 && this.target <= 0 && this.p < 1) {
+    // Pushing up at the hub goes back out of the window, but only in a new
+    // gesture begun once the camera is home: the scroll that brought it home,
+    // and its inertia, stop there (a pause between paragraphs)
+    const now = performance.now();
+    const fresh = now - this.lastInput > GESTURE_GAP;
+    this.lastInput = now;
+    const home = this.target <= 0 && this.p < 1;
+    if (!home) this.armed = false;
+    else if (fresh) this.armed = true;
+    if (dy < 0 && home) {
+      if (!this.armed) return;
       this.out -= dy;
       if (this.out >= OUT) {
         this.out = 0;
