@@ -1,7 +1,9 @@
 # 10 Scroll narrative
 
-**Status: skeleton built** (`scene/scroll.ts`; see [Skeleton](#skeleton)).
-The rest is proposed. Pages 01-08 describe
+**Status: being rebuilt.** The panels-over-the-carriage design below was
+built as a skeleton and dropped (F-006 in [09](09-fix-log.md)); what replaces
+it is in [Skeleton](#skeleton), and the sections below are the earlier proposal,
+kept for its timing and its art. Pages 01-08 describe
 the site as it is; this one describes where it is going and is the reference for
 the refactor. It settles how the camera moves;
 [11 Premise and voice](11-premise-and-voice.md) settles what it moves through,
@@ -413,43 +415,31 @@ A survey, not an implementation plan. No code has been changed.
 
 ## Skeleton
 
-What `scene/scroll.ts` does now, and what it does not yet.
+`scene/story.ts`. Two modes, never on screen together:
 
-Built:
+- **Scene.** The carriage alone. Wheel, touch and the arrow and page keys move a
+  progress value; there is no tall document and the page itself never scrolls.
+  The axis: the hub (300), then for each object an approach (700) to a node
+  and a retreat (500), in the order about, journey, stack, projects. On the
+  approach the camera closes on the object (zoom up to `DOLLY_MAX` 2.5, the
+  object filling 62% of the frame), the carriage dims around it, and a
+  portable object (the ticket, the map, the briefcase) also lifts toward the
+  lens, its place on the table shown empty (`.gone`). Progress follows input
+  with a 60 ms lag, no more. Pointer focus and parallax give way as an object
+  is approached.
+- **Page.** Reaching a node cuts through black (260 ms out, 260 ms in) to that
+  chapter's page: an ordinary document, scrolled natively, the carriage not
+  rendered (`.stage` hidden, its loop stopped). Pushing on past the page's
+  bottom cuts back to just after the node, where the camera retreats and goes
+  on to the next object; past its top, to just before the node, back toward
+  the hub. Esc goes home.
+- Clicking an object at the hub runs the progress to it (≤ 900 ms) and cuts. A
+  `#/id` link on load opens that page with no opening. The hash follows the
+  page by `replaceState`.
 
-- Once seated (phase `hub`), `html.story` makes the document as tall as the map
-  (`.track`) and the scroll offset drives the scene. Leaving the hub phase (the
-  window, a replay) holds the page at the top again.
-- The axis starts at the hub (420 px), then about → journey → stack → projects,
-  each approach 560, open 420, read (content overflow + 600), close 360.
-- Carry for the ticket, the map and the briefcase: a `.carry` element, sized
-  once per chapter, is transformed from the object's resting rect to the middle
-  of the frame. Its sprite on the table hides and `.gone`, a patch of the room
-  rendered without it (`build.py`, `CARRIED`), shows where it lay. The carriage
-  dims around it through `.spot`.
-- Dolly for the laptop: the camera gains `--fx`, and `focus.ts` frames any scene
-  point at any zoom, capped at `DOLLY_MAX` 2.5.
-- Panels: one per chapter, always in the DOM, faded in over the last 45% of the
-  open beat and translated through the read. All layout is read in `layout()`,
-  on load and resize, never per frame.
-- Pointer focus and parallax are scaled by the hub weight, so they give way as
-  a chapter is approached.
-- Click, Esc and `#/id`: a transport, ≤ 800 ms, cancelled by wheel, touch or a
-  key. `#/id` on load lands with the chapter open and no opening. The hash
-  follows the open chapter by `replaceState`.
-
-Not yet:
-
-- The cover, porches and window transits on the axis; the opening still runs
-  on its own phases before the axis begins.
-- Overlapping handoffs: chapters follow one another with a moment of rest in
-  between, and there is one carry element, so two objects never move at once.
-- The transport scrolls through the chapters between, rather than moving the
-  camera once across the carriage.
-- The read beat's own motion per object, the open-state art (stage 7 in
-  [13](13-art-review.md)), the chat, the timecode and the spoken lines.
-- The plain-document fallback; the old section pages (`sections/layout.ts`)
-  are no longer reached.
+Still to settle by testing: the cut's timing and colour, whether the camera
+goes from one object straight to the next instead of through the hub, and the
+read beats, the chat, the timecode and the spoken lines on this model.
 
 ## Keep in sync
 

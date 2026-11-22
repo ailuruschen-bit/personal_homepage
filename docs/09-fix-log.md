@@ -19,6 +19,23 @@ anything that is now load-bearing because of it.
 
 ---
 
+## F-006 Chrome: panels over the carriage fault on first focus
+
+**Symptom.** With the scroll skeleton, Chrome drew rectangular faults on the
+first return to the carriage and on the first focus of each object. Safari was
+clean.
+
+**Cause.** The chapters' content panels sat over the carriage, transparent,
+inside a box covering the stage. `?no=panel`, which left them out, cleared the
+faults; hiding them with `visibility` did not.
+
+**Fix.** The design changed rather than the CSS: content is never over the
+carriage. Reaching an object cuts through black to a separate page, and the
+carriage is hidden while it is read (docs/10, Skeleton).
+
+**Load-bearing.** Nothing is layered over the carriage but the object being
+lifted. Text goes on its own page.
+
 ## F-005 Chrome: nearest-neighbour scaling of the carriage stutters
 
 **Symptom.** With `image-rendering: pixelated` on the carriage's images
