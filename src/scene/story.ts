@@ -257,9 +257,11 @@ export class Story {
     }
     this.out = 0;
     // A stop at the hub between two chapters: the camera all the way back on
-    // the carriage, with time to look around or click before the next object
+    // the carriage, with time to look around or click before the next object.
+    // Only a new gesture leaves it: however long a swipe and its inertia run
+    // on, they end here
     if (this.stopSince) {
-      if (fresh || now - this.stopSince > BRAKE_HOLD) this.stopSince = 0;
+      if (fresh) this.stopSince = 0;
       else return;
     }
     const next = clamp(this.target + dy, 0, this.end);
