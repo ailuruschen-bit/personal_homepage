@@ -349,6 +349,9 @@ export class Story {
     const dt = Math.min(0.05, (now - this.last) / 1000);
     this.last = now;
     const frame: StoryFrame = { hub: 1, camera: null, dim: 0, pool: null };
+    // Nor is it quiet while the carriage is not yet the visitor's: the opening,
+    // the view outside, a page, a cut. The wait starts when the hub is theirs
+    if (!this.enabled || this.mode !== 'scene' || this.busy) this.quietSince = now;
     if (this.mode !== 'scene') return frame;
 
     const play = this.playing;
