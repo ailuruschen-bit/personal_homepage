@@ -1154,6 +1154,32 @@
   font-size: 14px;
   line-height: 1.8;
 }
+.page__top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 0 0 6vh;
+}
+.page__top .page__hint {
+  margin: 0;
+}
+.page__home {
+  padding: 6px 12px;
+  border: 1px solid rgba(242, 196, 109, 0.5);
+  background: transparent;
+  color: #f2c46d;
+  font:
+    13px 'DotGothic16',
+    'Noto Sans SC',
+    monospace;
+  letter-spacing: 0.15em;
+  cursor: pointer;
+}
+.page__home:hover,
+.page__home:focus-visible {
+  background: rgba(242, 196, 109, 0.12);
+}
 .page__hint {
   margin: 0 0 6vh;
   font-size: 12px;

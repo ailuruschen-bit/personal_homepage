@@ -149,6 +149,7 @@ export class Story {
     window.addEventListener('keydown', this.onKey);
     this.els.route.innerHTML = renderRoute();
     this.els.route.addEventListener('click', this.onRoute);
+    this.els.page.addEventListener('click', this.onPageClick);
   }
 
   /** At the hub: where pointer focus, clicks and the window belong */
@@ -211,6 +212,12 @@ export class Story {
     if (this.mode === 'scene') return this.goTo(CHAPTERS[k]!.id);
     if (k === this.chapter) window.scrollTo({ top: 0, behavior: 'smooth' });
     else void this.toOtherPage(k);
+  };
+
+  /** The page's own way back: to the carriage at the very start, unlike
+   *  scrolling out, which keeps the place in the story */
+  private readonly onPageClick = (e: MouseEvent) => {
+    if ((e.target as HTMLElement).closest('[data-home]') && !this.busy) this.home();
   };
 
   private async toOtherPage(i: number) {
@@ -509,7 +516,8 @@ export class Story {
         title = l.name;
         line = l.open;
         // not in a click's approach, nor in the cut that follows any approach
-        if (t > 0.7 && !this.playing && !this.busy) hint = `继续下滑 ▼ 翻开${sectionById(id)?.title ?? ''}`;
+        if (t > 0.7 && !this.playing && !this.busy)
+          hint = `继续下滑 ▼ 翻开${sectionById(id)?.title ?? ''}`;
       } else if (l && t > 0.5) {
         key = `${id}:out`;
         line = l.close;
@@ -640,6 +648,7 @@ export class Story {
     window.removeEventListener('touchmove', this.onTouchMove);
     window.removeEventListener('keydown', this.onKey);
     this.els.route.removeEventListener('click', this.onRoute);
+    this.els.page.removeEventListener('click', this.onPageClick);
   }
 }
 
@@ -661,7 +670,10 @@ function renderPage(i: number): string {
   const next = CHAPTERS[i + 1] ? sectionById(CHAPTERS[i + 1]!.id) : null;
   const blocks = (sec?.blocks ?? []).map((b) => `<p class="page__block">${b}</p>`).join('');
   return `<article class="page__in">
-    <p class="page__hint">↑ 向上滚动，回到车厢</p>
+    <div class="page__top">
+      <button class="page__home" type="button" data-home>← 回到车厢</button>
+      <p class="page__hint">↑ 向上滚动，回到车厢</p>
+    </div>
     <span class="page__kicker">${objectLines[ch.id]?.name ?? ''} · ${ch.id.toUpperCase()}</span>
     <h1>${sec?.title ?? ch.id}</h1>
     <p class="page__lede">${sec?.lede ?? ''}</p>
