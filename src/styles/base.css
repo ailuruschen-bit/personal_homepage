@@ -23,3 +23,20 @@ body {
   outline: 2px solid var(--cyan);
   outline-offset: 3px;
 }
+
+/* Reading a chapter's page (scene/story.ts), the document scrolls natively;
+   with the carriage on screen it does not scroll at all */
+html.reading,
+html.reading body {
+  height: auto;
+  overflow-y: auto;
+}
+/* No rubber band past either end: the page rests there (story.ts, pageInput).
+   On the root only: on body it stops Chrome handing the wheel on from body,
+   which cannot scroll, to the viewport, and the page never moves (F-008) */
+html.reading {
+  overscroll-behavior-y: none;
+}
+html.reading #app {
+  height: auto;
+}

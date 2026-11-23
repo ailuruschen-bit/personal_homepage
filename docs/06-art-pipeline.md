@@ -245,3 +245,13 @@ only here and never become sprites. The window wall, everything not in front of
 it, takes the `far` gain and tint, which fades out below the table; the benches
 take the `bench` gain. Tune the numbers in `VALUE_PLAN`, and judge the result on
 `luma.png` from `npm run art:preview`.
+
+## Where a carried object was
+
+The scroll story carries the ticket, the map and the briefcase off the table or
+the rack (docs/10). So that each is not in two places at once, `build.py` renders
+the room once more for each of them (`CARRIED`) with the object left out
+(`build_room(skip=...)`: in `room.py` its drawing goes to a canvas nobody reads),
+and cuts `obj-<id>-gone.webp` around where it lay, its shadow included. The
+generated geometry gives its box as `gone`; the page shows it under the sprites
+only while the object is carried.

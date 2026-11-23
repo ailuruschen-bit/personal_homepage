@@ -14,6 +14,14 @@ export interface SceneEls {
   ml: HTMLElement;
   hint: HTMLElement;
   pops: HTMLElement[];
+  /** The object lifted toward the lens as the camera reaches it (story.ts) */
+  carry: HTMLElement;
+  /** Patches of the room without each carried object (story.ts) */
+  gones: HTMLElement[];
+  /** A chapter's page: an ordinary document, shown instead of the stage (story.ts) */
+  page: HTMLElement;
+  /** The route: where the visitor is among the chapters, and a way to each (story.ts) */
+  route: HTMLElement;
 }
 
 const BLIND_SLATS = 14;
@@ -31,6 +39,16 @@ export function buildScene(root: HTMLElement): SceneEls {
       const b = h.box!;
       const box = `left:${pct(b.x)};top:${pct(b.y)};width:${pct(b.w)};height:${pct(b.h)};animation-delay:${i}s`;
       return `<div class="pop" data-pop="${h.target}" style="${box}"><i style="background-image:url(${h.sprite})"></i></div>`;
+    })
+    .join('');
+
+  // Where a carried object was, without it: under the sprites, shown only while
+  // the scroll story has the object in the middle of the frame (scroll.ts)
+  const gones = hotspots
+    .filter((h) => h.gone)
+    .map((h) => {
+      const f = h.gone!;
+      return `<div class="gone" data-gone="${h.target}" style="left:${pct(f.x)};top:${pct(f.y)};width:${pct(f.w)};height:${pct(f.h)};background-image:url(${f.sprite})"></div>`;
     })
     .join('');
 
@@ -76,6 +94,7 @@ export function buildScene(root: HTMLElement): SceneEls {
 
     <div class="ext l"></div><div class="ext r"></div><div class="ext t"></div><div class="ext b"></div>
     <div class="room"></div>
+    ${gones}
     ${pops}
     ${fronts}
 
@@ -97,6 +116,9 @@ export function buildScene(root: HTMLElement): SceneEls {
     <p>${site.heroLede}</p>
   </div></div>
 
+  <!-- The story: the object lifted toward the lens (story.ts) -->
+  <div class="carry" id="carry"></div>
+
   <!-- Idle-state hint for getting back to the carriage -->
   <div class="ghost gt"></div><div class="ghost gb"></div>
   <div class="lens"></div><div class="grain"></div>
@@ -106,7 +128,9 @@ export function buildScene(root: HTMLElement): SceneEls {
   <div class="ml" id="ml"><i></i></div>
   <div class="cap" id="cap"></div>
   <button class="re" id="re" type="button">↻ 重播开幕</button>
-</div>`;
+</div>
+<main class="page" id="page" hidden></main>
+<nav class="route" id="route" aria-label="阅读进度"></nav>`;
 
   const $ = <T extends HTMLElement>(id: string) => root.querySelector<T>(`#${id}`)!;
   return {
@@ -121,5 +145,9 @@ export function buildScene(root: HTMLElement): SceneEls {
     ml: $('ml'),
     hint: $('hint'),
     pops: Array.from(root.querySelectorAll<HTMLElement>('.pop')),
+    carry: $('carry'),
+    gones: Array.from(root.querySelectorAll<HTMLElement>('.gone')),
+    page: $('page'),
+    route: $('route'),
   };
 }

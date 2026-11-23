@@ -385,7 +385,30 @@ def place(g, key, drawn_at):
     passes drawn_at=(0, 0).
     """
     ax, ay = OBJECTS[key]['at']
+    if key in SKIP:
+        return away(g).at(ax - drawn_at[0], ay - drawn_at[1])
     return g.at(ax - drawn_at[0], ay - drawn_at[1], key)
+
+
+# Objects left out of a render, for the patch that shows where an object was
+# once the scroll story has carried it away (build.py, docs/10). Drawing for
+# them goes to a canvas nobody looks at.
+SKIP = set()
+
+
+def mask_of(g, key):
+    """An object's silhouette, or an empty one when the object was skipped."""
+    return g.masks.get(key) or Image.new('L', (g.cv.w, g.cv.h), 0)
+
+
+def away(g):
+    """A canvas like g whose drawing is thrown away."""
+    return Off(Cv(g.cv.w, g.cv.h), g.dx, g.dy, None, {}, g.k, g.flat)
+
+
+def object_canvas(g, key):
+    """g, recording into `key`'s silhouette; or nowhere, when `key` is skipped."""
+    return away(g) if key in SKIP else g.at(0, 0, key)
 
 
 def lerp(a, b, t):
@@ -580,7 +603,7 @@ def rack(g, rnd, over_rack=True):
         xs = (x1 if x1 < 240 else x0)
         zl = LUGGAGE_Z[-1 if x1 < 240 else 1]
         X, top = (xs - 240) / WALL_SCALE, RACK_Y + h * LUGGAGE_FLAT / WALL_SCALE
-        t = g.at(0, 0, tag) if tag else g
+        t = object_canvas(g, tag) if tag else g
         if r_:
             rounded_side(g, x1, r_, c, zl)
             continue
@@ -677,7 +700,7 @@ def rack(g, rnd, over_rack=True):
     if over_rack:
         rack_frame(g.at(0, 0, '_rack'), 1)
         over = g.masks.pop('_rack')
-        x0, y0, x1, y1 = g.masks['stack'].getbbox()
+        x0, y0, x1, y1 = mask_of(g, 'stack').getbbox() or (0, 0, 0, 0)
         near = Image.new('L', over.size, 0)
         ImageDraw.Draw(near).rectangle([x0 - 6, y0 - 6, x1 + 6, y1 + 3], fill=255)
         g.masks['stack/front'] = ImageChops.multiply(over, near)
@@ -1246,12 +1269,12 @@ def table_map(g, T):
     the laptop and the cup. The far half is still rolled into a tube along its
     back edge; the near corner on the right has curled up and shows the paper's
     back. T(u, v) is a point on the table top, u across, v from back to front."""
-    o = g.at(0, 0, 'journey')
+    o = object_canvas(g, 'journey')
     paper = (232, 222, 196)
     # the flat sheet, a little askew
     A, B, C, D = T(0.53, 0.08), T(0.8, 0.05), T(0.81, 0.28), T(0.54, 0.31)
     o.poly([A, B, C, D], paper)
-    g.line([(D[0], D[1] + 1), (C[0], C[1] + 1)], mul(WOOD, 0.55))  # its shadow on the wood
+    o.line([(D[0], D[1] + 1), (C[0], C[1] + 1)], mul(WOOD, 0.55))  # its shadow on the wood
 
     def at(u, v):
         top = lerp(A, B, u)
@@ -1556,7 +1579,8 @@ def table(g, rnd):
     cg.px(284, 331, (236, 190, 140))
     cg.px(293, 333, (150, 96, 70))
     cup = g.masks['_cup']
-    g.masks['journey'] = ImageChops.multiply(g.masks['journey'], ImageChops.invert(cup))
+    if 'journey' in g.masks:
+        g.masks['journey'] = ImageChops.multiply(g.masks['journey'], ImageChops.invert(cup))
     # ---- ticket (the about object), docs/13 O-08: larger, with a fold, print
     # rows, a perforated stub with a punched hole, and the business card (N-01)
     # under it, one corner showing
@@ -1919,7 +1943,7 @@ def reflections(a, table, front, k):
 BANDS = float(os.environ.get('BANDS', '0.2')) or None
 
 
-def build_room(seed=21, over_rack=True):
+def build_room(seed=21, over_rack=True, skip=()):
     """The carriage as one RGBA image at output resolution, and the silhouette
     mask of every interactive object at 1x, keyed by object id. A key ending in
     '/front' is what stands in front of that object and must stay on top of its
@@ -1927,6 +1951,8 @@ def build_room(seed=21, over_rack=True):
     the briefcase is rendered without the rack across it."""
     # One random stream per section, so that changing one part of the room does
     # not reshuffle the texture of every part drawn after it
+    SKIP.clear()
+    SKIP.update(skip)
     rng = lambda name: random.Random(f'{seed}:{name}')
     cv = Cv(W, H)
     g = Off(cv)
@@ -1979,10 +2005,10 @@ def build_room(seed=21, over_rack=True):
     k = px.SCALE
     a = np.asarray(im).copy()
     near = [g.masks.pop(t) for t in ('_bench', '_table', '_cup')]
-    occlusion(a, near[0], near[1:] + [g.masks[t] for t in ('projects', 'about', 'journey')], k)
-    value_plan(a, near, [g.masks[t] for t in ('projects', 'about', 'journey')], k)
-    rim(a, [g.masks.pop('_rim'), near[0], near[2], g.masks['stack']], k)
-    reflections(a, near[1], [near[2]] + [g.masks[t] for t in ('projects', 'about', 'journey')], k)
+    occlusion(a, near[0], near[1:] + [mask_of(g, t) for t in ('projects', 'about', 'journey')], k)
+    value_plan(a, near, [mask_of(g, t) for t in ('projects', 'about', 'journey')], k)
+    rim(a, [g.masks.pop('_rim'), near[0], near[2], mask_of(g, 'stack')], k)
+    reflections(a, near[1], [near[2]] + [mask_of(g, t) for t in ('projects', 'about', 'journey')], k)
     # The page lays a vignette over the 480 scene (scene.css .vig) and must not
     # be made to cover the side extensions as well: overlays wider than the
     # scene, and gradients painted inside the extensions, both flickered in

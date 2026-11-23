@@ -1,6 +1,9 @@
 # 10 Scroll narrative
 
-**Status: proposed. Nothing in this page is implemented.** Pages 01-08 describe
+**Status: skeleton settled (November 2026).** The panels-over-the-carriage design below was
+built as a skeleton and dropped (F-006 in [09](09-fix-log.md)); what replaces
+it is in [Skeleton](#skeleton), and the sections below are the earlier proposal,
+kept for its timing and its art. Pages 01-08 describe
 the site as it is; this one describes where it is going and is the reference for
 the refactor. It settles how the camera moves;
 [11 Premise and voice](11-premise-and-voice.md) settles what it moves through,
@@ -159,7 +162,8 @@ Hotspot                aperture (scene units)       becomes
       on a backrest
 公文包 on the rack       the open lid's interior      the Stack panel
 电脑  on the table      the screen                   the Projects panel
-门                     the lit doorway              the chat
+门    no hotspot        none: text only, over the    the chat
+                       carriage as it stands
 ```
 
 Two things follow from this that are worth stating plainly:
@@ -184,7 +188,7 @@ own transform interpolates from its resting rect to a centred rect, and the
 carriage behind it blurs and dims.
 
 **Dolly** — the object stays exactly where it is and the camera goes to it. For
-anything that stays put: the laptop, the door. The object's
+anything that stays put: the laptop. The object's
 transform is identity throughout; the camera's framing interpolates to fit the
 aperture.
 
@@ -379,7 +383,7 @@ A survey, not an implementation plan. No code has been changed.
 | `scene/chapter.ts`   | new: per-chapter beat interpolation, carry and dolly                      |
 | `scene/focus.ts`     | add `--fx`; narrow pointer focus to the hub; expose `presence`            |
 | `scene/hotspots.ts`  | add `aperture` and `transit` per object; chapter order; decoys            |
-| `tools/art/room.py`  | draw the rolled map, the card behind the ticket, the books, the door      |
+| `tools/art/room.py`  | draw the rolled map, the card behind the ticket, the books                |
 | `scene/opening.ts`   | phases reduce to the locked segments; transport joins the machine         |
 | `scene/scene.css`    | remove transitions from anything scroll drives; `.cam` consumes `--fx`    |
 | `router.ts`          | routes resolve to offsets; manual scroll restoration                      |
@@ -396,8 +400,8 @@ A survey, not an implementation plan. No code has been changed.
    distinct by what the read beat drives, and it is the order the evidence
    would be found in — see
    [11](11-premise-and-voice.md#the-evidence-map). `chat` is last by
-   construction: it is the confrontation, and the only chapter whose aperture
-   opens onto a person.
+   construction: it is the confrontation, and the only chapter with no object
+   and no picture of its own: it is played as text over the carriage.
    `notes`, `hobby` and `chat` cannot become chapters until they have artwork
    and therefore an aperture.
 3. **Is the cover the top of the document?** Proposed yes: `s = 0` is outside,
@@ -409,9 +413,71 @@ A survey, not an implementation plan. No code has been changed.
 5. **Does the window transit stay locked in both directions?** Proposed yes.
    It is the one moment the site asks to be watched rather than driven.
 
+## Skeleton
+
+`scene/story.ts`. Settled by testing; what is built:
+
+**Two modes, never on screen together.**
+
+- **Scene.** The carriage alone. Wheel, touch and the arrow and page keys move a
+  progress value; there is no tall document. For each object, in the order
+  about, journey, stack, projects: an approach (600, eased out, answering the
+  very first turn of the wheel) to a node, and a retreat (500). On the
+  approach the camera closes on the object (zoom up to `DOLLY_MAX` 2.5, the
+  object filling 62% of the frame), the carriage dims around it, and a
+  portable object (ticket, map, briefcase) lifts toward the lens, its place on
+  the table shown empty (`.gone`). Progress follows input with a 60 ms lag.
+- **Page.** Reaching a node, either way, cuts through black (260 ms out, 260 ms
+  in) to that chapter's page: an ordinary document, scrolled natively, the
+  carriage not rendered. Going back up, the page opens at its end.
+
+**Stops.** Every gate waits for a new gesture: a pause of 120 ms in the input,
+or the input speeding up twofold from at least 6 (a swipe begun over the last
+one's inertia). Inertia alone never triggers anything.
+
+- The hub between two chapters (each retreat's end) is a stop: a swipe ends
+  there, both ways, so there is always a moment to look or click.
+- A page rests at its top and bottom, with no rubber band (`overscroll-behavior`
+  on the root only, F-008); a new gesture pushing on (24 px) leaves it.
+- After every cut the rest of the swipe is dropped: 700 ms onto a page, 150 ms
+  back on the carriage.
+- At the very start, scrolling up looks back out of the window (`peek`), in a
+  new gesture only. Out there, scrolling down comes back in.
+
+**Back from a page** the camera glides on its own (900 ms, eased, starting
+behind the black, no lines) to the hub: past the node to the stop after it;
+by the page's top, to where that object's approach began.
+
+**Clicks.** Pointer focus and clicks share one test: the camera seated at the
+hub framing (hub weight above 0.8), at the start or at any stop. Clicking an
+object plays its approach on its own (1.6 s, eased in and out) from the head of
+that object's own approach, so nothing else moves; its line is typed out, and
+150 ms later the cut. Input and focus wait meanwhile. Clicking the window
+resets the story to its start before going out. Each page has a button back to
+the carriage at the start; scrolling out keeps the place.
+
+**The route** (`.route`, right edge): the carriage and the four chapters as
+stops, three dots between each that fill with progress; the stop being
+approached in brass, the one arrived at ◉. Each stop is a way there through
+black. Shown on the pages too.
+
+**Lines.** In the focus caption (`.cap`; `content/lines.ts`, after
+[12](12-script.md)): on the way in, the object's name and his first look typed
+out (28 ms a character), then a brass prompt naming the page ahead; on the way
+out, his last word. The nudge after 1.8 s with no scroll and nothing in focus,
+counted from when the hub is the visitor's (not during the opening, outside,
+on a page or in a cut). No new layer, nothing painted over the carriage: a
+speech bubble was tried and dropped (F-007 in [09](09-fix-log.md)).
+
+Overlays over the carriage are text only and change only their text and
+classes (F-006, F-007).
+
+Still open: the read beats (what scrolling does to each object, [11](11-premise-and-voice.md#the-evidence-map)),
+the chat and scene 8, the timecode, the no-JavaScript fallback.
+
 ## Keep in sync
 
-- The segment table here and the constants in `scene/scroll.ts` once it exists.
+- The Skeleton section here and the constants at the top of `scene/story.ts`.
 - `DOLLY_MAX` here, in `scene/chapter.ts`, and the raster-scale reasoning in
   [05 Rendering and compositing](05-rendering-and-compositing.md).
 - The aperture table here and the `aperture` fields in `hotspots.ts`, which must

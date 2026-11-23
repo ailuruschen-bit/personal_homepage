@@ -28,13 +28,24 @@ export interface Hotspot {
   sprite?: string;
   /** What stands in front of the object: drawn above its sprite, never lifted */
   front?: { x: number; y: number; w: number; h: number; sprite: string };
+  /** Where the object was, without it: shown while the scroll story carries it away */
+  gone?: { x: number; y: number; w: number; h: number; sprite: string };
 }
 
 /** Where an object is, from the generated geometry */
-function geo(target: string): Pick<Hotspot, 'zone' | 'light' | 'box' | 'sprite' | 'front'> {
+function geo(
+  target: string,
+): Pick<Hotspot, 'zone' | 'light' | 'box' | 'sprite' | 'front' | 'gone'> {
   const g = OBJECTS[target];
   if (!g) throw new Error(`geometry.gen.ts has no object "${target}"`);
-  return { zone: g.zone, light: g.light, box: g.box, sprite: g.sprite, front: g.front };
+  return {
+    zone: g.zone,
+    light: g.light,
+    box: g.box,
+    sprite: g.sprite,
+    front: g.front,
+    gone: g.gone,
+  };
 }
 
 export const hotspots: Hotspot[] = [

@@ -19,6 +19,55 @@ anything that is now load-bearing because of it.
 
 ---
 
+## F-008 Chrome: a chapter page does not scroll at all
+
+**Symptom.** On a chapter page in Chrome the wheel showed the scrollbar but
+the page never moved. Safari was fine.
+
+**Cause.** `overscroll-behavior-y: none` was set on `body` as well as `html`
+while reading. With both set to `overflow-y: auto`, `body` is a scroll
+container of its own, with nothing to scroll. Chrome sends the wheel to it
+first, and `overscroll-behavior` there stops it being handed on to the
+viewport, which is what actually scrolls.
+
+**Fix.** `overscroll-behavior-y: none` on the root only (`base.css`). That
+still removes the rubber band past a page's ends.
+
+## F-007 Chrome: any panel painted over the carriage faults
+
+**Symptom.** A speech bubble for the detective's lines (a dark panel with a
+rim and a shadow, over the lower middle of the carriage) brought back the
+rectangular faults on the first focus of each object and when its text first
+appeared. Safari was clean.
+
+**Cause.** Being over the carriage at all. `?talk=off` was clean; `?talk=static`,
+the bubble always shown with no transition, still faulted, and so did giving it
+its own layer from the first frame (`will-change`). Showing it by opacity
+written per frame, then by a class and a transition, made no difference.
+
+**Fix.** The bubble was dropped. The lines go into the focus caption, plain
+text that has always been clean, which only changes its text and its class.
+
+**Load-bearing.** Over the carriage: the caption's text and nothing painted
+behind it. No panels, boxes, backgrounds or shadows, however they are shown.
+
+## F-006 Chrome: panels over the carriage fault on first focus
+
+**Symptom.** With the scroll skeleton, Chrome drew rectangular faults on the
+first return to the carriage and on the first focus of each object. Safari was
+clean.
+
+**Cause.** The chapters' content panels sat over the carriage, transparent,
+inside a box covering the stage. `?no=panel`, which left them out, cleared the
+faults; hiding them with `visibility` did not.
+
+**Fix.** The design changed rather than the CSS: content is never over the
+carriage. Reaching an object cuts through black to a separate page, and the
+carriage is hidden while it is read (docs/10, Skeleton).
+
+**Load-bearing.** Nothing is layered over the carriage but the object being
+lifted. Text goes on its own page.
+
 ## F-005 Chrome: nearest-neighbour scaling of the carriage stutters
 
 **Symptom.** With `image-rendering: pixelated` on the carriage's images

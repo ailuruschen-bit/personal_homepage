@@ -5,20 +5,21 @@ import { buildScene } from './dom';
 import { FocusEngine } from './focus';
 import { COVER } from './hotspots';
 import { Opening } from './opening';
+import { Story } from './story';
 
 export interface SceneHandle {
   destroy(): void;
 }
 
 export interface SceneOptions {
-  /** Open the matching section once an object is chosen */
-  onEnter: (sectionId: string) => void;
-  /** Skip the opening and land straight in the carriage (used when returning from a section) */
+  /** Skip the opening and land straight in the carriage */
   skipOpening?: boolean;
+  /** Land with this chapter already open, skipping the opening (a #/id link) */
+  startAt?: string;
 }
 
 /** Mount the carriage scene: opening -> idle -> hub */
-export function mountScene(root: HTMLElement, { onEnter, skipOpening }: SceneOptions): SceneHandle {
+export function mountScene(root: HTMLElement, { skipOpening, startAt }: SceneOptions): SceneHandle {
   const els = buildScene(root);
   // ?debug=geometry overlays the generated geometry, ?debug=layers adds switches
   // that remove one layer at a time; both are loaded only when asked for
@@ -31,11 +32,32 @@ export function mountScene(root: HTMLElement, { onEnter, skipOpening }: SceneOpt
     () => opening.phase,
     (target) => (target === COVER ? '窗外' : (sectionById(target)?.title ?? target)),
   );
+  // The story: once seated, wheel and touch walk the camera to each object,
+  // and reaching one cuts to its page (docs/10)
+  history.scrollRestoration = 'manual';
+  const story = new Story(els);
+  focus.story = () => story.update(focus.hubCamera);
+  // the carriage is not rendered while a page is read
+  story.onMode = (mode) => (mode === 'page' ? focus.stop() : focus.start());
+  // scrolling up at the hub looks back out of the window; scrolling down out there returns
+  story.onOut = () => opening.set('peek');
+  story.focused = () => focus.focused !== null;
+  // for poking at the story from the console while developing
+  if (import.meta.env.DEV) Object.assign(window, { __story: story });
   // Sync the framing the moment the phase changes, ahead of the style recalc in the same frame
-  opening.onPhase = () => focus.syncFrame();
-  if (skipOpening) opening.skip();
+  opening.onPhase = (p) => {
+    story.enabled = p === 'hub';
+    focus.syncFrame();
+  };
+  if (startAt) {
+    // A link straight to a chapter: no opening, its page on the first frame
+    opening.set('hub');
+    story.openNow(startAt);
+  } else if (skipOpening) opening.skip();
   focus.syncFrame();
-  focus.start();
+  if (!startAt) focus.start();
+  const onResize = () => story.layout();
+  window.addEventListener('resize', onResize);
 
   // Drop the grain's moving compositor layer before Chrome hides the tab, then
   // let the visible carriage paint twice before starting that layer again.
@@ -57,15 +79,18 @@ export function mountScene(root: HTMLElement, { onEnter, skipOpening }: SceneOpt
 
   const enter = (target: string | null) => {
     if (!target) return;
-    if (target === COVER) opening.set('peek');
-    else onEnter(target);
+    // out through the window, and back in at the start of the story
+    if (target === COVER) {
+      story.reset();
+      opening.set('peek');
+    } else story.play(target);
   };
 
   const onPointerMove = (e: PointerEvent) => {
     pointerType = e.pointerType;
     if (e.pointerType === 'touch') return;
     opening.hintOnMove();
-    if (opening.phase === 'hub') focus.movePointer(e.clientX, e.clientY);
+    if (opening.phase === 'hub' && !story.isPlaying) focus.movePointer(e.clientX, e.clientY);
     else focus.trackPointer(e.clientX, e.clientY);
   };
 
@@ -80,6 +105,7 @@ export function mountScene(root: HTMLElement, { onEnter, skipOpening }: SceneOpt
     if (el.id === 'skip') return opening.skip();
     if (el.id === 're') return opening.replay();
     if (opening.phase !== 'hub') return opening.back();
+    if (!story.atHub) return;
 
     if (pointerType === 'touch') {
       // Touch: the first tap focuses, the second one enters
@@ -98,7 +124,11 @@ export function mountScene(root: HTMLElement, { onEnter, skipOpening }: SceneOpt
     if (target && opening.phase === 'hub' && el.matches(':focus-visible')) focus.setFocus(target);
   };
 
-  const onWheel = () => opening.back();
+  // Out of the window, scrolling down comes back in; up does nothing, so the
+  // tail of the scroll that took the visitor out does not bring them straight back
+  const onWheel = (e: WheelEvent) => {
+    if (e.deltaY > 0) opening.back();
+  };
 
   const onKeyDown = (e: KeyboardEvent) => {
     if (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') opening.back();
@@ -118,6 +148,8 @@ export function mountScene(root: HTMLElement, { onEnter, skipOpening }: SceneOpt
       cancelAnimationFrame(grainResume);
       root.classList.remove('grain-suspended');
       focus.stop();
+      story.dispose();
+      window.removeEventListener('resize', onResize);
       opening.dispose();
       document.removeEventListener('keydown', onKeyDown);
       root.replaceChildren();

@@ -589,7 +589,8 @@ Gate: the full Chrome check.
 ## Stage 7 — Open states and the door
 
 The ticket's two faces, the map unrolled, the briefcase open with its books,
-the screen at reading size, and the door. These are new drawings for
+and the screen at reading size. The door is not drawn: scene 8 is text only
+(see [12](12-script.md)). These are new drawings for
 [10](10-scroll-narrative.md) and [12](12-script.md), and their apertures go
 into the manifest. They are drawn here and wired up when the scroll narrative
 is built.

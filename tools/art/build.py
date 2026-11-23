@@ -27,6 +27,11 @@ from far import build_c1, build_c3, build_sky  # noqa: E402
 from room import OX, build_room, geometry  # noqa: E402
 
 
+# The objects the scroll story carries off the table or the rack (scene/scroll.ts)
+CARRIED = ('about', 'journey', 'stack')
+GONE_MARGIN = 6  # around an object's silhouette, for its shadow
+
+
 def save(im, path, lossless=False):
     """Write an asset, unless the file already holds exactly these pixels.
 
@@ -90,6 +95,8 @@ def write_geometry(geo, path):
         '  sprite?: string;',
         '  /** What stands in front of the object and stays on top of its sprite */',
         '  front?: { x: number; y: number; w: number; h: number; sprite: string };',
+        '  /** Where the object was, without it: shown while the scroll story carries it away */',
+        '  gone?: { x: number; y: number; w: number; h: number; sprite: string };',
         '}',
         '',
         '/** The window opening and its corner radius, in scene units */',
@@ -122,6 +129,9 @@ def write_geometry(geo, path):
         if 'front' in o:
             fb = o['front']['box']
             parts.append(f"front: {{ x: {num(fb[0])}, y: {num(fb[1])}, w: {num(fb[2])}, h: {num(fb[3])}, sprite: '{o['front']['sprite']}' }}")
+        if 'gone' in o:
+            gb = o['gone']['box']
+            parts.append(f"gone: {{ x: {num(gb[0])}, y: {num(gb[1])}, w: {num(gb[2])}, h: {num(gb[3])}, sprite: '{o['gone']['sprite']}' }}")
         lines.append(f"  {key}: {{ {', '.join(parts)} }},")
     lines += ['};', '']
     with open(path, 'w') as f:
@@ -201,11 +211,20 @@ def main(out, src=None):
     cut.update({k.replace('/front', '-front'): im for k, im in sprites(room, fronts).items()})
     for key, im in cut.items():
         save(im, os.path.join(out, f'obj-{key}.webp'), lossless=True)
+    geo = geometry(masks)
+    # Where a carried object was: the room rendered without it, cut to its box
+    # and a margin for its shadow. The scroll story shows it while the object
+    # is carried away (docs/10).
+    for key in CARRIED:
+        bare, _ = build_room(skip={key})
+        x0, y0, x1, y1 = masks[key].getbbox()
+        x0, y0, x1, y1 = max(0, x0 - GONE_MARGIN), max(0, y0 - GONE_MARGIN), x1 + GONE_MARGIN, y1 + GONE_MARGIN
+        save(bare.crop((x0 * k, y0 * k, x1 * k, y1 * k)), os.path.join(out, f'obj-{key}-gone.webp'), lossless=True)
+        geo['objects'][key]['gone'] = dict(box=(x0 - OX, y0, x1 - x0, y1 - y0), sprite=f'/assets/obj-{key}-gone.webp')
     save(room.crop((OX * k, 0, (OX + 480) * k, 480 * k)), os.path.join(out, 'room.webp'))
     save(room.crop((0, 0, OX * k, 480 * k)).convert('RGB'), os.path.join(out, 'room-l.webp'))
     save(room.crop(((OX + 480) * k, 0, (OX + 600) * k, 480 * k)).convert('RGB'), os.path.join(out, 'room-r.webp'))
     save(build_grain(), os.path.join(out, 'grain.png'))
-    geo = geometry(masks)
     write_geometry(geo, os.path.join(src or out, 'geometry.gen.ts'))
     write_geometry_css(geo, os.path.join(src or out, 'geometry.gen.css'))
 

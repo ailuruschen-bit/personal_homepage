@@ -247,9 +247,9 @@ room.
 
 `chat` is the only chapter where the detective is not alone.
 
-The door opens. He is a silhouette against the corridor and is never drawn
-further than that. He takes in the open briefcase and the unrolled map, and he
-is less angry than tired:
+The door opens behind him. The occupant is never drawn: the scene is text
+only, over the carriage as it stands, and he is a voice. He takes in the open
+briefcase and the unrolled map, and he is less angry than tired:
 
 > 想知道什么，直接问我。翻东西多累。
 
