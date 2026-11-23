@@ -5,6 +5,9 @@ import { toScene, unitSize, type Camera, type ScenePoint } from './units';
 import { CAMERA } from './geometry.gen';
 import { SEATED, type StoryFrame } from './story';
 
+/** Pointer parallax: the carriage's shift per pixel of pointer from the centre */
+const PARALLAX = 0.032;
+
 /** How many scene units beyond its region an object still snaps from */
 const SNAP_RANGE = 22;
 /** Distance must change by at least this much to count as movement; ignores jitter */
@@ -245,8 +248,10 @@ export class FocusEngine {
     const c = this.camera;
     // damped to nothing as a chapter is approached, so the camera does not fight two inputs
     const w = this.frame.hub;
-    const tx = seated && this.pointer ? -(this.pointer.x - window.innerWidth / 2) * 0.02 * w : 0;
-    const ty = seated && this.pointer ? -(this.pointer.y - window.innerHeight / 2) * 0.02 * w : 0;
+    const tx =
+      seated && this.pointer ? -(this.pointer.x - window.innerWidth / 2) * PARALLAX * w : 0;
+    const ty =
+      seated && this.pointer ? -(this.pointer.y - window.innerHeight / 2) * PARALLAX * w : 0;
 
     // .look is only updated per frame inside the hub, where it is its own compositing
     // layer. Touching it while the camera is still zooming would repaint the whole
