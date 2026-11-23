@@ -362,9 +362,12 @@ export class Story {
         stops.push(k < this.chapter ? 'done' : k === this.chapter ? 'here' : '');
       } else {
         rails.push(Math.floor(clamp((this.p - from) / (to - from)) * RAIL + 0.001));
+        // Reaching a node holds the progress on it through the cut: that stop
+        // is where the visitor is arriving, not one passed with the next lit
+        const arriving = this.p >= to && this.p < to + 1;
         const done = this.p >= to;
-        stops.push(done ? 'done' : next ? 'next' : '');
-        if (!done) next = false;
+        stops.push(arriving ? 'here' : done ? 'done' : next ? 'next' : '');
+        if (!done || arriving) next = false;
       }
     }
     const key = `${visible}|${stops.join()}|${rails.join()}`;
