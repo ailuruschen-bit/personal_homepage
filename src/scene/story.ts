@@ -54,7 +54,7 @@ const PLAY_MS = 1600;
 /** ...then holds on the object this long once its line is typed out, in ms */
 const PLAY_READ = 150;
 /** Back from a page, the camera glides off the object to the hub this long, in ms */
-const GLIDE_MS = 1200;
+const GLIDE_MS = 900;
 /** After a cut, how long a swipe that keeps going is still ignored, in ms.
  *  Longer onto a page, where the rest of a swipe could run a short page out at
  *  its far end; short back on the carriage, where the hub stop catches it anyway */
@@ -501,7 +501,7 @@ export class Story {
     let title = '';
     let line = '';
     let hint = '';
-    if (i >= 0 && t > 0.2) {
+    if (i >= 0 && t > 0.2 && !this.glide) {
       const id = CHAPTERS[i]!.id;
       const l = objectLines[id];
       if (l && !leaving) {
@@ -516,6 +516,7 @@ export class Story {
     } else if (
       this.enabled &&
       !this.playing &&
+      !this.glide &&
       !this.focused() &&
       now - this.quietSince > NUDGE_AFTER
     ) {
@@ -607,6 +608,14 @@ export class Story {
     this.els.stage.hidden = false;
     this.onMode('scene');
     history.replaceState(null, '', '#/');
+    // Back to the hub on its own, already moving as the black lifts, so the
+    // camera never rests on the object: past the node, to the stop after it;
+    // before it, to where this object's approach began
+    const node = this.nodes[this.chapter];
+    if (node !== undefined && p !== 0) {
+      const to = p > node ? Math.min(node + RETREAT, this.end) : node - APPROACH;
+      this.glide = { from: p, to, start: performance.now() };
+    }
     // let the carriage draw twice behind black before it is shown
     await nextFrame();
     await nextFrame();
@@ -614,13 +623,6 @@ export class Story {
     this.busy = false;
     this.brakeSince = performance.now();
     this.brakeHold = BRAKE_SCENE;
-    // and back to the hub on its own: past the node, to the stop after it;
-    // before it, to where this object's approach began
-    const node = this.nodes[this.chapter];
-    if (node !== undefined && p !== 0) {
-      const to = p > node ? Math.min(node + RETREAT, this.end) : node - APPROACH;
-      this.glide = { from: p, to, start: performance.now() };
-    }
   }
 
   private async fade(el: HTMLElement, to: number) {
