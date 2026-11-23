@@ -48,6 +48,8 @@ const HOME_HOLD = 450;
 /** Wheel travel past a page's top or bottom that leaves it: barely any, so
  *  the scroll that reaches the end carries straight on to the carriage */
 const LEAVE = 24;
+/** Resting at a page's end this long, the scroll pushing on leaves it, in ms */
+const EDGE_HOLD = 450;
 /** After a cut, how long a swipe that keeps going is still ignored, in ms.
  *  Longer onto a page, where the rest of a swipe could run a short page out at
  *  its far end; short back on the carriage, where the hub stop catches it anyway */
@@ -117,6 +119,8 @@ export class Story {
   private routeKey = '';
   private brakeSince = 0;
   private edgeArmed = false;
+  private edgeSince = 0;
+  private lastMag = 0;
   private brakeHold = BRAKE_PAGE;
   private stopSince = 0;
   /** The hub between chapters: where each retreat ends and the next approach starts */
@@ -289,12 +293,21 @@ export class Story {
     const pushing = (dy < 0 && atTop) || (dy > 0 && atBottom);
     // The scroll that reaches an end stops there: the page rests on it. Only
     // a gesture begun at the end, pushing on, leaves for the carriage
+    const now = performance.now();
+    const mag = Math.abs(dy);
+    const rising = mag > 4 && mag > this.lastMag * 1.5;
+    this.lastMag = mag;
     if (!pushing) {
       this.edgeArmed = false;
+      this.edgeSince = 0;
       this.leave = 0;
       return;
     }
-    if (fresh) this.edgeArmed = true;
+    if (!this.edgeSince) this.edgeSince = now;
+    // A new gesture at the end: a pause before it, or a swipe that speeds up
+    // again where inertia only ever slows (a trackpad swipe begun while the
+    // last one's inertia still trickles in), or a moment resting at the end
+    if (fresh || rising || now - this.edgeSince > EDGE_HOLD) this.edgeArmed = true;
     if (!this.edgeArmed) return;
     this.leave += dy;
     const node = this.nodes[this.chapter]!;
@@ -517,6 +530,7 @@ export class Story {
     this.mode = 'page';
     this.leave = 0;
     this.edgeArmed = false;
+    this.edgeSince = 0;
     this.onMode('page');
     this.els.page.innerHTML = renderPage(i);
     this.els.page.hidden = false;
