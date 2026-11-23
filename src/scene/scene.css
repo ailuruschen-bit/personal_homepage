@@ -352,7 +352,8 @@
   z-index: 8;
   left: 0;
   right: 0;
-  bottom: 2.5vh;
+  bottom: 4.5vh;
+  padding: 0 20px;
   text-align: center;
   pointer-events: none;
   opacity: 0;
@@ -362,7 +363,7 @@
     transform 0.35s;
   color: #f3f0fb;
   font:
-    22px/1.2 'DotGothic16',
+    clamp(24px, 2.2vw, 32px) / 1.2 'DotGothic16',
     'Noto Sans SC',
     monospace;
   letter-spacing: 0.3em;
@@ -375,7 +376,7 @@
   display: block;
   margin-top: 8px;
   font:
-    12px/1 'Noto Sans SC',
+    clamp(14px, 1.1vw, 16px) / 1.2 'Noto Sans SC',
     system-ui,
     sans-serif;
   letter-spacing: 0.2em;
@@ -1166,12 +1167,99 @@
 /* The story's lines in the focus caption (story.ts): the detective's line in
    the caption's small type, typed out, and a prompt in brass under it */
 .cap .cap__hint {
-  margin-top: 10px;
+  margin-top: 14px;
   color: #f2c46d;
 }
 .cap .cap__line {
-  font-size: 14px;
+  margin-top: 12px;
+  font-size: clamp(17px, 1.45vw, 21px);
+  color: #e4def5;
   line-height: 1.5;
   letter-spacing: 0.12em;
   text-indent: 0;
+}
+
+/* The route: where the visitor is among the chapters (story.ts, showRoute).
+   Text only over the carriage, like the caption: no panel, no background,
+   and only classes change (docs/09, F-006 / F-007). */
+.route {
+  position: fixed;
+  z-index: 20;
+  right: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: none;
+  flex-direction: column;
+  align-items: flex-start;
+  font:
+    14px/1 'DotGothic16',
+    'Noto Sans SC',
+    monospace;
+  text-shadow:
+    0 1px 0 rgba(5, 4, 14, 0.9),
+    0 0 10px rgba(5, 4, 14, 0.9);
+}
+.route.on {
+  display: flex;
+}
+.route__stop {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  letter-spacing: 0.15em;
+  color: rgba(201, 195, 230, 0.55);
+  cursor: pointer;
+}
+.route__stop i {
+  width: 1em;
+  font-style: normal;
+  text-align: center;
+}
+.route__stop i::before {
+  content: '○';
+}
+.route__stop.done {
+  color: rgba(201, 195, 230, 0.85);
+}
+.route__stop.done i::before {
+  content: '●';
+}
+.route__stop.next {
+  color: #f2c46d;
+}
+.route__stop.here {
+  color: #f2c46d;
+}
+.route__stop.here i::before {
+  content: '◉';
+}
+.route__stop:hover span,
+.route__stop:focus-visible span {
+  color: #fff;
+}
+.route__rail {
+  display: flex;
+  flex-direction: column;
+  width: 1em;
+  line-height: 0.6;
+  text-align: center;
+  color: rgba(201, 195, 230, 0.3);
+}
+.route__rail b {
+  font-weight: normal;
+}
+.route__rail b.lit {
+  color: #f2c46d;
+}
+@media (max-width: 640px) {
+  .route {
+    right: 8px;
+  }
+  .route__stop span {
+    display: none;
+  }
 }

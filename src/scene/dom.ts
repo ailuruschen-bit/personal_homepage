@@ -20,6 +20,8 @@ export interface SceneEls {
   gones: HTMLElement[];
   /** A chapter's page: an ordinary document, shown instead of the stage (story.ts) */
   page: HTMLElement;
+  /** The route: where the visitor is among the chapters, and a way to each (story.ts) */
+  route: HTMLElement;
 }
 
 const BLIND_SLATS = 14;
@@ -127,7 +129,8 @@ export function buildScene(root: HTMLElement): SceneEls {
   <div class="cap" id="cap"></div>
   <button class="re" id="re" type="button">↻ 重播开幕</button>
 </div>
-<main class="page" id="page" hidden></main>`;
+<main class="page" id="page" hidden></main>
+<nav class="route" id="route" aria-label="阅读进度"></nav>`;
 
   const $ = <T extends HTMLElement>(id: string) => root.querySelector<T>(`#${id}`)!;
   return {
@@ -145,5 +148,6 @@ export function buildScene(root: HTMLElement): SceneEls {
     carry: $('carry'),
     gones: Array.from(root.querySelectorAll<HTMLElement>('.gone')),
     page: $('page'),
+    route: $('route'),
   };
 }

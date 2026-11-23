@@ -25,7 +25,6 @@ import { nudge, objectLines } from '../content/lines';
  *  the carriage for a still that can only be clicked */
 const APPROACH = 600;
 const RETREAT = 500;
-/** Progress below which the carriage still counts as the hub: clicks and focus */
 /** Hub weight above which the scene counts as at the hub (focus.ts uses the same) */
 export const SEATED = 0.8;
 /** The camera never zooms the carriage further than this (docs/10, Performance) */
@@ -36,7 +35,7 @@ const FILL = 0.62;
 const FOLLOW = 0.06;
 /** Each cut: to black, and back from it, in ms */
 const FADE = 260;
-/** Typing speed of the speech bubble, ms per character */
+/** Typing speed of the caption's line, ms per character */
 const CHAR_MS = 28;
 /** At the hub with nothing moving this long, the nudge shows, in ms */
 const NUDGE_AFTER = 1800;
@@ -48,6 +47,8 @@ const GESTURE_GAP = 120;
 const HOME_HOLD = 450;
 /** Wheel travel past a page's top or bottom that leaves it */
 const LEAVE = 160;
+/** Dots on each stretch of the route between two stops */
+const RAIL = 3;
 
 export type Present = 'carry' | 'dolly';
 
@@ -107,6 +108,7 @@ export class Story {
   private typed = -1;
   private typeStart = 0;
   private lineEl: HTMLElement | null = null;
+  private routeKey = '';
   private hintEl: HTMLElement | null = null;
 
   constructor(private readonly els: SceneEls) {
@@ -120,6 +122,8 @@ export class Story {
     window.addEventListener('touchstart', this.onTouchStart, { passive: true });
     window.addEventListener('touchmove', this.onTouchMove, { passive: true });
     window.addEventListener('keydown', this.onKey);
+    this.els.route.innerHTML = renderRoute();
+    this.els.route.addEventListener('click', this.onRoute);
   }
 
   /** At the hub: where pointer focus, clicks and the window belong */
@@ -151,6 +155,27 @@ export class Story {
     if (i < 0) return;
     this.p = this.target = this.nodes[i]!;
     this.showPage(i);
+  }
+
+  /** A stop on the route: the carriage, or a chapter's page through black */
+  private readonly onRoute = (e: MouseEvent) => {
+    const el = (e.target as HTMLElement).closest<HTMLElement>('[data-stop]');
+    if (!el || this.busy) return;
+    const k = Number(el.dataset.stop);
+    if (k < 0) return this.home();
+    if (this.mode === 'scene') return this.goTo(CHAPTERS[k]!.id);
+    if (k === this.chapter) window.scrollTo({ top: 0, behavior: 'smooth' });
+    else void this.toOtherPage(k);
+  };
+
+  private async toOtherPage(i: number) {
+    this.busy = true;
+    await this.fade(this.els.page, 0);
+    this.p = this.target = this.nodes[i]!;
+    this.showPage(i);
+    await nextFrame();
+    await this.fade(this.els.page, 1);
+    this.busy = false;
   }
 
   // ---- input --------------------------------------------------------------
@@ -262,6 +287,7 @@ export class Story {
     this.showObject(i, easeOut(clamp(t)), hub, frame);
     this.seated = frame.hub > SEATED;
     this.showLines(i, clamp(t), i >= 0 && this.p > this.nodes[i]!, now);
+    this.showRoute();
     return frame;
   }
 
@@ -316,6 +342,44 @@ export class Story {
    *  out: his last word on it. At the hub, after a while and with nothing in
    *  focus, the nudge. The caption only ever changes its text and its `on`
    *  class: anything painted over the carriage made Chrome fault (docs/09). */
+  /**
+   * The route: the carriage, then each chapter as a stop, with dots between
+   * that fill as the progress runs from one stop to the next. Text only, its
+   * classes changed only when the state does (docs/09, F-007).
+   */
+  private showRoute() {
+    const page = this.mode === 'page';
+    const visible = page || this.enabled;
+    const stops: string[] = [];
+    const rails: number[] = [];
+    let next = true;
+    stops.push(page || this.p >= 1 ? 'done' : 'here');
+    for (let k = 0; k < this.nodes.length; k++) {
+      const from = k ? this.nodes[k - 1]! : 0;
+      const to = this.nodes[k]!;
+      if (page) {
+        rails.push(k <= this.chapter ? RAIL : 0);
+        stops.push(k < this.chapter ? 'done' : k === this.chapter ? 'here' : '');
+      } else {
+        rails.push(Math.floor(clamp((this.p - from) / (to - from)) * RAIL + 0.001));
+        const done = this.p >= to;
+        stops.push(done ? 'done' : next ? 'next' : '');
+        if (!done) next = false;
+      }
+    }
+    const key = `${visible}|${stops.join()}|${rails.join()}`;
+    if (key === this.routeKey) return;
+    this.routeKey = key;
+    const route = this.els.route;
+    route.classList.toggle('on', visible);
+    route.querySelectorAll<HTMLElement>('[data-stop]').forEach((el, n) => {
+      el.className = `route__stop ${stops[n] ?? ''}`;
+    });
+    route.querySelectorAll<HTMLElement>('.route__rail').forEach((el, n) => {
+      el.querySelectorAll('b').forEach((b, d) => b.classList.toggle('lit', d < rails[n]!));
+    });
+  }
+
   private showLines(i: number, t: number, leaving: boolean, now: number) {
     let key = '';
     let title = '';
@@ -402,6 +466,7 @@ export class Story {
     document.documentElement.classList.add('reading');
     window.scrollTo(0, 0);
     history.replaceState(null, '', `#/${CHAPTERS[i]!.id}`);
+    this.showRoute();
   }
 
   private async toScene(p: number) {
@@ -437,7 +502,19 @@ export class Story {
     window.removeEventListener('touchstart', this.onTouchStart);
     window.removeEventListener('touchmove', this.onTouchMove);
     window.removeEventListener('keydown', this.onKey);
+    this.els.route.removeEventListener('click', this.onRoute);
   }
+}
+
+/** The route's markup: the carriage and the chapters as stops, rails between */
+function renderRoute(): string {
+  const stop = (k: number, label: string) =>
+    `<button class="route__stop" type="button" data-stop="${k}"><i></i><span>${label}</span></button>`;
+  const rail = `<span class="route__rail" aria-hidden="true">${'<b>·</b>'.repeat(RAIL)}</span>`;
+  return [
+    stop(-1, '车厢'),
+    ...CHAPTERS.map((c, k) => rail + stop(k, sectionById(c.id)?.title ?? c.id)),
+  ].join('');
 }
 
 /** A chapter's page: plain document content, with the ways back and on */
