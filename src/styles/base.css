@@ -30,6 +30,8 @@ html.reading,
 html.reading body {
   height: auto;
   overflow-y: auto;
+  /* no rubber band past either end: the page rests there (story.ts, pageInput) */
+  overscroll-behavior-y: none;
 }
 html.reading #app {
   height: auto;

@@ -116,6 +116,7 @@ export class Story {
   private lineEl: HTMLElement | null = null;
   private routeKey = '';
   private brakeSince = 0;
+  private edgeArmed = false;
   private brakeHold = BRAKE_PAGE;
   private stopSince = 0;
   /** The hub between chapters: where each retreat ends and the next approach starts */
@@ -237,7 +238,7 @@ export class Story {
       if (fresh || now - this.brakeSince > this.brakeHold) this.brakeSince = 0;
       else return;
     }
-    if (this.mode === 'page') return this.pageInput(dy);
+    if (this.mode === 'page') return this.pageInput(dy, fresh);
     if (!this.enabled) return;
     // Pushing up at the hub goes back out of the window, but only in a new
     // gesture begun once the camera is home: the scroll that brought it home,
@@ -281,12 +282,21 @@ export class Story {
   }
 
   /** On a page the document scrolls itself; pushing on past its top or bottom leaves it */
-  private pageInput(dy: number) {
+  private pageInput(dy: number, fresh: boolean) {
     const doc = document.documentElement;
     const atTop = window.scrollY <= 0;
     const atBottom = window.scrollY + window.innerHeight >= doc.scrollHeight - 2;
-    if ((dy < 0 && atTop) || (dy > 0 && atBottom)) this.leave += dy;
-    else this.leave = 0;
+    const pushing = (dy < 0 && atTop) || (dy > 0 && atBottom);
+    // The scroll that reaches an end stops there: the page rests on it. Only
+    // a gesture begun at the end, pushing on, leaves for the carriage
+    if (!pushing) {
+      this.edgeArmed = false;
+      this.leave = 0;
+      return;
+    }
+    if (fresh) this.edgeArmed = true;
+    if (!this.edgeArmed) return;
+    this.leave += dy;
     const node = this.nodes[this.chapter]!;
     if (this.leave <= -LEAVE) void this.toScene(node - 2);
     else if (this.leave >= LEAVE) void this.toScene(node + 2);
@@ -506,6 +516,7 @@ export class Story {
     this.chapter = i;
     this.mode = 'page';
     this.leave = 0;
+    this.edgeArmed = false;
     this.onMode('page');
     this.els.page.innerHTML = renderPage(i);
     this.els.page.hidden = false;
