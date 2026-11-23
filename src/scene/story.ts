@@ -395,6 +395,10 @@ export class Story {
       }
     }
 
+    // The nudge waits for a quiet spell: no scroll, and no object in focus.
+    // Focus counts as activity, so the wait starts again when it is lost
+    if (this.focused() || this.playing || this.glide) this.quietSince = now;
+
     // Which object the camera is with, and how far: up to it, then away
     let i = -1;
     let t = 0;
