@@ -45,8 +45,9 @@ const OUT = 100;
 const GESTURE_GAP = 120;
 /** ...or the camera has been home this long, in ms */
 const HOME_HOLD = 450;
-/** Wheel travel past a page's top or bottom that leaves it */
-const LEAVE = 160;
+/** Wheel travel past a page's top or bottom that leaves it: barely any, so
+ *  the scroll that reaches the end carries straight on to the carriage */
+const LEAVE = 24;
 /** After a cut, how long a swipe that keeps going is still ignored, in ms.
  *  Longer onto a page, where the rest of a swipe could run a short page out at
  *  its far end; short back on the carriage, where the hub stop catches it anyway */
