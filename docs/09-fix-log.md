@@ -19,6 +19,20 @@ anything that is now load-bearing because of it.
 
 ---
 
+## F-008 Chrome: a chapter page does not scroll at all
+
+**Symptom.** On a chapter page in Chrome the wheel showed the scrollbar but
+the page never moved. Safari was fine.
+
+**Cause.** `overscroll-behavior-y: none` was set on `body` as well as `html`
+while reading. With both set to `overflow-y: auto`, `body` is a scroll
+container of its own, with nothing to scroll. Chrome sends the wheel to it
+first, and `overscroll-behavior` there stops it being handed on to the
+viewport, which is what actually scrolls.
+
+**Fix.** `overscroll-behavior-y: none` on the root only (`base.css`). That
+still removes the rubber band past a page's ends.
+
 ## F-007 Chrome: any panel painted over the carriage faults
 
 **Symptom.** A speech bubble for the detective's lines (a dark panel with a
