@@ -79,8 +79,11 @@ export function mountScene(root: HTMLElement, { skipOpening, startAt }: SceneOpt
 
   const enter = (target: string | null) => {
     if (!target) return;
-    if (target === COVER) opening.set('peek');
-    else story.play(target);
+    // out through the window, and back in at the start of the story
+    if (target === COVER) {
+      story.reset();
+      opening.set('peek');
+    } else story.play(target);
   };
 
   const onPointerMove = (e: PointerEvent) => {

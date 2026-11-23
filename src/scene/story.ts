@@ -189,6 +189,17 @@ export class Story {
     void this.toPage(i);
   }
 
+  /** Back to the very start of the story at once, with no move: for leaving
+   *  through the window, which is clicked only from a hub framing, the same
+   *  at every stop, so the jump does not show */
+  reset() {
+    if (this.mode !== 'scene' || this.busy) return;
+    this.p = this.target = 0;
+    this.stopSince = 0;
+    this.playing = null;
+    this.glide = null;
+  }
+
   /** Back to the hub, from anywhere */
   home() {
     if (this.mode === 'page') void this.toScene(0);
