@@ -30,7 +30,11 @@ html.reading,
 html.reading body {
   height: auto;
   overflow-y: auto;
-  /* no rubber band past either end: the page rests there (story.ts, pageInput) */
+}
+/* No rubber band past either end: the page rests there (story.ts, pageInput).
+   On the root only: on body it stops Chrome handing the wheel on from body,
+   which cannot scroll, to the viewport, and the page never moves (F-008) */
+html.reading {
   overscroll-behavior-y: none;
 }
 html.reading #app {
