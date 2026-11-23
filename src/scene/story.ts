@@ -298,12 +298,15 @@ export class Story {
 
     const prev = this.p;
     this.p += (this.target - this.p) * (1 - Math.exp(-dt / FOLLOW));
-    // Reaching a node going forward cuts to its page
+    // Reaching a node cuts to its page, either way: going back up, the page
+    // opens at its end, as if read back up to it
     if (!this.busy) {
-      const i = this.nodes.findIndex((n) => prev < n && this.p >= n);
+      const fwd = this.nodes.findIndex((n) => prev < n && this.p >= n);
+      const back = this.nodes.findIndex((n) => prev > n && this.p <= n);
+      const i = fwd >= 0 ? fwd : back;
       if (i >= 0) {
         this.p = this.target = this.nodes[i]!;
-        void this.toPage(i);
+        void this.toPage(i, fwd < 0);
       }
     }
 
@@ -479,11 +482,12 @@ export class Story {
 
   // ---- the cuts -----------------------------------------------------------
 
-  private async toPage(i: number) {
+  private async toPage(i: number, atEnd = false) {
     if (this.busy) return;
     this.busy = true;
     await this.fade(this.els.stage, 0);
     this.showPage(i);
+    if (atEnd) window.scrollTo(0, document.documentElement.scrollHeight);
     this.els.page.style.opacity = '0';
     await nextFrame();
     await this.fade(this.els.page, 1);
