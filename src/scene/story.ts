@@ -508,7 +508,8 @@ export class Story {
         key = `${id}:in`;
         title = l.name;
         line = l.open;
-        if (t > 0.7 && !this.playing) hint = `继续下滑 ▼ 翻开${sectionById(id)?.title ?? ''}`;
+        // not in a click's approach, nor in the cut that follows any approach
+        if (t > 0.7 && !this.playing && !this.busy) hint = `继续下滑 ▼ 翻开${sectionById(id)?.title ?? ''}`;
       } else if (l && t > 0.5) {
         key = `${id}:out`;
         line = l.close;
