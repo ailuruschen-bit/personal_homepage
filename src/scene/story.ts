@@ -112,6 +112,9 @@ export class Story {
   private lineEl: HTMLElement | null = null;
   private routeKey = '';
   private brakeSince = 0;
+  private stopSince = 0;
+  /** The hub between chapters: where each retreat ends and the next approach starts */
+  private readonly stops: number[] = [];
   private hintEl: HTMLElement | null = null;
 
   constructor(private readonly els: SceneEls) {
@@ -121,6 +124,7 @@ export class Story {
       s += APPROACH + RETREAT;
     }
     this.end = s;
+    this.stops = this.nodes.slice(0, -1).map((n) => n + RETREAT);
     window.addEventListener('wheel', this.onWheel, { passive: true });
     window.addEventListener('touchstart', this.onTouchStart, { passive: true });
     window.addEventListener('touchmove', this.onTouchMove, { passive: true });
@@ -252,7 +256,20 @@ export class Story {
       return;
     }
     this.out = 0;
-    this.target = clamp(this.target + dy, 0, this.end);
+    // A stop at the hub between two chapters: the camera all the way back on
+    // the carriage, with time to look around or click before the next object
+    if (this.stopSince) {
+      if (fresh || now - this.stopSince > BRAKE_HOLD) this.stopSince = 0;
+      else return;
+    }
+    const next = clamp(this.target + dy, 0, this.end);
+    const stop = this.stops.find(
+      (h) => (this.target < h && next > h) || (this.target > h && next < h),
+    );
+    if (stop !== undefined) {
+      this.target = stop;
+      this.stopSince = now;
+    } else this.target = next;
   }
 
   /** On a page the document scrolls itself; pushing on past its top or bottom leaves it */
