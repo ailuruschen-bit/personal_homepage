@@ -52,7 +52,7 @@ const LEAVE = 24;
 /** A click plays the approach on its own: this long, in ms... */
 const PLAY_MS = 1600;
 /** ...then holds on the object this long once its line is typed out, in ms */
-const PLAY_READ = 700;
+const PLAY_READ = 150;
 /** After a cut, how long a swipe that keeps going is still ignored, in ms.
  *  Longer onto a page, where the rest of a swipe could run a short page out at
  *  its far end; short back on the carriage, where the hub stop catches it anyway */
