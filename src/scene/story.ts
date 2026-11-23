@@ -53,6 +53,8 @@ const LEAVE = 24;
 const PLAY_MS = 1600;
 /** ...then holds on the object this long once its line is typed out, in ms */
 const PLAY_READ = 150;
+/** Back from a page, the camera glides off the object to the hub this long, in ms */
+const GLIDE_MS = 1200;
 /** After a cut, how long a swipe that keeps going is still ignored, in ms.
  *  Longer onto a page, where the rest of a swipe could run a short page out at
  *  its far end; short back on the carriage, where the hub stop catches it anyway */
@@ -121,6 +123,8 @@ export class Story {
   private lineEl: HTMLElement | null = null;
   private routeKey = '';
   private brakeSince = 0;
+  /** Back from a page: the camera easing off the object to the hub by itself */
+  private glide: { from: number; to: number; start: number } | null = null;
   /** A clicked object's approach, playing by itself (play) */
   private playing: { i: number; from: number; start: number; read: number } | null = null;
   private edgeArmed = false;
@@ -149,7 +153,7 @@ export class Story {
 
   /** At the hub: where pointer focus, clicks and the window belong */
   get atHub() {
-    return this.mode === 'scene' && !this.busy && !this.playing && this.seated;
+    return this.mode === 'scene' && !this.busy && !this.playing && !this.glide && this.seated;
   }
 
   /** A clicked object's approach is playing: the pointer picks nothing meanwhile */
@@ -265,7 +269,7 @@ export class Story {
       now - this.lastInput > GESTURE_GAP || (mag > RISE_MIN && mag > this.lastMag * RISE);
     this.lastInput = now;
     this.lastMag = mag;
-    if (this.busy || this.playing) return;
+    if (this.busy || this.playing || this.glide) return;
     // The brake after every cut: the rest of the swipe that made it is
     // dropped, until a new gesture starts or it has run on for the hold,
     // so one fast swipe never carries through several chapters
@@ -341,7 +345,16 @@ export class Story {
     if (this.mode !== 'scene') return frame;
 
     const play = this.playing;
-    if (play) {
+    const glide = this.glide;
+    if (glide) {
+      const k = clamp((now - glide.start) / GLIDE_MS);
+      this.p = this.target = lerp(glide.from, glide.to, easeInOut(k));
+      if (k >= 1) {
+        this.glide = null;
+        // resting at the hub: the swipe that left the page goes no further
+        this.stopSince = now;
+      }
+    } else if (play) {
       // the clicked object's approach, on its own clock; it stops just short
       // of the node until the line is read, then the cut
       const n = this.nodes[play.i]!;
@@ -601,6 +614,13 @@ export class Story {
     this.busy = false;
     this.brakeSince = performance.now();
     this.brakeHold = BRAKE_SCENE;
+    // and back to the hub on its own: past the node, to the stop after it;
+    // before it, to where this object's approach began
+    const node = this.nodes[this.chapter];
+    if (node !== undefined && p !== 0) {
+      const to = p > node ? Math.min(node + RETREAT, this.end) : node - APPROACH;
+      this.glide = { from: p, to, start: performance.now() };
+    }
   }
 
   private async fade(el: HTMLElement, to: number) {
