@@ -47,8 +47,11 @@ const GESTURE_GAP = 120;
 const HOME_HOLD = 450;
 /** Wheel travel past a page's top or bottom that leaves it */
 const LEAVE = 160;
-/** After a cut, how long a swipe that keeps going is still ignored, in ms */
-const BRAKE_HOLD = 700;
+/** After a cut, how long a swipe that keeps going is still ignored, in ms.
+ *  Longer onto a page, where the rest of a swipe could run a short page out at
+ *  its far end; short back on the carriage, where the hub stop catches it anyway */
+const BRAKE_PAGE = 700;
+const BRAKE_SCENE = 150;
 /** Dots on each stretch of the route between two stops */
 const RAIL = 3;
 
@@ -112,6 +115,7 @@ export class Story {
   private lineEl: HTMLElement | null = null;
   private routeKey = '';
   private brakeSince = 0;
+  private brakeHold = BRAKE_PAGE;
   private stopSince = 0;
   /** The hub between chapters: where each retreat ends and the next approach starts */
   private readonly stops: number[] = [];
@@ -184,6 +188,7 @@ export class Story {
     await this.fade(this.els.page, 1);
     this.busy = false;
     this.brakeSince = performance.now();
+    this.brakeHold = BRAKE_PAGE;
   }
 
   // ---- input --------------------------------------------------------------
@@ -225,10 +230,10 @@ export class Story {
     this.lastInput = now;
     if (this.busy) return;
     // The brake after every cut: the rest of the swipe that made it is
-    // dropped, until a new gesture starts or it has run on for BRAKE_HOLD,
+    // dropped, until a new gesture starts or it has run on for the hold,
     // so one fast swipe never carries through several chapters
     if (this.brakeSince) {
-      if (fresh || now - this.brakeSince > BRAKE_HOLD) this.brakeSince = 0;
+      if (fresh || now - this.brakeSince > this.brakeHold) this.brakeSince = 0;
       else return;
     }
     if (this.mode === 'page') return this.pageInput(dy);
@@ -493,6 +498,7 @@ export class Story {
     await this.fade(this.els.page, 1);
     this.busy = false;
     this.brakeSince = performance.now();
+    this.brakeHold = BRAKE_PAGE;
   }
 
   private showPage(i: number) {
@@ -528,6 +534,7 @@ export class Story {
     await this.fade(this.els.stage, 1);
     this.busy = false;
     this.brakeSince = performance.now();
+    this.brakeHold = BRAKE_SCENE;
   }
 
   private async fade(el: HTMLElement, to: number) {
