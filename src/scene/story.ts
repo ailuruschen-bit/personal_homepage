@@ -47,6 +47,8 @@ const GESTURE_GAP = 120;
 const HOME_HOLD = 450;
 /** Wheel travel past a page's top or bottom that leaves it */
 const LEAVE = 160;
+/** After a cut, how long a swipe that keeps going is still ignored, in ms */
+const BRAKE_HOLD = 700;
 /** Dots on each stretch of the route between two stops */
 const RAIL = 3;
 
@@ -109,6 +111,7 @@ export class Story {
   private typeStart = 0;
   private lineEl: HTMLElement | null = null;
   private routeKey = '';
+  private brakeSince = 0;
   private hintEl: HTMLElement | null = null;
 
   constructor(private readonly els: SceneEls) {
@@ -176,6 +179,7 @@ export class Story {
     await nextFrame();
     await this.fade(this.els.page, 1);
     this.busy = false;
+    this.brakeSince = performance.now();
   }
 
   // ---- input --------------------------------------------------------------
@@ -209,16 +213,25 @@ export class Story {
   };
 
   private input(dy: number) {
-    this.quietSince = performance.now();
+    const now = performance.now();
+    this.quietSince = now;
+    // Gestures are timed through the cuts too, so the inertia of the swipe
+    // that made a cut is still known as the same gesture on the far side
+    const fresh = now - this.lastInput > GESTURE_GAP;
+    this.lastInput = now;
     if (this.busy) return;
+    // The brake after every cut: the rest of the swipe that made it is
+    // dropped, until a new gesture starts or it has run on for BRAKE_HOLD,
+    // so one fast swipe never carries through several chapters
+    if (this.brakeSince) {
+      if (fresh || now - this.brakeSince > BRAKE_HOLD) this.brakeSince = 0;
+      else return;
+    }
     if (this.mode === 'page') return this.pageInput(dy);
     if (!this.enabled) return;
     // Pushing up at the hub goes back out of the window, but only in a new
     // gesture begun once the camera is home: the scroll that brought it home,
     // and its inertia, stop there (a pause between paragraphs)
-    const now = performance.now();
-    const fresh = now - this.lastInput > GESTURE_GAP;
-    this.lastInput = now;
     const home = this.target <= 0 && this.p < 1;
     if (!home) {
       this.armed = false;
@@ -456,6 +469,7 @@ export class Story {
     await nextFrame();
     await this.fade(this.els.page, 1);
     this.busy = false;
+    this.brakeSince = performance.now();
   }
 
   private showPage(i: number) {
@@ -490,6 +504,7 @@ export class Story {
     await nextFrame();
     await this.fade(this.els.stage, 1);
     this.busy = false;
+    this.brakeSince = performance.now();
   }
 
   private async fade(el: HTMLElement, to: number) {
