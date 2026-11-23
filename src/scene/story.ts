@@ -500,7 +500,12 @@ export class Story {
         key = `${id}:out`;
         line = l.close;
       }
-    } else if (this.enabled && !this.focused() && now - this.quietSince > NUDGE_AFTER) {
+    } else if (
+      this.enabled &&
+      !this.playing &&
+      !this.focused() &&
+      now - this.quietSince > NUDGE_AFTER
+    ) {
       key = 'nudge';
       line = nudge.line;
       hint = nudge.hint;
