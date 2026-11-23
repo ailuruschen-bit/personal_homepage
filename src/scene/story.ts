@@ -49,6 +49,10 @@ const RISE_MIN = 6;
 /** Wheel travel past a page's top or bottom that leaves it: barely any, so
  *  the scroll that reaches the end carries straight on to the carriage */
 const LEAVE = 24;
+/** A click plays the approach on its own: this long, in ms... */
+const PLAY_MS = 1600;
+/** ...then holds on the object this long once its line is typed out, in ms */
+const PLAY_READ = 700;
 /** After a cut, how long a swipe that keeps going is still ignored, in ms.
  *  Longer onto a page, where the rest of a swipe could run a short page out at
  *  its far end; short back on the carriage, where the hub stop catches it anyway */
@@ -81,6 +85,7 @@ export interface StoryFrame {
 const clamp = (v: number, lo = 0, hi = 1) => Math.max(lo, Math.min(hi, v));
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 const easeOut = (t: number) => 1 - (1 - t) * (1 - t);
+const easeInOut = (t: number) => (t < 0.5 ? 2 * t * t : 1 - 2 * (1 - t) * (1 - t));
 const nextFrame = () => new Promise<void>((r) => requestAnimationFrame(() => r()));
 const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
@@ -116,6 +121,8 @@ export class Story {
   private lineEl: HTMLElement | null = null;
   private routeKey = '';
   private brakeSince = 0;
+  /** A clicked object's approach, playing by itself (play) */
+  private playing: { i: number; from: number; start: number; read: number } | null = null;
   private edgeArmed = false;
   private lastMag = 0;
   private brakeHold = BRAKE_PAGE;
@@ -142,7 +149,27 @@ export class Story {
 
   /** At the hub: where pointer focus, clicks and the window belong */
   get atHub() {
-    return this.mode === 'scene' && !this.busy && this.seated;
+    return this.mode === 'scene' && !this.busy && !this.playing && this.seated;
+  }
+
+  /** A clicked object's approach is playing: the pointer picks nothing meanwhile */
+  get isPlaying() {
+    return this.playing !== null;
+  }
+
+  /**
+   * Clicking an object at the hub: its approach plays by itself at an even
+   * pace, the line is typed out in full, then the cut to its page. It starts
+   * from the hub framing at the head of that object's own approach, so no
+   * other object's approach or retreat plays on the way.
+   */
+  play(id: string) {
+    const i = CHAPTERS.findIndex((c) => c.id === id);
+    if (i < 0 || this.busy || this.mode !== 'scene' || this.playing) return;
+    const from = this.nodes[i]! - APPROACH;
+    this.p = this.target = from;
+    this.stopSince = 0;
+    this.playing = { i, from, start: performance.now(), read: 0 };
   }
   /** The camera is back at the hub framing: at the start, or between two
    *  chapters. Pointer focus and clicks share this, so whatever lights up
@@ -238,7 +265,7 @@ export class Story {
       now - this.lastInput > GESTURE_GAP || (mag > RISE_MIN && mag > this.lastMag * RISE);
     this.lastInput = now;
     this.lastMag = mag;
-    if (this.busy) return;
+    if (this.busy || this.playing) return;
     // The brake after every cut: the rest of the swipe that made it is
     // dropped, until a new gesture starts or it has run on for the hold,
     // so one fast swipe never carries through several chapters
@@ -313,17 +340,38 @@ export class Story {
     const frame: StoryFrame = { hub: 1, camera: null, dim: 0, pool: null };
     if (this.mode !== 'scene') return frame;
 
-    const prev = this.p;
-    this.p += (this.target - this.p) * (1 - Math.exp(-dt / FOLLOW));
-    // Reaching a node cuts to its page, either way: going back up, the page
-    // opens at its end, as if read back up to it
-    if (!this.busy) {
-      const fwd = this.nodes.findIndex((n) => prev < n && this.p >= n);
-      const back = this.nodes.findIndex((n) => prev > n && this.p <= n);
-      const i = fwd >= 0 ? fwd : back;
-      if (i >= 0) {
-        this.p = this.target = this.nodes[i]!;
-        void this.toPage(i, fwd < 0);
+    const play = this.playing;
+    if (play) {
+      // the clicked object's approach, on its own clock; it stops just short
+      // of the node until the line is read, then the cut
+      const n = this.nodes[play.i]!;
+      const k = clamp((now - play.start) / PLAY_MS);
+      this.p = this.target = lerp(play.from, n - 0.5, easeInOut(k));
+      if (
+        k >= 1 &&
+        !play.read &&
+        this.talkKey.endsWith(':in') &&
+        this.typed >= this.talkLine.length
+      )
+        play.read = now;
+      if (play.read && now - play.read > PLAY_READ) {
+        this.playing = null;
+        this.p = this.target = n;
+        void this.toPage(play.i);
+      }
+    } else {
+      const prev = this.p;
+      this.p += (this.target - this.p) * (1 - Math.exp(-dt / FOLLOW));
+      // Reaching a node cuts to its page, either way: going back up, the page
+      // opens at its end, as if read back up to it
+      if (!this.busy) {
+        const fwd = this.nodes.findIndex((n) => prev < n && this.p >= n);
+        const back = this.nodes.findIndex((n) => prev > n && this.p <= n);
+        const i = fwd >= 0 ? fwd : back;
+        if (i >= 0) {
+          this.p = this.target = this.nodes[i]!;
+          void this.toPage(i, fwd < 0);
+        }
       }
     }
 
@@ -447,7 +495,7 @@ export class Story {
         key = `${id}:in`;
         title = l.name;
         line = l.open;
-        if (t > 0.7) hint = `继续下滑 ▼ 翻开${sectionById(id)?.title ?? ''}`;
+        if (t > 0.7 && !this.playing) hint = `继续下滑 ▼ 翻开${sectionById(id)?.title ?? ''}`;
       } else if (l && t > 0.5) {
         key = `${id}:out`;
         line = l.close;

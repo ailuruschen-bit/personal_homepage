@@ -80,14 +80,14 @@ export function mountScene(root: HTMLElement, { skipOpening, startAt }: SceneOpt
   const enter = (target: string | null) => {
     if (!target) return;
     if (target === COVER) opening.set('peek');
-    else story.goTo(target);
+    else story.play(target);
   };
 
   const onPointerMove = (e: PointerEvent) => {
     pointerType = e.pointerType;
     if (e.pointerType === 'touch') return;
     opening.hintOnMove();
-    if (opening.phase === 'hub') focus.movePointer(e.clientX, e.clientY);
+    if (opening.phase === 'hub' && !story.isPlaying) focus.movePointer(e.clientX, e.clientY);
     else focus.trackPointer(e.clientX, e.clientY);
   };
 
