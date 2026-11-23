@@ -43,13 +43,12 @@ const NUDGE_AFTER = 1800;
 const OUT = 100;
 /** A pause in wheel input longer than this starts a new gesture, in ms */
 const GESTURE_GAP = 120;
-/** ...or the camera has been home this long, in ms */
-const HOME_HOLD = 450;
+/** ...or the input speeding up by this factor, from at least RISE_MIN */
+const RISE = 2;
+const RISE_MIN = 6;
 /** Wheel travel past a page's top or bottom that leaves it: barely any, so
  *  the scroll that reaches the end carries straight on to the carriage */
 const LEAVE = 24;
-/** Resting at a page's end this long, the scroll pushing on leaves it, in ms */
-const EDGE_HOLD = 450;
 /** After a cut, how long a swipe that keeps going is still ignored, in ms.
  *  Longer onto a page, where the rest of a swipe could run a short page out at
  *  its far end; short back on the carriage, where the hub stop catches it anyway */
@@ -109,7 +108,6 @@ export class Story {
   /** Going out takes a fresh gesture, or a moment, once the camera is home */
   private armed = true;
   private lastInput = 0;
-  private homeSince = 0;
   private quietSince = performance.now();
   private talkKey = '';
   private talkLine = '';
@@ -119,7 +117,6 @@ export class Story {
   private routeKey = '';
   private brakeSince = 0;
   private edgeArmed = false;
-  private edgeSince = 0;
   private lastMag = 0;
   private brakeHold = BRAKE_PAGE;
   private stopSince = 0;
@@ -232,8 +229,15 @@ export class Story {
     this.quietSince = now;
     // Gestures are timed through the cuts too, so the inertia of the swipe
     // that made a cut is still known as the same gesture on the far side
-    const fresh = now - this.lastInput > GESTURE_GAP;
+    // A new gesture: a pause in the input, or a swipe speeding up again where
+    // inertia only ever slows (a trackpad swipe begun while the last one's
+    // inertia still trickles in). Nothing else counts, however long the
+    // inertia runs: it never triggers anything on its own
+    const mag = Math.abs(dy);
+    const fresh =
+      now - this.lastInput > GESTURE_GAP || (mag > RISE_MIN && mag > this.lastMag * RISE);
     this.lastInput = now;
+    this.lastMag = mag;
     if (this.busy) return;
     // The brake after every cut: the rest of the swipe that made it is
     // dropped, until a new gesture starts or it has run on for the hold,
@@ -248,15 +252,8 @@ export class Story {
     // gesture begun once the camera is home: the scroll that brought it home,
     // and its inertia, stop there (a pause between paragraphs)
     const home = this.target <= 0 && this.p < 1;
-    if (!home) {
-      this.armed = false;
-      this.homeSince = 0;
-    } else {
-      if (!this.homeSince) this.homeSince = now;
-      // a brief pause in the wheel, or a moment at home while it keeps going
-      // (a trackpad's inertia runs into the next swipe without a gap)
-      if (fresh || now - this.homeSince > HOME_HOLD) this.armed = true;
-    }
+    if (!home) this.armed = false;
+    else if (fresh) this.armed = true;
     if (dy < 0 && home) {
       if (!this.armed) return;
       this.out -= dy;
@@ -293,21 +290,12 @@ export class Story {
     const pushing = (dy < 0 && atTop) || (dy > 0 && atBottom);
     // The scroll that reaches an end stops there: the page rests on it. Only
     // a gesture begun at the end, pushing on, leaves for the carriage
-    const now = performance.now();
-    const mag = Math.abs(dy);
-    const rising = mag > 4 && mag > this.lastMag * 1.5;
-    this.lastMag = mag;
     if (!pushing) {
       this.edgeArmed = false;
-      this.edgeSince = 0;
       this.leave = 0;
       return;
     }
-    if (!this.edgeSince) this.edgeSince = now;
-    // A new gesture at the end: a pause before it, or a swipe that speeds up
-    // again where inertia only ever slows (a trackpad swipe begun while the
-    // last one's inertia still trickles in), or a moment resting at the end
-    if (fresh || rising || now - this.edgeSince > EDGE_HOLD) this.edgeArmed = true;
+    if (fresh) this.edgeArmed = true;
     if (!this.edgeArmed) return;
     this.leave += dy;
     const node = this.nodes[this.chapter]!;
@@ -530,7 +518,6 @@ export class Story {
     this.mode = 'page';
     this.leave = 0;
     this.edgeArmed = false;
-    this.edgeSince = 0;
     this.onMode('page');
     this.els.page.innerHTML = renderPage(i);
     this.els.page.hidden = false;
