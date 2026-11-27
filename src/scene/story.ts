@@ -3,6 +3,8 @@ import { hotspotByTarget } from './hotspots';
 import { toScene, unitSize, type Camera } from './units';
 import { sectionById } from '../content/sections';
 import { nudge, objectLines } from '../content/lines';
+import { openPrompt, pageNext, ui } from '../content/ui';
+import { onLang, tr } from '../i18n';
 
 /**
  * The story, docs/10. Two modes that are never on screen together:
@@ -150,6 +152,26 @@ export class Story {
     this.els.route.innerHTML = renderRoute();
     this.els.route.addEventListener('click', this.onRoute);
     this.els.page.addEventListener('click', this.onPageClick);
+    this.offLang = onLang(() => this.relabel());
+  }
+
+  private offLang: () => void = () => {};
+
+  /** A new language: the route, the page being read and the caption again */
+  private relabel() {
+    this.els.route.innerHTML = renderRoute();
+    this.routeKey = '';
+    this.showRoute();
+    if (this.mode === 'page') {
+      const y = window.scrollY;
+      this.els.page.innerHTML = renderPage(this.chapter);
+      window.scrollTo(0, y);
+    }
+    // typed again in the new language from where it stands
+    if (this.talkKey) {
+      this.talkKey = '';
+      this.lineEl = null;
+    }
   }
 
   /** At the hub: where pointer focus, clicks and the window belong */
@@ -531,14 +553,14 @@ export class Story {
       const l = objectLines[id];
       if (l && !leaving) {
         key = `${id}:in`;
-        title = l.name;
-        line = l.open;
+        title = tr(l.name);
+        line = tr(l.open);
         // not in a click's approach, nor in the cut that follows any approach
         if (t > 0.7 && !this.playing && !this.busy)
-          hint = `继续下滑 ▼ 翻开${sectionById(id)?.title ?? ''}`;
+          hint = tr(openPrompt)(tr(sectionById(id)?.title ?? EMPTY));
       } else if (l && t > 0.5) {
         key = `${id}:out`;
-        line = l.close;
+        line = tr(l.close);
       }
     } else if (
       this.enabled &&
@@ -548,8 +570,8 @@ export class Story {
       now - this.quietSince > NUDGE_AFTER
     ) {
       key = 'nudge';
-      line = nudge.line;
-      hint = nudge.hint;
+      line = tr(nudge.line);
+      hint = tr(nudge.hint);
     }
     const cap = this.els.cap;
     if (!key) {
@@ -667,6 +689,7 @@ export class Story {
     window.removeEventListener('keydown', this.onKey);
     this.els.route.removeEventListener('click', this.onRoute);
     this.els.page.removeEventListener('click', this.onPageClick);
+    this.offLang();
   }
 }
 
@@ -676,10 +699,16 @@ function renderRoute(): string {
     `<button class="route__stop" type="button" data-stop="${k}"><i></i><span>${label}</span></button>`;
   const rail = `<span class="route__rail" aria-hidden="true">${'<b>·</b>'.repeat(RAIL)}</span>`;
   return [
-    stop(-1, '车厢'),
-    ...CHAPTERS.map((c, k) => rail + stop(k, sectionById(c.id)?.title ?? c.id)),
+    stop(-1, tr(ui.carriage)),
+    ...CHAPTERS.map((c, k) => rail + stop(k, sectionTitle(c.id))),
   ].join('');
 }
+
+const EMPTY = { zh: '', ja: '', en: '' };
+const sectionTitle = (id: string) => {
+  const sec = sectionById(id);
+  return sec ? tr(sec.title) : id;
+};
 
 /** A chapter's page: plain document content, with the ways back and on */
 function renderPage(i: number): string {
@@ -689,13 +718,13 @@ function renderPage(i: number): string {
   const blocks = (sec?.blocks ?? []).map((b) => `<p class="page__block">${b}</p>`).join('');
   return `<article class="page__in">
     <div class="page__top">
-      <button class="page__home" type="button" data-home>← 回到车厢</button>
-      <p class="page__hint">↑ 向上滚动，回到车厢</p>
+      <button class="page__home" type="button" data-home>${tr(ui.pageHome)}</button>
+      <p class="page__hint">${tr(ui.pageUp)}</p>
     </div>
-    <span class="page__kicker">${objectLines[ch.id]?.name ?? ''} · ${ch.id.toUpperCase()}</span>
-    <h1>${sec?.title ?? ch.id}</h1>
+    <span class="page__kicker">${objectLines[ch.id] ? tr(objectLines[ch.id]!.name) : ''} · ${ch.id.toUpperCase()}</span>
+    <h1>${sectionTitle(ch.id)}</h1>
     <p class="page__lede">${sec?.lede ?? ''}</p>
     ${blocks}
-    <p class="page__hint page__hint--end">↓ 继续向下${next ? `：${next.title}` : '，回到车厢'}</p>
+    <p class="page__hint page__hint--end">${next ? tr(pageNext)(tr(next.title)) : tr(ui.pageEnd)}</p>
   </article>`;
 }

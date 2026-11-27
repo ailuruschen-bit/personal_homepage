@@ -424,9 +424,40 @@
 .txt p:empty {
   display: none;
 }
+/* The occupant's name: a neon sign of its own among the ones outside */
 .txt b {
+  display: inline-block;
+  margin: 0 0.12em;
   font-weight: 400;
-  color: #f2c46d;
+  font-size: 1.7em;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  vertical-align: -0.08em;
+  color: #ffd98a;
+  text-shadow:
+    -2px 0 0 rgba(64, 226, 255, 0.6),
+    2px 0 0 rgba(255, 64, 178, 0.6),
+    0 3px 0 rgba(11, 10, 30, 0.75),
+    0 0 22px rgba(255, 186, 90, 0.55);
+  animation: neon 6s steps(1) infinite;
+}
+@keyframes neon {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  71% {
+    opacity: 0.55;
+  }
+  72% {
+    opacity: 1;
+  }
+  74% {
+    opacity: 0.7;
+  }
+  75% {
+    opacity: 1;
+  }
 }
 .txt .caret {
   display: inline-block;
@@ -1303,4 +1334,43 @@
   .route__stop span {
     display: none;
   }
+}
+
+/* The language switch: top right, over everything, text only like the route
+   (docs/09, F-006 / F-007) */
+.langs {
+  position: fixed;
+  z-index: 21;
+  top: 14px;
+  right: 18px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font:
+    13px/1 'DotGothic16',
+    'Noto Sans SC',
+    monospace;
+  text-shadow:
+    0 1px 0 rgba(5, 4, 14, 0.9),
+    0 0 10px rgba(5, 4, 14, 0.9);
+}
+.langs i {
+  font-style: normal;
+  color: rgba(201, 195, 230, 0.35);
+}
+.langs button {
+  padding: 6px 6px;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  letter-spacing: 0.1em;
+  color: rgba(201, 195, 230, 0.6);
+  cursor: pointer;
+}
+.langs button:hover,
+.langs button:focus-visible {
+  color: #fff;
+}
+.langs button.on {
+  color: #f2c46d;
 }

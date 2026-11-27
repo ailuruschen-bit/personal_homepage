@@ -1,4 +1,5 @@
 import { site } from '../content/site';
+import { tr } from '../i18n';
 
 /** Typing speed, ms per character, and the pause after each line */
 const CHAR_MS = 45;
@@ -35,17 +36,21 @@ function partial(line: Run[], n: number): string {
  * city, never over the carriage, so its text can change per frame (docs/09).
  */
 export class Monologue {
-  private readonly lines = site.monologue.map(runs);
-  private readonly els: HTMLElement[];
+  private lines: Run[][] = [];
+  private els: HTMLElement[] = [];
   private played = false;
   private timer = 0;
 
   constructor(private readonly root: HTMLElement) {
-    this.els = this.lines.map(() => {
-      const p = document.createElement('p');
-      root.append(p);
-      return p;
-    });
+    this.build();
+  }
+
+  /** The lines in the current language, as empty paragraphs to type into */
+  private build() {
+    this.lines = tr(site.monologue).map(runs);
+    this.root.setAttribute('aria-label', tr(site.monologue).join(' ').replace(/[{}]/g, ''));
+    this.els = this.lines.map(() => document.createElement('p'));
+    this.root.replaceChildren(...this.els);
   }
 
   /** The city is on screen: type the lines out, or show them if seen before */
@@ -78,6 +83,13 @@ export class Monologue {
       this.els[i]!.innerHTML = partial(line, Infinity) + (last ? '<i class="caret"></i>' : '');
     });
     this.root.classList.add('done');
+  }
+
+  /** A new language: the lines again, whole if they had started */
+  relabel() {
+    clearTimeout(this.timer);
+    this.build();
+    if (this.played) this.showAll();
   }
 
   dispose() {

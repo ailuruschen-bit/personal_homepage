@@ -20,8 +20,6 @@ export const COVER = 'cover';
 export interface Hotspot {
   /** Id of the section to open (see content/sections.ts), or COVER */
   target: string;
-  /** Object name, shown under the section name while focused */
-  object: string;
   zone: [number, number, number, number];
   light: { x: number; y: number; rx: number; ry: number };
   box?: { x: number; y: number; w: number; h: number };
@@ -51,27 +49,22 @@ function geo(
 export const hotspots: Hotspot[] = [
   {
     target: COVER,
-    object: '车窗',
     ...geo(COVER),
   },
   {
     target: 'projects',
-    object: '电脑',
     ...geo('projects'),
   },
   {
     target: 'about',
-    object: '车票',
     ...geo('about'),
   },
   {
     target: 'stack',
-    object: '公文包',
     ...geo('stack'),
   },
   {
     target: 'journey',
-    object: '线路图',
     ...geo('journey'),
   },
   // TODO: notes / hobby / chat have no object yet. Draw the artwork, then register them here.

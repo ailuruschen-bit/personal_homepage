@@ -1,4 +1,5 @@
-import { site } from '../content/site';
+import { LANGS, lang, tr, type Lang } from '../i18n';
+import { objectNames, ui } from '../content/ui';
 import { hotspots } from './hotspots';
 import { pct } from './units';
 
@@ -24,6 +25,8 @@ export interface SceneEls {
   page: HTMLElement;
   /** The route: where the visitor is among the chapters, and a way to each (story.ts) */
   route: HTMLElement;
+  /** The language switch */
+  langs: HTMLElement;
 }
 
 const BLIND_SLATS = 14;
@@ -68,7 +71,7 @@ export function buildScene(root: HTMLElement): SceneEls {
     .map((h) => {
       const [x0, y0, x1, y1] = h.zone;
       return (
-        `<button type="button" class="hs" data-go="${h.target}" aria-label="${h.object}" ` +
+        `<button type="button" class="hs" data-go="${h.target}" aria-label="${tr(objectNames[h.target] ?? { zh: h.target, ja: h.target, en: h.target })}" ` +
         `style="left:${pct(x0)};top:${pct(y0)};width:${pct(x1 - x0)};height:${pct(y1 - y0)}"></button>`
       );
     })
@@ -111,7 +114,7 @@ export function buildScene(root: HTMLElement): SceneEls {
   </div></div></div></div>
 
   <!-- Cover: the detective's monologue, typed out (monologue.ts) -->
-  <div class="hero" id="hero"><div class="txt" id="mono" aria-label="${site.monologue.join(' ').replace(/[{}]/g, '')}"></div></div>
+  <div class="hero" id="hero"><div class="txt" id="mono"></div></div>
 
   <!-- The story: the object lifted toward the lens (story.ts) -->
   <div class="carry" id="carry"></div>
@@ -119,15 +122,16 @@ export function buildScene(root: HTMLElement): SceneEls {
   <!-- Idle-state hint for getting back to the carriage -->
   <div class="ghost gt"></div><div class="ghost gb"></div>
   <div class="lens"></div><div class="grain"></div>
-  <div class="hint" id="hint"><i>▼</i><span id="hintt">点击 · 回到车厢</span></div>
+  <div class="hint" id="hint"><i>▼</i><span id="hintt"></span></div>
 
-  <button class="skip" id="skip" type="button">跳过 →</button>
+  <button class="skip" id="skip" type="button"></button>
   <div class="ml" id="ml"><i></i></div>
   <div class="cap" id="cap"></div>
-  <button class="re" id="re" type="button">↻ 重播开幕</button>
+  <button class="re" id="re" type="button"></button>
 </div>
 <main class="page" id="page" hidden></main>
-<nav class="route" id="route" aria-label="阅读进度"></nav>`;
+<nav class="route" id="route"></nav>
+<nav class="langs" id="langs">${LANGS.map((l) => `<button type="button" data-lang="${l}" lang="${l}">${LANG_LABEL[l]}</button>`).join('<i>·</i>')}</nav>`;
 
   const $ = <T extends HTMLElement>(id: string) => root.querySelector<T>(`#${id}`)!;
   return {
@@ -147,5 +151,25 @@ export function buildScene(root: HTMLElement): SceneEls {
     gones: Array.from(root.querySelectorAll<HTMLElement>('.gone')),
     page: $('page'),
     route: $('route'),
+    langs: $('langs'),
   };
+}
+
+/** How each language names itself in the switch */
+const LANG_LABEL: Record<Lang, string> = { zh: '中', ja: '日', en: 'EN' };
+
+/** Every fixed label of the scene in the current language (on load and on change) */
+export function relabel(els: SceneEls, touch: boolean) {
+  const hint = els.hint.querySelector('#hintt');
+  if (hint) hint.textContent = tr(touch ? ui.hintTap : ui.hintClick);
+  els.stage.querySelector('#skip')!.textContent = tr(ui.skip);
+  els.stage.querySelector('#re')!.textContent = tr(ui.replay);
+  els.route.setAttribute('aria-label', tr(ui.progress));
+  els.langs.setAttribute('aria-label', tr(ui.language));
+  for (const b of els.langs.querySelectorAll<HTMLElement>('[data-lang]'))
+    b.classList.toggle('on', b.dataset.lang === lang());
+  for (const b of els.stage.querySelectorAll<HTMLElement>('[data-go]')) {
+    const name = objectNames[b.dataset.go!];
+    if (name) b.setAttribute('aria-label', tr(name));
+  }
 }

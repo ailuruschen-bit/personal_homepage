@@ -19,7 +19,7 @@ export class Opening {
   private skipAnimations: Animation[] = [];
   /** Called synchronously on a phase change, after the class is set and before style recalc */
   onPhase?: (p: Phase) => void;
-  private readonly touch = window.matchMedia?.('(hover:none)').matches ?? false;
+  readonly touch = window.matchMedia?.('(hover:none)').matches ?? false;
   /** The two layers that must be eased along when the opening is skipped: city and rain */
   private readonly out: HTMLElement;
   private readonly rain: HTMLElement;
@@ -27,10 +27,6 @@ export class Opening {
   constructor(private readonly els: SceneEls) {
     this.out = els.ow.querySelector<HTMLElement>('.out')!;
     this.rain = els.stage.querySelector<HTMLElement>('.rain2')!;
-    if (this.touch) {
-      const label = els.hint.querySelector('#hintt');
-      if (label) label.textContent = '轻点 · 回到车厢';
-    }
 
     // Headline finished fading in -> idle; return camera finished -> hub
     els.hero.addEventListener('animationend', (e) => {

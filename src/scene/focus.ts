@@ -4,6 +4,8 @@ import { hotspotByTarget, hotspots, nearestHotspot, zoneDistance } from './hotsp
 import { toScene, unitSize, type Camera, type ScenePoint } from './units';
 import { CAMERA } from './geometry.gen';
 import { SEATED, type StoryFrame } from './story';
+import { objectNames } from '../content/ui';
+import { tr } from '../i18n';
 
 /** Pointer parallax: the carriage's shift per pixel of pointer from the centre */
 const PARALLAX = 0.032;
@@ -118,6 +120,13 @@ export class FocusEngine {
     return distance < SNAP_RANGE ? hotspot.target : null;
   }
 
+  /** The caption again, in a new language */
+  relabel() {
+    const f = this.focus;
+    this.focus = null;
+    this.setFocus(f);
+  }
+
   setFocus(target: string | null) {
     if (target === this.focus) return;
     this.focus = target;
@@ -127,7 +136,8 @@ export class FocusEngine {
 
     const hotspot = target ? hotspotByTarget(target) : null;
     if (hotspot) {
-      this.els.cap.replaceChildren(this.labelOf(hotspot.target), small(hotspot.object));
+      const name = objectNames[hotspot.target];
+      this.els.cap.replaceChildren(this.labelOf(hotspot.target), small(name ? tr(name) : ''));
       this.els.cap.classList.add('on');
     } else {
       this.els.cap.classList.remove('on');

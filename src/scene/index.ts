@@ -1,4 +1,7 @@
 import './geometry.gen.css';
+import { relabel } from './dom';
+import { ui } from '../content/ui';
+import { onLang, setLang, tr, type Lang } from '../i18n';
 import { Monologue } from './monologue';
 import './scene.css';
 import { sectionById } from '../content/sections';
@@ -31,7 +34,10 @@ export function mountScene(root: HTMLElement, { skipOpening, startAt }: SceneOpt
   const focus = new FocusEngine(
     els,
     () => opening.phase,
-    (target) => (target === COVER ? '窗外' : (sectionById(target)?.title ?? target)),
+    (target) => {
+      const sec = sectionById(target);
+      return target === COVER ? tr(ui.outside) : sec ? tr(sec.title) : target;
+    },
   );
   // The story: once seated, wheel and touch walk the camera to each object,
   // and reaching one cuts to its page (docs/10)
@@ -47,6 +53,18 @@ export function mountScene(root: HTMLElement, { skipOpening, startAt }: SceneOpt
   if (import.meta.env.DEV) Object.assign(window, { __story: story });
   // Sync the framing the moment the phase changes, ahead of the style recalc in the same frame
   const monologue = new Monologue(els.mono);
+  // Languages: every label now, and again in place on each change
+  relabel(els, opening.touch);
+  const onLangClick = (e: MouseEvent) => {
+    const l = (e.target as HTMLElement).closest<HTMLElement>('[data-lang]')?.dataset.lang;
+    if (l) setLang(l as Lang);
+  };
+  els.langs.addEventListener('click', onLangClick);
+  const offLang = onLang(() => {
+    relabel(els, opening.touch);
+    monologue.relabel();
+    if (focus.focused && story.atHub) focus.relabel();
+  });
   opening.onPhase = (p) => {
     story.enabled = p === 'hub';
     // the city is reached: the detective's monologue
@@ -154,6 +172,8 @@ export function mountScene(root: HTMLElement, { skipOpening, startAt }: SceneOpt
       focus.stop();
       story.dispose();
       monologue.dispose();
+      offLang();
+      els.langs.removeEventListener('click', onLangClick);
       window.removeEventListener('resize', onResize);
       opening.dispose();
       document.removeEventListener('keydown', onKeyDown);
