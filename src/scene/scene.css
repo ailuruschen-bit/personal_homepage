@@ -1184,14 +1184,26 @@
   margin: 0 auto;
   padding: 14vh 24px 18vh;
 }
-.page__kicker {
+/* Where the page is, as quietly as possible: the object it came from and
+   the section's name, one small line, a signpost rather than a heading */
+.page__crumb {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6em;
+  margin: 0 0 3vh;
   font-size: 12px;
   letter-spacing: 0.2em;
-  color: #c98a9e;
+  color: rgba(232, 225, 242, 0.42);
 }
-.page h1 {
-  margin: 0.4em 0 0.4em;
-  font-size: clamp(26px, 4vw, 40px);
+.page__crumb span:not(:empty)::after {
+  content: '/';
+  margin-left: 0.6em;
+  opacity: 0.6;
+}
+.page__crumb h1 {
+  margin: 0;
+  font: inherit;
+  color: rgba(232, 225, 242, 0.6);
 }
 .page__lede {
   font-size: 16px;

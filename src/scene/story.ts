@@ -740,8 +740,10 @@ function renderPage(i: number): string {
       <button class="page__home" type="button" data-home>${tr(ui.pageHome)}</button>
       <p class="page__hint">${tr(ui.pageUp)}</p>
     </div>
-    <span class="page__kicker">${objectLines[ch.id] ? tr(objectLines[ch.id]!.name) : ''} · ${ch.id.toUpperCase()}</span>
-    <h1>${sectionTitle(ch.id)}</h1>
+    <header class="page__crumb">
+      <span>${objectLines[ch.id] ? tr(objectLines[ch.id]!.name) : ''}</span>
+      <h1>${sectionTitle(ch.id)}</h1>
+    </header>
     ${
       PAGES[ch.id]?.() ??
       `<p class="page__lede">${sec?.lede ?? ''}</p>
