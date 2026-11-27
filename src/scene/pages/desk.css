@@ -50,7 +50,9 @@
     transparent 75%
   );
   transform-origin: 90% -20%;
-  animation: lamp-sway 3.4s ease-in-out infinite alternate;
+  animation:
+    lamp-sway 3.4s ease-in-out infinite alternate,
+    lamp-strobe 1.7s steps(1) infinite;
 }
 @keyframes lamp-sway {
   0% {
@@ -60,6 +62,26 @@
   100% {
     transform: rotate(0.8deg);
     opacity: 1;
+  }
+}
+/* The lamp's bulb on the carriage's supply: a faint, regular double flicker,
+   too slight to call broken, enough to feel the current in it */
+@keyframes lamp-strobe {
+  0%,
+  100% {
+    filter: brightness(1);
+  }
+  62% {
+    filter: brightness(0.9);
+  }
+  64% {
+    filter: brightness(1.03);
+  }
+  70% {
+    filter: brightness(0.93);
+  }
+  72% {
+    filter: brightness(1);
   }
 }
 /* The window beyond the table: the city's light, never quite even as it
@@ -131,7 +153,9 @@
 /* the lamp's bulb: a warm hot spot under it, swaying with the lamp */
 .desk__spec--lamp {
   transform-origin: 86% -20%;
-  animation: lamp-sway 3.4s ease-in-out infinite alternate;
+  animation:
+    lamp-sway 3.4s ease-in-out infinite alternate,
+    lamp-strobe 1.7s steps(1) infinite;
   background: radial-gradient(
     ellipse 9% 8% at 86% 25%,
     rgba(255, 236, 196, 0.42),
