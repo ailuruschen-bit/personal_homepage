@@ -209,15 +209,26 @@
   pointer-events: none;
   overflow: hidden;
   mix-blend-mode: multiply;
-  /* only where the window's light reaches: the far end of the table */
-  -webkit-mask-image: radial-gradient(ellipse 75% 62% at 50% 0, #000 25%, transparent 100%);
-  mask-image: radial-gradient(ellipse 75% 62% at 50% 0, #000 25%, transparent 100%);
+  /* only where the window's light reaches, the far end of the table, and
+     through the blinds: in their slats, like the window's own light */
+  -webkit-mask-image:
+    radial-gradient(ellipse 75% 62% at 50% 0, #000 25%, transparent 100%),
+    repeating-linear-gradient(177deg, #000 0 7px, rgba(0, 0, 0, 0.28) 11px 17px, #000 21px);
+  -webkit-mask-composite: source-in;
+  mask-image:
+    radial-gradient(ellipse 75% 62% at 50% 0, #000 25%, transparent 100%),
+    repeating-linear-gradient(177deg, #000 0 7px, rgba(0, 0, 0, 0.28) 11px 17px, #000 21px);
+  mask-composite: intersect;
 }
 .pass {
   position: absolute;
   top: -6%;
   left: 0;
   will-change: transform;
+}
+.pass b {
+  position: absolute;
+  inset: 0;
 }
 .pass svg {
   display: block;

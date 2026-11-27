@@ -199,11 +199,14 @@ function passing(layer: HTMLElement, lights: HTMLElement): () => void {
     el.className = 'pass';
     el.style.width = `${width}px`;
     el.style.height = `${h * (0.8 + s.near * 0.7)}px`;
-    el.style.filter = `blur(${(1.5 + s.near * 7).toFixed(1)}px)`;
-    el.style.opacity = (0.32 + s.near * 0.3).toFixed(2);
-    el.innerHTML = `<svg viewBox="0 0 ${s.width.toFixed(0)} 1000" preserveAspectRatio="none" width="100%" height="100%">${s.svg}</svg>`;
-    // nearer passes quicker
-    run(el, width, rand(700, 820) * (1.25 - s.near * 0.5), layer);
+    // Two of it: the shadow itself, soft (light from a broad source, nearer
+    // things softer), and over it a wide, faint haze where the glass scatters
+    // the light round its edges
+    const svg = `<svg viewBox="0 0 ${s.width.toFixed(0)} 1000" preserveAspectRatio="none" width="100%" height="100%">${s.svg}</svg>`;
+    el.innerHTML = `<b style="filter:blur(${(14 + s.near * 22).toFixed(1)}px);opacity:.5">${svg}</b><b style="filter:blur(${(4 + s.near * 9).toFixed(1)}px)">${svg}</b>`;
+    el.style.opacity = (0.26 + s.near * 0.26).toFixed(2);
+    // nearer passes quicker, and the train itself is never at one speed
+    run(el, width, rand(700, 820) * (1.25 - s.near * 0.5) * pace, layer);
   };
 
   const lamp = () => {
@@ -211,15 +214,35 @@ function passing(layer: HTMLElement, lights: HTMLElement): () => void {
     el.className = 'pass pass--lamp';
     const width = rand(180, 260);
     el.style.width = `${width}px`;
-    run(el, width, rand(480, 560), lights);
+    run(el, width, rand(480, 560) * pace, lights);
   };
+
+  // the train's pace, wandering slowly: 1 is the usual
+  let pace = 1;
+  // what is left of a run of things close together (a stand of trees, a yard)
+  let runLeft = 0;
 
   const next = () => {
     if (!live) return;
+    pace = Math.min(1.35, Math.max(0.75, pace + rand(-0.08, 0.08)));
     if (Math.random() < 0.08) lamp();
     else shadow();
-    // a steady beat with some give, and the odd longer gap
-    timer = window.setTimeout(next, rand(700, 1300) * (Math.random() < 0.12 ? 2.4 : 1));
+    // No beat: things by the line come as they come. Sometimes several close
+    // together, mostly a second or so apart, sometimes nothing for a while
+    let gap: number;
+    if (runLeft > 0) {
+      runLeft--;
+      gap = rand(180, 520);
+    } else {
+      const r = Math.random();
+      if (r < 0.12) {
+        runLeft = Math.floor(rand(1, 4));
+        gap = rand(180, 520);
+      } else if (r < 0.62) gap = rand(600, 1700);
+      else if (r < 0.9) gap = rand(1700, 3400);
+      else gap = rand(3600, 6500);
+    }
+    timer = window.setTimeout(next, gap * pace);
   };
   timer = window.setTimeout(next, 500);
   return () => {
