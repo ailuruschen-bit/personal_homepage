@@ -3,11 +3,6 @@ import { tr, type T } from '../../i18n';
 import { wornEdge } from './paper';
 import { DESK_MARKUP } from './desk';
 
-const text = (v: T | string) => (typeof v === 'string' ? v : tr(v));
-
-const row = (f: { label: T; value: T | string }) =>
-  `<div class="dos__row"><dt>${tr(f.label)}</dt><dd>${text(f.value)}</dd></div>`;
-
 /** A paper clip, drawn as wire */
 const CLIP = `<svg class="dos__clip" viewBox="0 0 12 34" aria-hidden="true">
   <path d="M4 31V6.5a3.2 3.2 0 0 1 6.4 0V27a1.9 1.9 0 0 1-3.8 0V9" fill="none" stroke="url(#wire)" stroke-width="1.3" stroke-linecap="round"/>
@@ -20,37 +15,62 @@ const paper = (cls: string, seed: number, body = '', fold = 0) =>
     fold ? `<i class="paper__fold" style="--fold:${fold}px"></i>` : ''
   }</div>`;
 
+type Row = { when: string; what: T; note?: T };
+
+/** A section of the form: its heading cell, and dated lines ruled under it */
+const section = (s: { label: T; rows: readonly Row[] }) => `
+  <section class="dos__sec">
+    <h3>${tr(s.label)}</h3>
+    ${s.rows
+      .map(
+        (r) =>
+          `<div class="dos__line"><span class="dos__when">${r.when}</span><span class="dos__what">${tr(r.what)}${
+            r.note ? `<small>${tr(r.note)}</small>` : ''
+          }</span></div>`,
+      )
+      .join('')}
+  </section>`;
+
 /**
- * The 档案 page as papers on a desk: two sheets askew underneath, the
- * personnel file on top with an empty photo slot clipped to it, and the
- * detective's report laid over its lower edge. The page is not over the
+ * The 档案 page as his own papers on the table: a résumé form with his
+ * photo's place clipped at the top right, and his certificates on a second
+ * sheet laid over its lower edge, two more askew underneath. Printed rules,
+ * typed entries; nothing written by the detective. The page is not over the
  * carriage, so it can be painted freely.
  */
 export function renderAbout(): string {
-  const file = `
-    <header class="dos__bar"><span>${tr(about.file)}</span><span>${about.caseNo}</span></header>
-    <div class="dos__stamp">${tr(about.stamp)}</div>
+  const n = about.name;
+  const form = `
+    <header class="dos__title"><h2>${tr(about.title)}</h2></header>
     <i class="dos__holes" aria-hidden="true"></i>
     <div class="dos__head">
+      <div class="dos__id">
+        <div class="dos__cell dos__cell--name">
+          <span class="dos__label">${tr(n.label)}</span>
+          <span class="dos__reading">${tr(n.reading)}</span>
+          <span class="dos__name">${tr(n.value)}</span>
+        </div>
+        ${about.fields
+          .map(
+            (f) =>
+              `<div class="dos__cell"><span class="dos__label">${tr(f.label)}</span><span class="dos__value">${tr(f.value)}</span></div>`,
+          )
+          .join('')}
+      </div>
       <figure class="dos__photo">
         <div class="dos__slot"><span>${tr(about.photo)}</span></div>
-        <figcaption class="dos__pencil">${tr(about.photoNote)}</figcaption>
       </figure>
-      <dl class="dos__fields dos__fields--head">${about.head.map(row).join('')}</dl>
     </div>
-    <dl class="dos__fields">${about.fields.map(row).join('')}</dl>`;
-  const report = `
-    <h2>${tr(about.report)}</h2>
-    ${about.notes.map((n) => `<p>${tr(n)}</p>`).join('')}
-    <p class="dos__signed">${tr(about.signed)}</p>
-    <i class="dos__ring" aria-hidden="true"></i>`;
+    ${section(about.education)}
+    ${section(about.work)}`;
+  const certs = `${section(about.certs)}${section(about.awards)}<i class="dos__ring" aria-hidden="true"></i>`;
   return `${DESK_MARKUP}<div class="dos">
     ${paper('dos__under dos__under--a', 11)}
     ${paper('dos__under dos__under--b', 23)}
     <div class="dos__filewrap">
       ${CLIP}
-      ${paper('dos__file', 37, file, 30)}
+      ${paper('dos__file', 37, form, 30)}
     </div>
-    ${paper('dos__report', 53, report)}
+    ${paper('dos__report', 53, certs)}
   </div>`;
 }

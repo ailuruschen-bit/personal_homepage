@@ -39,6 +39,7 @@
   --ink-soft: #6b5f66;
   --red: #a3302a;
   --pencil: #556084;
+  --rule: rgba(60, 45, 35, 0.32);
   position: relative;
   margin: 2vh 0 0;
   color: var(--ink);
@@ -122,16 +123,19 @@
   background: linear-gradient(315deg, transparent 50%, #d8c9a4 50%, #f2e9d3 85%);
   filter: drop-shadow(-2px -2px 2px rgba(60, 40, 15, 0.35));
 }
-.dos__bar {
-  display: flex;
-  justify-content: space-between;
-  margin: 0 -30px 26px -44px;
-  padding: 11px 30px 10px 44px;
-  background: var(--grain), linear-gradient(#2c2531, #221c27);
-  color: #e9dfc6;
-  font-size: 13px;
-  letter-spacing: 0.25em;
-  text-transform: uppercase;
+/* The form's title, printed */
+.dos__title {
+  margin: 0 0 18px;
+  padding: 26px 0 10px;
+  border-bottom: 2px solid rgba(38, 32, 43, 0.75);
+}
+.dos__title h2 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 400;
+  letter-spacing: 0.6em;
+  text-indent: 0.6em;
+  text-align: center;
 }
 /* Two punched holes for a binder, down the left margin */
 .dos__holes {
@@ -147,46 +151,70 @@
     inset 1px 1px 2px rgba(0, 0, 0, 0.8);
   outline: 1px solid rgba(120, 85, 40, 0.25);
 }
-/* The stamp: ink that did not take evenly */
-.dos__stamp {
-  position: absolute;
-  top: 62px;
-  right: 26px;
-  padding: 4px 12px 3px;
-  border: 3px double var(--red);
-  border-radius: 3px;
-  color: var(--red);
-  font-size: 19px;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  transform: rotate(-9deg);
-  opacity: 0.8;
-  mix-blend-mode: multiply;
-  -webkit-mask-image: var(--grain), linear-gradient(100deg, #000 60%, rgba(0, 0, 0, 0.55));
-  mask-image: var(--grain), linear-gradient(100deg, #000 60%, rgba(0, 0, 0, 0.55));
-  -webkit-mask-composite: source-over;
-}
+/* The top of the form: name and particulars in ruled cells, the photo's
+   place at the top right, as on a 履歴書 */
 .dos__head {
   display: grid;
-  grid-template-columns: 150px 1fr;
-  gap: 26px;
+  grid-template-columns: 1fr 132px;
+  gap: 22px;
   align-items: start;
+}
+.dos__id {
+  border-top: 1px solid var(--rule);
+}
+.dos__cell {
+  display: grid;
+  grid-template-columns: 5.6em 1fr;
+  align-items: baseline;
+  gap: 12px;
+  padding: 9px 4px 8px;
+  border-bottom: 1px solid var(--rule);
+}
+.dos__cell--name {
+  grid-template-rows: auto auto;
+  padding: 6px 4px 12px;
+}
+.dos__cell--name .dos__label {
+  grid-row: 1 / 3;
+  align-self: center;
+}
+.dos__label {
+  font-size: 12px;
+  letter-spacing: 0.15em;
+  color: var(--ink-soft);
+}
+.dos__reading {
+  font-size: 11px;
+  letter-spacing: 0.25em;
+  color: var(--ink-soft);
+}
+.dos__name {
+  font-size: 30px;
+  letter-spacing: 0.3em;
+  line-height: 1.15;
+  text-shadow: 0 0 0.7px rgba(38, 32, 43, 0.65);
+}
+.dos__value {
+  font-size: 15px;
+  text-shadow: 0 0 0.6px rgba(38, 32, 43, 0.6);
+  overflow-wrap: anywhere;
 }
 .dos__photo {
   position: relative;
-  margin: 0;
+  margin: 4px 0 0;
 }
-/* The empty slot: a recess for a 3:4 photo, with mounting corners */
+/* The empty place for a 3:4 photo, with mounting corners */
 .dos__slot {
   position: relative;
   aspect-ratio: 3 / 4;
   display: grid;
   place-items: center;
+  border: 1px dashed rgba(38, 32, 43, 0.45);
   background:
     var(--grain),
     repeating-linear-gradient(45deg, rgba(120, 90, 50, 0.08) 0 3px, transparent 3px 7px), #d6c9a8;
   box-shadow:
-    inset 2px 2px 3px rgba(70, 45, 15, 0.4),
+    inset 2px 2px 3px rgba(70, 45, 15, 0.35),
     inset -1px -1px 0 rgba(255, 250, 235, 0.6);
 }
 .dos__slot::before,
@@ -216,50 +244,50 @@
 .dos__clip {
   position: absolute;
   z-index: 3;
-  /* over the top edge of the photo slot, as if holding the photo */
-  top: 52px;
-  left: 86px;
+  top: 72px;
+  right: 92px;
   width: 18px;
   height: 52px;
   filter: drop-shadow(1px 2px 1px rgba(0, 0, 0, 0.45));
 }
-.dos__pencil {
-  margin: 10px 0 0;
-  font-size: 12px;
-  color: var(--pencil);
-  opacity: 0.85;
-  transform: rotate(-2deg);
+/* A section: its heading, then dated lines on printed rules */
+.dos__sec {
+  margin: 22px 0 0;
 }
-
-/* The form: typed, with a little ink spread */
-.dos__fields {
-  margin: 26px 0 0;
+.dos__sec h3 {
+  margin: 0;
+  padding: 0 0 6px;
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 0.4em;
+  border-bottom: 1px solid rgba(38, 32, 43, 0.6);
 }
-.dos__fields--head {
-  margin: 4px 0 0;
-}
-.dos__row {
+.dos__line {
   display: grid;
-  grid-template-columns: 7.5em 1fr;
-  gap: 12px;
-  padding: 9px 0 7px;
-  border-bottom: 1px dotted rgba(60, 45, 35, 0.4);
+  grid-template-columns: 10.5em 1fr;
+  gap: 14px;
+  padding: 9px 4px 8px;
+  border-bottom: 1px solid var(--rule);
+  font-size: 14px;
+  line-height: 1.55;
 }
-.dos__row dt {
+.dos__when {
+  font-size: 12.5px;
+  letter-spacing: 0.04em;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+.dos__what {
+  text-shadow: 0 0 0.6px rgba(38, 32, 43, 0.55);
+}
+.dos__what small {
+  display: block;
+  margin-top: 2px;
   font-size: 12px;
-  letter-spacing: 0.15em;
   color: var(--ink-soft);
 }
-.dos__row dd {
-  margin: 0;
-  font-size: 16px;
-  text-shadow: 0 0 0.6px rgba(38, 32, 43, 0.6);
-}
-.dos__fields--head .dos__row dd {
-  font-size: 19px;
-}
 
-/* The report, on ruled paper laid over the file's lower edge */
+/* The certificates, on a second sheet laid over the form's lower edge */
 .dos__report {
   z-index: 2;
   margin: -24px 0 0 34px;
@@ -267,31 +295,7 @@
 }
 .dos__report .paper__face {
   --base: #f0e8d2;
-  padding: 28px 30px 28px 54px;
-  line-height: 28px;
-  background:
-    linear-gradient(90deg, transparent 38px, rgba(190, 70, 70, 0.35) 38px 39px, transparent 39px),
-    repeating-linear-gradient(transparent 0 27px, rgba(80, 110, 160, 0.24) 27px 28px), var(--fibre),
-    var(--grain), var(--age),
-    radial-gradient(ellipse 120% 110% at 50% 50%, transparent 55%, rgba(150, 105, 45, 0.24)),
-    var(--base);
-}
-/* everything on the report sits on its rules: rows of 28px from the top */
-.dos__report h2 {
-  margin: 0 0 28px;
-  line-height: 28px;
-  font-size: 15px;
-  font-weight: 400;
-  letter-spacing: 0.25em;
-  color: var(--red);
-}
-.dos__report p {
-  margin: 0 0 28px;
-  font-size: 15px;
-}
-.dos__signed {
-  text-align: right;
-  color: var(--ink-soft);
+  padding: 6px 30px 30px 34px;
 }
 /* A coffee ring: someone put a cup down on it */
 .dos__ring {
@@ -320,13 +324,20 @@
     grid-template-columns: 1fr;
   }
   .dos__photo {
-    width: 150px;
+    width: 120px;
+    order: -1;
+  }
+  .dos__clip {
+    top: 92px;
+    right: auto;
+    left: 70px;
   }
   .dos__report {
     margin-left: 12px;
   }
-  .dos__row {
-    grid-template-columns: 6em 1fr;
+  .dos__line {
+    grid-template-columns: 1fr;
+    gap: 2px;
   }
   .dos__file .paper__face {
     padding-left: 36px;
