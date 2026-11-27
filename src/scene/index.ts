@@ -1,7 +1,8 @@
 import './geometry.gen.css';
 import { relabel } from './dom';
 import { ui } from '../content/ui';
-import { onLang, setLang, tr, type Lang } from '../i18n';
+import { lang, onLang, setLang, tr, type Lang } from '../i18n';
+
 import { Monologue } from './monologue';
 import './scene.css';
 import { sectionById } from '../content/sections';
@@ -10,6 +11,9 @@ import { FocusEngine } from './focus';
 import { COVER } from './hotspots';
 import { Opening } from './opening';
 import { Story } from './story';
+
+/** Each half of the language switch's cut through black, in ms */
+const LANG_FADE = 220;
 
 export interface SceneHandle {
   destroy(): void;
@@ -55,9 +59,25 @@ export function mountScene(root: HTMLElement, { skipOpening, startAt }: SceneOpt
   const monologue = new Monologue(els.mono);
   // Languages: every label now, and again in place on each change
   relabel(els, opening.touch);
-  const onLangClick = (e: MouseEvent) => {
-    const l = (e.target as HTMLElement).closest<HTMLElement>('[data-lang]')?.dataset.lang;
-    if (l) setLang(l as Lang);
+  // The switch goes through black: Chrome faults when the labels over the
+  // carriage change in sight (docs/09, F-009)
+  let switching = false;
+  const onLangClick = async (e: MouseEvent) => {
+    const l = (e.target as HTMLElement).closest<HTMLElement>('[data-lang]')?.dataset.lang as
+      Lang | undefined;
+    if (!l || l === lang() || switching) return;
+    switching = true;
+    root.style.transition = `opacity ${LANG_FADE}ms ease`;
+    root.style.opacity = '0';
+    await new Promise((r) => setTimeout(r, LANG_FADE));
+    setLang(l);
+    // drawn twice behind black before it is shown
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    root.style.opacity = '1';
+    await new Promise((r) => setTimeout(r, LANG_FADE));
+    root.style.transition = '';
+    root.style.opacity = '';
+    switching = false;
   };
   els.langs.addEventListener('click', onLangClick);
   const offLang = onLang(() => {

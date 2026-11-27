@@ -19,6 +19,18 @@ anything that is now load-bearing because of it.
 
 ---
 
+## F-009 Chrome: the language switch faults over the carriage
+
+**Symptom.** Switching language at the hub drew garbled rectangles over the
+carriage for a moment in Chrome. Safari was fine.
+
+**Cause.** The same family as F-006 and F-007: the switch rewrites the text
+over the carriage (the route, the caption, the buttons) in sight, all at once.
+
+**Fix.** Not fixed at the source. The switch goes through black instead, like
+every other cut: `#app` fades out (220 ms), the language changes, two frames
+are drawn, and it fades back (`index.ts`, `LANG_FADE`).
+
 ## F-008 Chrome: a chapter page does not scroll at all
 
 **Symptom.** On a chapter page in Chrome the wheel showed the scrollbar but
