@@ -3,7 +3,7 @@
  * side at irregular steps, the same every time for the same seed. An optional
  * dog-eared corner is cut off the bottom right.
  */
-export function wornEdge(seed: number, { amp = 1.6, fold = 0 } = {}): string {
+export function wornEdge(seed: number, { amp = 2.2, fold = 0 } = {}): string {
   let s = seed >>> 0 || 1;
   const rand = () => {
     s = (s * 1664525 + 1013904223) >>> 0;

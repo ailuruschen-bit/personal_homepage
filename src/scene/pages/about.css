@@ -4,7 +4,7 @@
   background:
     radial-gradient(ellipse 70% 55% at 50% 28%, rgba(255, 190, 110, 0.1), transparent 70%),
     radial-gradient(ellipse 120% 90% at 50% 40%, transparent 40%, rgba(0, 0, 0, 0.55)),
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='w'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.006 .25' numOctaves='3' seed='4'/%3E%3CfeColorMatrix values='0 0 0 0 .16 0 0 0 0 .1 0 0 0 0 .14 0 0 0 .7 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23w)'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='w'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.006 .25' numOctaves='3' seed='4' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .16 0 0 0 0 .1 0 0 0 0 .14 0 0 0 .4 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23w)'/%3E%3C/svg%3E"),
     #130d18;
 }
 
@@ -194,10 +194,11 @@
 .dos__clip {
   position: absolute;
   z-index: 3;
-  top: -16px;
-  left: 70px;
-  width: 16px;
-  height: 46px;
+  /* over the top edge of the photo slot, as if holding the photo */
+  top: 52px;
+  left: 86px;
+  width: 18px;
+  height: 52px;
   filter: drop-shadow(1px 2px 1px rgba(0, 0, 0, 0.45));
 }
 .dos__pencil {
