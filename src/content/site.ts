@@ -8,9 +8,8 @@ export const site = {
    * cover (scene/monologue.ts). {braces} mark the occupant's name.
    */
   monologue: [
-    '委托书上只有一行：查查 {Ailurus} 是个什么样的人。',
-    '人刚离开包厢，时间不多。',
-    '干活吧。',
+    '调查对象：{Ailurus}。',
+    '人刚走。干活吧。',
   ],
 
   /** External links, used on the about page and in the footer */
