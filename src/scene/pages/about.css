@@ -255,9 +255,37 @@
   z-index: 1;
   overflow: hidden;
   pointer-events: none;
+  /* the print's own light and shade: darker toward its edges, a little where
+     the clip presses its top down, the lamp's colour warming the upper right */
   background:
-    linear-gradient(155deg, rgba(255, 255, 255, 0.16), transparent 38%),
-    repeating-linear-gradient(transparent 0 2px, rgba(10, 6, 16, 0.05) 2px 3px);
+    linear-gradient(180deg, rgba(20, 10, 20, 0.22), transparent 9%),
+    radial-gradient(ellipse 125% 105% at 50% 44%, transparent 58%, rgba(14, 8, 18, 0.38)),
+    radial-gradient(ellipse 70% 50% at 88% 8%, rgba(255, 196, 130, 0.14), transparent 70%);
+  mix-blend-mode: multiply;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 1px 2px rgba(0, 0, 0, 0.4);
+}
+/* The gloss: the lamp caught across the print in a soft diagonal band, a
+   second, fainter one beside it, and the tube's magenta along its left edge */
+.dos__slot .dos__gloss {
+  position: absolute;
+  inset: 3px;
+  z-index: 1;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  background:
+    linear-gradient(
+      118deg,
+      transparent 34%,
+      rgba(255, 236, 214, 0.08) 41%,
+      rgba(255, 248, 236, 0.2) 45.5%,
+      rgba(255, 236, 214, 0.07) 50%,
+      transparent 58%
+    ),
+    linear-gradient(118deg, transparent 60%, rgba(255, 236, 214, 0.07) 64%, transparent 69%),
+    radial-gradient(ellipse 60% 45% at 92% 6%, rgba(255, 214, 160, 0.16), transparent 70%),
+    linear-gradient(90deg, rgba(255, 80, 180, 0.12), transparent 14%);
 }
 .dos__scan::after {
   content: '';
