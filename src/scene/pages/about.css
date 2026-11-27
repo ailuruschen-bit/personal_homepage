@@ -287,7 +287,7 @@
     radial-gradient(ellipse 60% 45% at 92% 6%, rgba(255, 214, 160, 0.16), transparent 70%),
     linear-gradient(90deg, rgba(255, 80, 180, 0.12), transparent 14%);
 }
-.dos__scan::after {
+.dos__slot .dos__gloss::after {
   content: '';
   position: absolute;
   left: 0;
