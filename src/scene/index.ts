@@ -1,4 +1,5 @@
 import './geometry.gen.css';
+import { Monologue } from './monologue';
 import './scene.css';
 import { sectionById } from '../content/sections';
 import { buildScene } from './dom';
@@ -45,8 +46,11 @@ export function mountScene(root: HTMLElement, { skipOpening, startAt }: SceneOpt
   // for poking at the story from the console while developing
   if (import.meta.env.DEV) Object.assign(window, { __story: story });
   // Sync the framing the moment the phase changes, ahead of the style recalc in the same frame
+  const monologue = new Monologue(els.mono);
   opening.onPhase = (p) => {
     story.enabled = p === 'hub';
+    // the city is reached: the detective's monologue
+    if (p === 'idle') monologue.play();
     focus.syncFrame();
   };
   if (startAt) {
@@ -149,6 +153,7 @@ export function mountScene(root: HTMLElement, { skipOpening, startAt }: SceneOpt
       root.classList.remove('grain-suspended');
       focus.stop();
       story.dispose();
+      monologue.dispose();
       window.removeEventListener('resize', onResize);
       opening.dispose();
       document.removeEventListener('keydown', onKeyDown);

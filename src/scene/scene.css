@@ -407,27 +407,42 @@
   top: clamp(90px, 17vh, 160px);
   right: 24px;
 }
-.txt h1 {
-  margin: 0;
-  font-family: 'DotGothic16', 'Noto Sans SC', monospace;
-  font-weight: 400;
-  font-size: clamp(44px, 6.4vw, 88px);
-  line-height: 1;
-  color: #f3f0fb;
-  /* Offset cyan/magenta outlines, for the colour fringing of a neon sign */
-  text-shadow:
-    -2px 0 0 rgba(64, 226, 255, 0.55),
-    2px 0 0 rgba(255, 64, 178, 0.55),
-    0 4px 0 rgba(11, 10, 30, 0.7),
-    0 0 28px rgba(255, 64, 178, 0.28);
-}
+/* The detective's monologue over the city (monologue.ts) */
 .txt p {
-  margin: 18px 0 0;
-  max-width: 520px;
-  font-size: clamp(16px, 1.4vw, 20px);
-  line-height: 1.7;
-  color: #d7dcf5;
-  text-shadow: 0 1px 0 rgba(8, 7, 24, 0.8);
+  margin: 0 0 0.35em;
+  max-width: 34em;
+  font:
+    clamp(18px, 1.9vw, 27px) / 1.6 'DotGothic16',
+    'Noto Sans SC',
+    monospace;
+  letter-spacing: 0.06em;
+  color: #ece8f8;
+  text-shadow:
+    0 2px 0 rgba(8, 7, 24, 0.85),
+    0 0 18px rgba(8, 7, 24, 0.9);
+}
+.txt p:empty {
+  display: none;
+}
+.txt b {
+  font-weight: 400;
+  color: #f2c46d;
+}
+.txt .caret {
+  display: inline-block;
+  width: 0.5em;
+  height: 1em;
+  margin-left: 0.15em;
+  vertical-align: -0.12em;
+  background: #f2c46d;
+}
+.txt.done .caret {
+  animation: caret 1.05s steps(1) infinite;
+}
+@keyframes caret {
+  50% {
+    opacity: 0;
+  }
 }
 .ghost {
   position: absolute;

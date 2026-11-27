@@ -3,13 +3,15 @@
  * content means editing this file and nothing else.
  */
 export const site = {
-  /** Cover headline; use \n for the line break */
-  // TODO: replace with the real headline
-  heroTitle: "Hi, I'm\n[NAME]",
-
-  /** Cover sub-headline: who you are, in one line */
-  // TODO: replace with the real one-line introduction
-  heroLede: '[一句话自我介绍]',
+  /**
+   * The detective's monologue over the city, typed out line by line on the
+   * cover (scene/monologue.ts). {braces} mark the occupant's name.
+   */
+  monologue: [
+    '委托书上只有一行：查查 {Ailurus} 是个什么样的人。',
+    '人刚离开包厢，时间不多。',
+    '干活吧。',
+  ],
 
   /** External links, used on the about page and in the footer */
   links: {

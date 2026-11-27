@@ -8,6 +8,8 @@ export interface SceneEls {
   look: HTMLElement;
   ow: HTMLElement;
   hero: HTMLElement;
+  /** The cover's monologue lines (monologue.ts) */
+  mono: HTMLElement;
   spot: HTMLElement;
   beam: HTMLElement;
   cap: HTMLElement;
@@ -72,8 +74,6 @@ export function buildScene(root: HTMLElement): SceneEls {
     })
     .join('');
 
-  const [l1, l2] = site.heroTitle.split('\n');
-
   root.innerHTML = `
 <div class="stage intro" id="stage">
   <div class="sky"></div>
@@ -110,11 +110,8 @@ export function buildScene(root: HTMLElement): SceneEls {
     ${zones}
   </div></div></div></div>
 
-  <!-- Cover headline -->
-  <div class="hero" id="hero"><div class="txt">
-    <h1>${l1}<br>${l2}<span style="color:var(--leica)">_</span></h1>
-    <p>${site.heroLede}</p>
-  </div></div>
+  <!-- Cover: the detective's monologue, typed out (monologue.ts) -->
+  <div class="hero" id="hero"><div class="txt" id="mono" aria-label="${site.monologue.join(' ').replace(/[{}]/g, '')}"></div></div>
 
   <!-- The story: the object lifted toward the lens (story.ts) -->
   <div class="carry" id="carry"></div>
@@ -139,6 +136,7 @@ export function buildScene(root: HTMLElement): SceneEls {
     look: $('look'),
     ow: $('ow'),
     hero: $('hero'),
+    mono: $('mono'),
     spot: $('spot'),
     beam: $('beam'),
     cap: $('cap'),
