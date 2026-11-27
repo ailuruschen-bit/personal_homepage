@@ -1,76 +1,148 @@
-/* The 档案 page: papers on a desk (pages/about.ts). Pixel-flat: hard
-   shadows, no blur on the paper, square corners. Not over the carriage, so
+/* The 档案 page: papers on a desk (pages/about.ts). Not over the carriage, so
    painting here is safe (docs/09). */
 .page--about {
   background:
-    radial-gradient(ellipse at 50% 30%, rgba(255, 196, 120, 0.08), transparent 60%),
-    repeating-linear-gradient(90deg, #15101c 0 6px, #130e1a 6px 12px), #130e1a;
+    radial-gradient(ellipse 70% 55% at 50% 28%, rgba(255, 190, 110, 0.1), transparent 70%),
+    radial-gradient(ellipse 120% 90% at 50% 40%, transparent 40%, rgba(0, 0, 0, 0.55)),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='w'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.006 .25' numOctaves='3' seed='4'/%3E%3CfeColorMatrix values='0 0 0 0 .16 0 0 0 0 .1 0 0 0 0 .14 0 0 0 .7 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23w)'/%3E%3C/svg%3E"),
+    #130d18;
 }
+
 .dos {
-  --paper: #e9e0c9;
-  --paper-2: #ddd2b6;
-  --ink: #2b2530;
-  --ink-soft: #6d6272;
-  --red: #b3352d;
-  --pencil: #4a5a8a;
+  /* Paper: grain, fibres and uneven ageing, over a warm base */
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .32 0 0 0 0 .24 0 0 0 0 .14 0 0 0 .42 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  --fibre: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.012 .45' numOctaves='2' stitchTiles='stitch' seed='7'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .36 0 0 0 0 .22 0 0 0 .22 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");
+  --age: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='700' height='700'%3E%3Cfilter id='a'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.005' numOctaves='4' seed='12'/%3E%3CfeColorMatrix values='0 0 0 0 .62 0 0 0 0 .45 0 0 0 0 .2 0 0 1.4 0 -.62'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23a)'/%3E%3C/svg%3E");
+  --ink: #26202b;
+  --ink-soft: #6b5f66;
+  --red: #a3302a;
+  --pencil: #556084;
   position: relative;
   margin: 2vh 0 0;
   color: var(--ink);
   font-family: 'DotGothic16', 'Noto Sans SC', monospace;
 }
-.dos__sheet,
-.dos__under {
+
+/* A sheet: the wrapper casts a soft shadow that follows the worn edge */
+.paper {
   position: relative;
-  background: var(--paper);
-  box-shadow:
-    inset 0 0 0 1px rgba(60, 40, 20, 0.18),
-    inset 0 0 40px rgba(120, 90, 40, 0.18),
-    6px 6px 0 rgba(0, 0, 0, 0.45);
+  filter: drop-shadow(0 1px 0.5px rgba(0, 0, 0, 0.45)) drop-shadow(4px 10px 9px rgba(0, 0, 0, 0.5));
 }
+.paper__face {
+  position: relative;
+  --base: #e7dcc1;
+  background:
+    var(--fibre),
+    var(--grain),
+    var(--age),
+    /* yellowed toward the edges, a little lighter where the lamp falls */
+    radial-gradient(ellipse 85% 75% at 45% 35%, rgba(255, 252, 238, 0.5), transparent 70%),
+    radial-gradient(ellipse 120% 110% at 50% 50%, transparent 55%, rgba(150, 105, 45, 0.28)),
+    var(--base);
+  box-shadow:
+    inset 0 0 0 1px rgba(110, 80, 40, 0.25),
+    inset 0 0 18px rgba(140, 95, 40, 0.28),
+    inset 0 0 60px rgba(160, 120, 60, 0.12);
+}
+
 /* The sheets underneath, showing at the edges */
 .dos__under {
   position: absolute;
-  inset: 0 0 auto;
-  height: 420px;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 440px;
+}
+.dos__under .paper__face {
+  height: 100%;
 }
 .dos__under--a {
-  background: var(--paper-2);
-  transform: translate(14px, -10px) rotate(2.2deg);
+  transform: translate(16px, -12px) rotate(2.4deg);
+}
+.dos__under--a .paper__face {
+  --base: #d9cba8;
 }
 .dos__under--b {
-  background: #cfd6dc;
-  transform: translate(-12px, 8px) rotate(-1.6deg);
+  transform: translate(-14px, 10px) rotate(-1.7deg);
+}
+.dos__under--b .paper__face {
+  --base: #c9d0cf;
 }
 
 /* The personnel file */
-.dos__file {
-  padding: 0 28px 30px;
+.dos__filewrap {
+  position: relative;
   z-index: 1;
+}
+.dos__file .paper__face {
+  --base: #ebe1c7;
+  padding: 0 30px 34px 44px;
+  /* a fold across the middle, from being kept in a pocket */
+  background-image:
+    linear-gradient(
+      transparent calc(52% - 1px),
+      rgba(120, 85, 40, 0.16) calc(52% - 1px),
+      rgba(255, 255, 245, 0.35) calc(52% + 1px),
+      transparent calc(52% + 5px)
+    ),
+    var(--fibre), var(--grain), var(--age),
+    radial-gradient(ellipse 85% 75% at 45% 35%, rgba(255, 252, 238, 0.5), transparent 70%),
+    radial-gradient(ellipse 120% 110% at 50% 50%, transparent 55%, rgba(150, 105, 45, 0.28));
+  background-color: var(--base);
+}
+/* The dog-eared corner: the back of the paper, folded up */
+.paper__fold {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: var(--fold);
+  height: var(--fold);
+  background: linear-gradient(315deg, transparent 50%, #d8c9a4 50%, #f2e9d3 85%);
+  filter: drop-shadow(-2px -2px 2px rgba(60, 40, 15, 0.35));
 }
 .dos__bar {
   display: flex;
   justify-content: space-between;
-  margin: 0 -28px 24px;
-  padding: 10px 28px;
-  background: var(--ink);
-  color: var(--paper);
+  margin: 0 -30px 26px -44px;
+  padding: 11px 30px 10px 44px;
+  background: var(--grain), linear-gradient(#2c2531, #221c27);
+  color: #e9dfc6;
   font-size: 13px;
   letter-spacing: 0.25em;
   text-transform: uppercase;
 }
+/* Two punched holes for a binder, down the left margin */
+.dos__holes {
+  position: absolute;
+  left: 15px;
+  top: 34%;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #18121c;
+  box-shadow:
+    0 120px 0 #18121c,
+    inset 1px 1px 2px rgba(0, 0, 0, 0.8);
+  outline: 1px solid rgba(120, 85, 40, 0.25);
+}
+/* The stamp: ink that did not take evenly */
 .dos__stamp {
   position: absolute;
-  top: 58px;
-  right: 22px;
-  padding: 4px 12px;
-  border: 3px solid var(--red);
+  top: 62px;
+  right: 26px;
+  padding: 4px 12px 3px;
+  border: 3px double var(--red);
+  border-radius: 3px;
   color: var(--red);
-  font-size: 18px;
-  letter-spacing: 0.2em;
+  font-size: 19px;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
   transform: rotate(-9deg);
-  opacity: 0.78;
+  opacity: 0.8;
   mix-blend-mode: multiply;
+  -webkit-mask-image: var(--grain), linear-gradient(100deg, #000 60%, rgba(0, 0, 0, 0.55));
+  mask-image: var(--grain), linear-gradient(100deg, #000 60%, rgba(0, 0, 0, 0.55));
+  -webkit-mask-composite: source-over;
 }
 .dos__head {
   display: grid;
@@ -88,19 +160,21 @@
   aspect-ratio: 3 / 4;
   display: grid;
   place-items: center;
-  background: repeating-linear-gradient(45deg, #d4c8aa 0 4px, #cdc0a0 4px 8px);
+  background:
+    var(--grain),
+    repeating-linear-gradient(45deg, rgba(120, 90, 50, 0.08) 0 3px, transparent 3px 7px), #d6c9a8;
   box-shadow:
-    inset 2px 2px 0 rgba(60, 40, 20, 0.35),
-    inset -1px -1px 0 rgba(255, 255, 255, 0.5);
+    inset 2px 2px 3px rgba(70, 45, 15, 0.4),
+    inset -1px -1px 0 rgba(255, 250, 235, 0.6);
 }
 .dos__slot::before,
 .dos__slot::after {
   content: '';
   position: absolute;
-  width: 16px;
-  height: 16px;
-  background: linear-gradient(135deg, var(--ink) 50%, transparent 50%);
-  opacity: 0.85;
+  width: 18px;
+  height: 18px;
+  background: linear-gradient(135deg, #2a2329 50%, transparent 50%);
+  filter: drop-shadow(1px 1px 0.5px rgba(0, 0, 0, 0.35));
 }
 .dos__slot::before {
   top: 0;
@@ -114,27 +188,27 @@
 .dos__slot span {
   font-size: 12px;
   letter-spacing: 0.3em;
-  color: var(--ink-soft);
+  color: rgba(70, 55, 45, 0.55);
   text-transform: uppercase;
 }
 .dos__clip {
   position: absolute;
-  z-index: 2;
-  top: -14px;
-  left: 18px;
-  width: 14px;
-  height: 36px;
-  color: #9aa3ad;
-  filter: drop-shadow(1px 1px 0 rgba(0, 0, 0, 0.35));
+  z-index: 3;
+  top: -16px;
+  left: 70px;
+  width: 16px;
+  height: 46px;
+  filter: drop-shadow(1px 2px 1px rgba(0, 0, 0, 0.45));
 }
 .dos__pencil {
   margin: 10px 0 0;
   font-size: 12px;
   color: var(--pencil);
+  opacity: 0.85;
   transform: rotate(-2deg);
 }
 
-/* The form */
+/* The form: typed, with a little ink spread */
 .dos__fields {
   margin: 26px 0 0;
 }
@@ -146,7 +220,7 @@
   grid-template-columns: 7.5em 1fr;
   gap: 12px;
   padding: 9px 0 7px;
-  border-bottom: 1px dashed rgba(43, 37, 48, 0.3);
+  border-bottom: 1px dotted rgba(60, 45, 35, 0.4);
 }
 .dos__row dt {
   font-size: 12px;
@@ -156,20 +230,28 @@
 .dos__row dd {
   margin: 0;
   font-size: 16px;
+  text-shadow: 0 0 0.6px rgba(38, 32, 43, 0.6);
 }
 .dos__fields--head .dos__row dd {
   font-size: 19px;
 }
 
-/* The report, laid over the file's lower edge */
+/* The report, on ruled paper laid over the file's lower edge */
 .dos__report {
   z-index: 2;
-  margin: -22px 0 0 34px;
-  padding: 28px 30px 28px;
-  background:
-    repeating-linear-gradient(transparent 0 27px, rgba(80, 110, 160, 0.22) 27px 28px), #f1ead6;
-  transform: rotate(0.8deg);
+  margin: -24px 0 0 34px;
+  transform: rotate(0.9deg);
+}
+.dos__report .paper__face {
+  --base: #f0e8d2;
+  padding: 28px 30px 28px 54px;
   line-height: 28px;
+  background:
+    linear-gradient(90deg, transparent 38px, rgba(190, 70, 70, 0.35) 38px 39px, transparent 39px),
+    repeating-linear-gradient(transparent 0 27px, rgba(80, 110, 160, 0.24) 27px 28px), var(--fibre),
+    var(--grain), var(--age),
+    radial-gradient(ellipse 120% 110% at 50% 50%, transparent 55%, rgba(150, 105, 45, 0.24)),
+    var(--base);
 }
 /* everything on the report sits on its rules: rows of 28px from the top */
 .dos__report h2 {
@@ -188,6 +270,27 @@
   text-align: right;
   color: var(--ink-soft);
 }
+/* A coffee ring: someone put a cup down on it */
+.dos__ring {
+  position: absolute;
+  right: 40px;
+  bottom: 26px;
+  width: 92px;
+  height: 92px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    transparent 58%,
+    rgba(120, 70, 25, 0.1) 62%,
+    rgba(110, 62, 20, 0.28) 66%,
+    rgba(120, 70, 25, 0.08) 69%,
+    transparent 72%
+  );
+  -webkit-mask-image: var(--age), linear-gradient(#000, #000);
+  mix-blend-mode: multiply;
+  transform: rotate(20deg) scaleX(0.96);
+  pointer-events: none;
+}
 
 @media (max-width: 560px) {
   .dos__head {
@@ -201,5 +304,8 @@
   }
   .dos__row {
     grid-template-columns: 6em 1fr;
+  }
+  .dos__file .paper__face {
+    padding-left: 36px;
   }
 }
