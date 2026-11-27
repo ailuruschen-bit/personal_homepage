@@ -2,6 +2,7 @@
    its colours, lit by the compartment's lights. Fixed to the viewport, so the
    papers slide over it as the page scrolls. Not over the carriage (docs/09). */
 .desk,
+.desk__shadows,
 .desk__cast {
   position: fixed;
   inset: 0;
@@ -65,14 +66,12 @@
   }
 }
 
-/* Reflections in the varnish: brighter and tighter than the diffuse light,
-   each made of a few blobs that the pointer can scatter (desk.ts) */
+/* Reflections in the varnish: brighter and tighter than the diffuse light */
 .desk__spec {
   mix-blend-mode: screen;
 }
 .desk__spec i {
   position: absolute;
-  will-change: transform, opacity;
 }
 /* the tube, mirrored in the table: a long upright streak near the left */
 .desk__spec--neon i {
@@ -173,4 +172,22 @@
     radial-gradient(ellipse 50% 46% at 92% 26%, rgba(255, 170, 90, 0.6), transparent 72%),
     linear-gradient(180deg, rgba(110, 150, 255, 0.3), transparent 30%),
     linear-gradient(0deg, rgba(0, 0, 0, 0.55), transparent 45%);
+}
+
+/* The pointer's shadows, one from each light (desk.ts), over the papers too:
+   whatever casts them is above everything on the table */
+.desk__shadows {
+  opacity: 0;
+  transition: opacity 0.4s;
+  mix-blend-mode: multiply;
+}
+.desk__shadows.on {
+  opacity: 1;
+}
+.desk__shadows i {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: center;
+  will-change: transform;
 }
