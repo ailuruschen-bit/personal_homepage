@@ -34,6 +34,26 @@ const LIGHTS: Light[] = [
   { x: 0.5, y: -0.45, height: 2400, power: 0.14, size: 520, shade: [80, 62, 40] },
 ];
 
+/**
+ * What the pointer is on the table. 'cursor': the ordinary pointer, hovering
+ * a little above the papers, its arrow's shadow cast from each light. 'pen':
+ * a fountain pen drawn in its place, nib on the table (kept for trying again).
+ */
+const MODE = 'cursor' as 'cursor' | 'pen';
+
+/** The arrow pointer's outline, tip at the origin, px (the usual system arrow) */
+const ARROW: [number, number][] = [
+  [0, 0],
+  [0, 16.5],
+  [4.1, 12.7],
+  [6.9, 19],
+  [9.3, 18],
+  [6.6, 11.8],
+  [11.6, 11.8],
+];
+/** How far above the table the pointer seems to hover, px at a 900px-high viewport */
+const HOVER = 38;
+
 /** The pen: its length, how steeply it is held, and which way its barrel
  *  points from the nib (radians, screen axes: toward the lower right) */
 const PEN_LEN = 142;
@@ -132,7 +152,7 @@ export const DESK_MARKUP = `<div class="desk" aria-hidden="true">
   <div class="desk__shade"></div>
 </div>
 <canvas class="desk__shadows" aria-hidden="true"></canvas>
-<div class="desk__pen" aria-hidden="true">${PEN_SVG}</div>
+${MODE === 'pen' ? `<div class="desk__pen" aria-hidden="true">${PEN_SVG}</div>` : ''}
 <div class="desk__cast" aria-hidden="true"></div>`;
 
 /** Over these the pen gives way to the ordinary pointer */
@@ -142,7 +162,7 @@ const PLAIN = 'a, button, .route, .langs';
 export function animateDesk(root: HTMLElement): () => void {
   const canvas = root.querySelector<HTMLCanvasElement>('.desk__shadows');
   const pen = root.querySelector<HTMLElement>('.desk__pen');
-  if (!canvas || !pen) return () => {};
+  if (!canvas) return () => {};
   const ctx = canvas.getContext('2d')!;
   const page = root.closest<HTMLElement>('.page') ?? root;
 
@@ -222,6 +242,38 @@ export function animateDesk(root: HTMLElement): () => void {
     ctx.globalAlpha = 1;
   };
 
+  /** One light's shadow of the pointer's arrow, hovering with its tip over (x, y) */
+  const arrowShadow = (l: Light, x: number, y: number) => {
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    const scale = h / 900;
+    const H = l.height * scale;
+    const z = HOVER * scale;
+    const lx = l.x * w;
+    const ly = l.y * h;
+    // flat and level, so its shadow is its own shape, pushed away from the
+    // light and a touch larger; softer the broader the light
+    const k = H / (H - z);
+    const pts = ARROW.map(([u, v]) => [lx + (x + u - lx) * k, ly + (y + v - ly) * k] as const);
+    const d = Math.hypot(x - lx, y - ly);
+    const strength = l.power / (1 + (d / (Math.hypot(w, h) * 0.8)) ** 2);
+    const blur = Math.max(0.8, Math.min(30, l.size * scale * (z / (H - z))));
+    const [r, g, b] = l.shade;
+    const FAR = 20000;
+    ctx.save();
+    ctx.globalAlpha = Math.min(1, strength * 1.9);
+    ctx.translate(-FAR, 0);
+    ctx.shadowOffsetX = FAR * dpr;
+    ctx.shadowBlur = blur * dpr;
+    ctx.shadowColor = `rgba(${r},${g},${b},0.85)`;
+    ctx.fillStyle = '#000';
+    ctx.beginPath();
+    pts.forEach(([px, py], i) => (i ? ctx.lineTo(px, py) : ctx.moveTo(px, py)));
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  };
+
   let tx = 0;
   let ty = 0;
   let x: number | null = null;
@@ -233,6 +285,11 @@ export function animateDesk(root: HTMLElement): () => void {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
     ctx.globalCompositeOperation = 'multiply';
+    if (MODE === 'cursor') {
+      for (const l of LIGHTS) arrowShadow(l, x!, y);
+      ctx.globalCompositeOperation = 'source-over';
+      return;
+    }
     for (const l of LIGHTS) shadow(l, x!, y);
     ctx.globalCompositeOperation = 'source-over';
     // the nib's own contact: a touch of dark right under it
@@ -241,14 +298,15 @@ export function animateDesk(root: HTMLElement): () => void {
     c.addColorStop(1, 'rgba(20,12,16,0)');
     ctx.fillStyle = c;
     ctx.fillRect(x! - 6, y - 6, 12, 12);
-    pen.style.transform = `translate3d(${x!.toFixed(1)}px,${(y - 7).toFixed(1)}px,0) rotate(${AZIMUTH}rad)`;
+    if (pen)
+      pen.style.transform = `translate3d(${x!.toFixed(1)}px,${(y - 7).toFixed(1)}px,0) rotate(${AZIMUTH}rad)`;
   };
 
   const frame = (now: number) => {
     const dt = Math.min(0.05, (now - last) / 1000);
     last = now;
-    // the hand has a little weight
-    const ease = 1 - Math.exp(-dt / 0.05);
+    // the hand has a little weight; a shadow of the pointer itself has none
+    const ease = MODE === 'pen' ? 1 - Math.exp(-dt / 0.05) : 1;
     x = x === null ? tx : x + (tx - x) * ease;
     y += (ty - y) * ease;
     draw();
@@ -258,6 +316,7 @@ export function animateDesk(root: HTMLElement): () => void {
 
   const show = (on: boolean) => {
     canvas.classList.toggle('on', on);
+    if (!pen) return;
     pen.classList.toggle('on', on);
     page.classList.toggle('with-pen', on);
   };
