@@ -31,7 +31,7 @@ const LIGHTS: Light[] = [
   // the tube: tall and low on the left wall, a softer one to the right, green-grey
   { x: -0.05, y: 0.42, height: 1300, power: 0.42, size: 190, shade: [48, 70, 58] },
   // the window: broad and far, a faint, long, very soft one, warm
-  { x: 0.5, y: -0.45, height: 2400, power: 0.2, size: 520, shade: [80, 62, 40] },
+  { x: 0.5, y: -0.45, height: 2400, power: 0.14, size: 520, shade: [80, 62, 40] },
 ];
 
 /** The pen: its length, how steeply it is held, and which way its barrel
