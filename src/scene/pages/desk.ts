@@ -17,6 +17,9 @@ const SPECS = [
 /** Spring back to rest: stiffness, damping, per second */
 const K = 26;
 const C = 7.5;
+/** How hard pointer speed pushes the reflections, and their top speed, px/s */
+const GAIN = 3.5;
+const MAX_V = 320;
 
 export const DESK_MARKUP = `<div class="desk" aria-hidden="true">
   <div class="desk__wood"></div>
@@ -83,8 +86,14 @@ export function animateDesk(root: HTMLElement): () => void {
       const a = Math.atan2(dy, dx);
       for (const b of blobs) {
         const d = a + b.dir;
-        b.vx += Math.cos(d) * speed * 9 * b.scatter;
-        b.vy += Math.sin(d) * speed * 9 * b.scatter;
+        b.vx += Math.cos(d) * speed * GAIN * b.scatter;
+        b.vy += Math.sin(d) * speed * GAIN * b.scatter;
+        // soft, not thrown: the scatter never runs away however fast the hand
+        const v = Math.hypot(b.vx, b.vy);
+        if (v > MAX_V) {
+          b.vx *= MAX_V / v;
+          b.vy *= MAX_V / v;
+        }
       }
     }
     px = e.clientX;
