@@ -5,6 +5,11 @@ import { sectionById } from '../content/sections';
 import { nudge, objectLines } from '../content/lines';
 import { openPrompt, pageNext, ui } from '../content/ui';
 import { onLang, tr } from '../i18n';
+import { renderAbout } from './pages/about';
+import './pages/about.css';
+
+/** Chapters with a page of their own design; the rest use the plain one */
+const PAGES: Record<string, () => string> = { about: renderAbout };
 
 /**
  * The story, docs/10. Two modes that are never on screen together:
@@ -636,6 +641,7 @@ export class Story {
     this.edgeArmed = false;
     this.onMode('page');
     this.els.page.innerHTML = renderPage(i);
+    this.els.page.className = `page page--${CHAPTERS[i]!.id}`;
     this.els.page.hidden = false;
     this.els.stage.hidden = true;
     document.documentElement.classList.add('reading');
@@ -723,8 +729,11 @@ function renderPage(i: number): string {
     </div>
     <span class="page__kicker">${objectLines[ch.id] ? tr(objectLines[ch.id]!.name) : ''} · ${ch.id.toUpperCase()}</span>
     <h1>${sectionTitle(ch.id)}</h1>
-    <p class="page__lede">${sec?.lede ?? ''}</p>
-    ${blocks}
+    ${
+      PAGES[ch.id]?.() ??
+      `<p class="page__lede">${sec?.lede ?? ''}</p>
+    ${blocks}`
+    }
     <p class="page__hint page__hint--end">${next ? tr(pageNext)(tr(next.title)) : tr(ui.pageEnd)}</p>
   </article>`;
 }
