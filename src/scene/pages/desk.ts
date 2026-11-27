@@ -36,45 +36,89 @@ const LIGHTS: Light[] = [
 
 /** The pen: its length, how steeply it is held, and which way its barrel
  *  points from the nib (radians, screen axes: toward the lower right) */
-const PEN_LEN = 150;
-const ELEVATION = (50 * Math.PI) / 180;
-const AZIMUTH = (52 * Math.PI) / 180;
+const PEN_LEN = 142;
+const ELEVATION = (67 * Math.PI) / 180;
+const AZIMUTH = (54 * Math.PI) / 180;
 /** Its half-width along its length, from the nib: [distance, half-width] */
 const PROFILE: [number, number][] = [
-  [0, 0.4],
-  [6, 1.6],
-  [14, 3.2],
-  [16, 4.2],
-  [34, 4.8],
-  [38, 5.6],
-  [138, 5.8],
-  [146, 5.0],
-  [150, 3.2],
+  [0, 0.3],
+  [5, 1.5],
+  [13, 3.4],
+  [16, 4.1],
+  [32, 4.7],
+  [34, 5.1],
+  [104, 5.2],
+  [106, 5.9],
+  [138, 5.9],
+  [142, 3.4],
 ];
 
-/** The pen as drawn: seen from above, so its length is foreshortened. Drawn
- *  along +x from the nib at the origin, rotated into place */
-const FORE = PEN_LEN * Math.cos(ELEVATION);
+/**
+ * The pen as drawn, seen from above: a black lacquer pen with a two-tone nib,
+ * gold furniture and its cap posted on the end. Authored along +x in the
+ * pen's own length (0 at the nib) and squeezed by the foreshortening; lit as
+ * it stands in the room, the lamp catching its upper side and the tube's
+ * magenta along the lower edge.
+ */
+const FORE = Math.cos(ELEVATION);
 const PEN_SVG = (() => {
-  const s = (d: number) => ((d / PEN_LEN) * FORE).toFixed(2);
-  return `<svg class="pen" viewBox="0 -8 ${FORE.toFixed(1)} 16" width="${FORE.toFixed(1)}" height="16" aria-hidden="true">
+  const W = (PEN_LEN * FORE).toFixed(2);
+  return `<svg class="pen" viewBox="0 -7 ${W} 14" width="${W}" height="14" aria-hidden="true">
   <defs>
-    <linearGradient id="pen-body" x1="0" y1="-1" x2="0" y2="1" gradientUnits="objectBoundingBox">
-      <stop offset="0" stop-color="#1a1418"/><stop offset=".28" stop-color="#4a3a44"/>
-      <stop offset=".42" stop-color="#2a2027"/><stop offset="1" stop-color="#0c090c"/>
+    <linearGradient id="pen-lac" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#050304"/>
+      <stop offset=".1" stop-color="#3b2a20"/>
+      <stop offset=".19" stop-color="#ffe7c2"/>
+      <stop offset=".25" stop-color="#4a3328"/>
+      <stop offset=".42" stop-color="#170d12"/>
+      <stop offset=".7" stop-color="#0d070b"/>
+      <stop offset=".86" stop-color="#3a1030"/>
+      <stop offset=".93" stop-color="#e05aa8"/>
+      <stop offset="1" stop-color="#1c0a16"/>
     </linearGradient>
     <linearGradient id="pen-gold" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#7a5a22"/><stop offset=".35" stop-color="#f3d58a"/>
-      <stop offset=".6" stop-color="#b48a3c"/><stop offset="1" stop-color="#5e4318"/>
+      <stop offset="0" stop-color="#4a3210"/>
+      <stop offset=".18" stop-color="#d7ac55"/>
+      <stop offset=".3" stop-color="#fff3c8"/>
+      <stop offset=".46" stop-color="#c89a43"/>
+      <stop offset=".8" stop-color="#7a561e"/>
+      <stop offset=".92" stop-color="#c9709a"/>
+      <stop offset="1" stop-color="#3b2510"/>
     </linearGradient>
+    <linearGradient id="pen-rhod" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#6d7076"/>
+      <stop offset=".3" stop-color="#f4f6f8"/>
+      <stop offset=".6" stop-color="#a9aeb5"/>
+      <stop offset="1" stop-color="#55585e"/>
+    </linearGradient>
+    <pattern id="pen-guilloche" width="1.1" height="14" patternUnits="userSpaceOnUse" y="-7">
+      <rect width="1.1" height="14" fill="url(#pen-gold)"/>
+      <rect width=".35" height="14" fill="rgba(60,35,8,.55)"/>
+    </pattern>
   </defs>
-  <path d="M0 0 L${s(14)} -2.6 L${s(15)} 2.6 Z" fill="url(#pen-gold)"/>
-  <line x1="0.6" y1="0" x2="${s(11)}" y2="0" stroke="#3d2a10" stroke-width=".35"/>
-  <rect x="${s(14)}" y="-4.2" width="${(Number(s(38)) - Number(s(14))).toFixed(2)}" height="8.4" rx="1.6" fill="url(#pen-body)"/>
-  <rect x="${s(37)}" y="-5.1" width="${s(2.4)}" height="10.2" fill="url(#pen-gold)"/>
-  <rect x="${s(39)}" y="-5.6" width="${(Number(s(146)) - Number(s(39))).toFixed(2)}" height="11.2" rx="2" fill="url(#pen-body)"/>
-  <rect x="${s(120)}" y="-1.3" width="${s(24)}" height="2.6" rx="1.2" fill="url(#pen-gold)"/>
-  <rect x="${s(145)}" y="-4.6" width="${s(5)}" height="9.2" rx="2.2" fill="#140f12"/>
+  <g transform="scale(${FORE.toFixed(4)},1)">
+    <!-- the nib: gold, with a rhodium heart, its slit and breather hole -->
+    <path d="M0 0 C4 -.9 9 -2.6 13 -3.4 L16 -4.1 L16 4.1 L13 3.4 C9 2.6 4 .9 0 0 Z" fill="url(#pen-gold)"/>
+    <path d="M3.5 0 C6 -.8 9 -1.9 11.5 -2.3 C10.8 -1.2 10.8 1.2 11.5 2.3 C9 1.9 6 .8 3.5 0 Z" fill="url(#pen-rhod)"/>
+    <line x1=".4" y1="0" x2="9" y2="0" stroke="#2a1a08" stroke-width=".28"/>
+    <circle cx="9.6" cy="0" r=".75" fill="#1a1008"/>
+    <path d="M12.4 -2.6 q.6 .9 0 1.6 M12.4 2.6 q.6 -.9 0 -1.6" stroke="rgba(70,40,10,.6)" stroke-width=".25" fill="none"/>
+    <!-- the section, with a fine gold thread ring where it meets the barrel -->
+    <path d="M16 -4.1 L32 -4.7 L32 4.7 L16 4.1 Z" fill="url(#pen-lac)"/>
+    <rect x="32" y="-5.1" width="2" height="10.2" rx=".4" fill="url(#pen-gold)"/>
+    <!-- the barrel -->
+    <rect x="34" y="-5.2" width="72" height="10.4" rx=".8" fill="url(#pen-lac)"/>
+    <!-- the cap, posted: a broad engraved band, then the lacquer, the finial -->
+    <rect x="104" y="-5.9" width="36" height="11.8" rx="1" fill="url(#pen-lac)"/>
+    <rect x="104" y="-5.95" width="6.5" height="11.9" fill="url(#pen-guilloche)"/>
+    <rect x="104" y="-5.95" width=".6" height="11.9" fill="#fff0c0" opacity=".7"/>
+    <rect x="110" y="-5.95" width=".6" height="11.9" fill="#4a3210"/>
+    <path d="M138 -5.9 Q142 -4.6 142 0 Q142 4.6 138 5.9 Z" fill="url(#pen-gold)"/>
+    <!-- the clip, along the top of the cap, ending in a ball -->
+    <rect x="115" y="-2.6" width="25" height="2.3" rx="1" fill="url(#pen-gold)"/>
+    <ellipse cx="115.6" cy="-1.45" rx="1.9" ry="1.75" fill="url(#pen-gold)"/>
+    <ellipse cx="115.2" cy="-1.9" rx=".7" ry=".5" fill="#fff6d6" opacity=".9"/>
+  </g>
 </svg>`;
 })();
 
@@ -197,7 +241,7 @@ export function animateDesk(root: HTMLElement): () => void {
     c.addColorStop(1, 'rgba(20,12,16,0)');
     ctx.fillStyle = c;
     ctx.fillRect(x! - 6, y - 6, 12, 12);
-    pen.style.transform = `translate3d(${x!.toFixed(1)}px,${(y - 8).toFixed(1)}px,0) rotate(${AZIMUTH}rad)`;
+    pen.style.transform = `translate3d(${x!.toFixed(1)}px,${(y - 7).toFixed(1)}px,0) rotate(${AZIMUTH}rad)`;
   };
 
   const frame = (now: number) => {

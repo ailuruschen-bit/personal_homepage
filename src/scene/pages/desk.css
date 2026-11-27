@@ -139,7 +139,7 @@
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.25s;
-  transform-origin: 0 8px;
+  transform-origin: 0 7px;
   will-change: transform;
 }
 .desk__pen.on {
