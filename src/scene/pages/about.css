@@ -13,6 +13,11 @@
   position: fixed;
   z-index: 0;
 }
+.page--about .page__in > .desk__sweep,
+.page--about .page__in > .desk__sweep--light {
+  position: fixed;
+  z-index: 2;
+}
 .page--about .page__in > .desk__shadows {
   position: fixed;
   z-index: 2;

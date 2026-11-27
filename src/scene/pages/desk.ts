@@ -51,6 +51,9 @@ const ARROW: [number, number][] = [
   [6.6, 11.8],
   [11.6, 11.8],
 ];
+/** The light the pointer's shadow is cast from: the tube, a touch darker
+ *  than its share of the pen's, being the only one */
+const ARROW_LIGHT: Light = { ...LIGHTS[1]!, power: 0.55 };
 /** How far above the table the pointer seems to hover, px at a 900px-high viewport */
 const HOVER = 38;
 
@@ -145,15 +148,77 @@ const PEN_SVG = (() => {
 export const DESK_MARKUP = `<div class="desk" aria-hidden="true">
   <div class="desk__wood"></div>
   <div class="desk__ambient"></div>
+  <div class="desk__lamp"></div>
+  <div class="desk__window"></div>
   <div class="desk__blinds"></div>
   <div class="desk__spec desk__spec--neon"></div>
   <div class="desk__spec desk__spec--lamp"></div>
   <div class="desk__spec desk__spec--window"></div>
   <div class="desk__shade"></div>
 </div>
+<div class="desk__sweep" aria-hidden="true"></div>
+<div class="desk__sweep desk__sweep--light" aria-hidden="true"></div>
 <canvas class="desk__shadows" aria-hidden="true"></canvas>
 ${MODE === 'pen' ? `<div class="desk__pen" aria-hidden="true">${PEN_SVG}</div>` : ''}
 <div class="desk__cast" aria-hidden="true"></div>`;
+
+/**
+ * The train is moving: what stands by the line outside throws its shadow
+ * through the window as it passes, across the far end of the table and the
+ * papers on it, from right to left as the city outside goes. Masts come at a
+ * steady beat, now and then a signal box or a tree, and now and then a lamp
+ * by the line throws a light instead. Returns its stop.
+ */
+function passing(layer: HTMLElement, lights: HTMLElement): () => void {
+  if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return () => {};
+  let timer = 0;
+  let live = true;
+  const rand = (a: number, b: number) => a + Math.random() * (b - a);
+
+  const sweep = (cls: string, width: number, ms: number, delay = 0, into = layer) => {
+    const el = document.createElement('i');
+    el.className = cls;
+    el.style.width = `${width}px`;
+    into.append(el);
+    const w = window.innerWidth;
+    const a = el.animate(
+      [
+        { transform: `translate3d(${w + width}px,0,0) skewX(-14deg)` },
+        { transform: `translate3d(${-width * 2}px,0,0) skewX(-14deg)` },
+      ],
+      { duration: ms, delay, easing: 'linear' },
+    );
+    a.onfinish = () => el.remove();
+  };
+
+  const next = () => {
+    if (!live) return;
+    const r = Math.random();
+    const ms = rand(520, 680);
+    if (r < 0.72) {
+      // a catenary mast: narrow and dark
+      sweep('pass pass--mast', rand(22, 34), ms);
+    } else if (r < 0.84) {
+      // a signal box or a hut: broad
+      sweep('pass pass--box', rand(110, 190), ms * 1.1);
+    } else if (r < 0.93) {
+      // a tree: broad, broken, soft
+      sweep('pass pass--tree', rand(140, 240), ms * 1.15);
+    } else {
+      // a lamp by the line: light, not shadow
+      sweep('pass pass--lamp', rand(160, 260), ms * 0.9, 0, lights);
+    }
+    // masts at a steady beat, with the odd gap
+    timer = window.setTimeout(next, rand(900, 1500) * (Math.random() < 0.15 ? 2.2 : 1));
+  };
+  timer = window.setTimeout(next, 600);
+  return () => {
+    live = false;
+    clearTimeout(timer);
+    layer.replaceChildren();
+    lights.replaceChildren();
+  };
+}
 
 /** Over these the pen gives way to the ordinary pointer */
 const PLAIN = 'a, button, .route, .langs';
@@ -164,6 +229,9 @@ export function animateDesk(root: HTMLElement): () => void {
   const pen = root.querySelector<HTMLElement>('.desk__pen');
   if (!canvas) return () => {};
   const ctx = canvas.getContext('2d')!;
+  const sweepLayer = root.querySelector<HTMLElement>('.desk__sweep');
+  const lightLayer = root.querySelector<HTMLElement>('.desk__sweep--light');
+  const stopPassing = sweepLayer && lightLayer ? passing(sweepLayer, lightLayer) : () => {};
   const page = root.closest<HTMLElement>('.page') ?? root;
 
   let dpr = 1;
@@ -286,7 +354,9 @@ export function animateDesk(root: HTMLElement): () => void {
     ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
     ctx.globalCompositeOperation = 'multiply';
     if (MODE === 'cursor') {
-      for (const l of LIGHTS) arrowShadow(l, x!, y);
+      // only the tube's: one clear shadow to the right reads as the room's
+      // light; three read as a rendering trick
+      arrowShadow(ARROW_LIGHT, x!, y);
       ctx.globalCompositeOperation = 'source-over';
       return;
     }
@@ -346,6 +416,7 @@ export function animateDesk(root: HTMLElement): () => void {
     document.documentElement.removeEventListener('pointerleave', onLeave);
     window.removeEventListener('resize', onResize);
     cancelAnimationFrame(raf);
+    stopPassing();
     page.classList.remove('with-pen');
   };
 }
