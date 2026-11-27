@@ -1,13 +1,12 @@
 /* The 档案 page: papers on a desk (pages/about.ts). Not over the carriage, so
    painting here is safe (docs/09). */
 .page--about {
-  background:
-    radial-gradient(ellipse 70% 55% at 50% 28%, rgba(255, 190, 110, 0.1), transparent 70%),
-    radial-gradient(ellipse 120% 90% at 50% 40%, transparent 40%, rgba(0, 0, 0, 0.55)),
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='w'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.006 .25' numOctaves='3' seed='4' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .16 0 0 0 0 .1 0 0 0 0 .14 0 0 0 .4 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23w)'/%3E%3C/svg%3E"),
-    #130d18;
+  background: #2a1713;
 }
-
+.page--about .page__in {
+  position: relative;
+  z-index: 1;
+}
 .dos {
   /* Paper: grain, fibres and uneven ageing, over a warm base */
   --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .32 0 0 0 0 .24 0 0 0 0 .14 0 0 0 .42 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");

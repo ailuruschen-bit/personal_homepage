@@ -1,6 +1,7 @@
 import { about } from '../../content/about';
 import { tr, type T } from '../../i18n';
 import { wornEdge } from './paper';
+import { DESK_MARKUP } from './desk';
 
 const text = (v: T | string) => (typeof v === 'string' ? v : tr(v));
 
@@ -43,7 +44,7 @@ export function renderAbout(): string {
     ${about.notes.map((n) => `<p>${tr(n)}</p>`).join('')}
     <p class="dos__signed">${tr(about.signed)}</p>
     <i class="dos__ring" aria-hidden="true"></i>`;
-  return `<div class="dos">
+  return `${DESK_MARKUP}<div class="dos">
     ${paper('dos__under dos__under--a', 11)}
     ${paper('dos__under dos__under--b', 23)}
     <div class="dos__filewrap">

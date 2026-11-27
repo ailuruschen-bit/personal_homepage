@@ -6,6 +6,8 @@ import { nudge, objectLines } from '../content/lines';
 import { openPrompt, pageNext, ui } from '../content/ui';
 import { onLang, tr } from '../i18n';
 import { renderAbout } from './pages/about';
+import { animateDesk } from './pages/desk';
+import './pages/desk.css';
 import './pages/about.css';
 
 /** Chapters with a page of their own design; the rest use the plain one */
@@ -162,6 +164,13 @@ export class Story {
 
   private offLang: () => void = () => {};
 
+  /** Whatever moves on the page being read (the desk's light), and its stop */
+  private stopPage: () => void = () => {};
+  private livenPage() {
+    this.stopPage();
+    this.stopPage = animateDesk(this.els.page);
+  }
+
   /** A new language: the route, the page being read and the caption again */
   private relabel() {
     this.els.route.innerHTML = renderRoute();
@@ -170,6 +179,7 @@ export class Story {
     if (this.mode === 'page') {
       const y = window.scrollY;
       this.els.page.innerHTML = renderPage(this.chapter);
+      this.livenPage();
       window.scrollTo(0, y);
     }
     // typed again in the new language from where it stands
@@ -641,6 +651,7 @@ export class Story {
     this.edgeArmed = false;
     this.onMode('page');
     this.els.page.innerHTML = renderPage(i);
+    this.livenPage();
     this.els.page.className = `page page--${CHAPTERS[i]!.id}`;
     this.els.page.hidden = false;
     this.els.stage.hidden = true;
@@ -655,6 +666,8 @@ export class Story {
     this.busy = true;
     await this.fade(this.els.page, 0);
     this.els.page.hidden = true;
+    this.stopPage();
+    this.stopPage = () => {};
     document.documentElement.classList.remove('reading');
     window.scrollTo(0, 0);
     this.p = this.target = p;

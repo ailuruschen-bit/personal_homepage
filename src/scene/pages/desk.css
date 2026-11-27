@@ -1,0 +1,176 @@
+/* The table under the papers (pages/desk.ts): the compartment's own table, in
+   its colours, lit by the compartment's lights. Fixed to the viewport, so the
+   papers slide over it as the page scrolls. Not over the carriage (docs/09). */
+.desk,
+.desk__cast {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+}
+.desk {
+  z-index: 0;
+  overflow: hidden;
+  isolation: isolate;
+}
+.desk > div {
+  position: absolute;
+  inset: -6%;
+}
+
+/* The wood: the table's varnished brown (tools/art/room.py, WOOD), with a
+   grain that runs across the table */
+.desk__wood {
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='900' height='300'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.0035 .09' numOctaves='4' seed='9' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .14 0 0 0 0 .06 0 0 0 0 .04 0 0 0 1.3 -.35'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .1 0 0 0 0 .05 0 0 0 0 .03 0 0 0 .25 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
+    linear-gradient(180deg, #6a372c, #5a2e25 55%, #3d1f1a);
+}
+
+/* Diffuse light: where each source lands on the table. It does not move with the eye */
+.desk__ambient {
+  mix-blend-mode: screen;
+  background:
+    /* the magenta tube on the left wall */
+    radial-gradient(
+      ellipse 42% 75% at -4% 42%,
+      rgba(255, 64, 178, 0.42),
+      rgba(255, 64, 178, 0.12) 45%,
+      transparent 72%
+    ),
+    /* the lamp on the right wall, its cone falling on the far right of the table */
+    radial-gradient(
+        ellipse 48% 44% at 90% 26%,
+        rgba(255, 178, 96, 0.5),
+        rgba(255, 150, 80, 0.15) 50%,
+        transparent 75%
+      ),
+    /* the window beyond the table: cool city light from the far side */
+    radial-gradient(ellipse 70% 40% at 50% -6%, rgba(96, 140, 255, 0.36), transparent 70%);
+}
+/* The window's light comes through the blinds: slats of it across the far end */
+.desk__blinds {
+  mix-blend-mode: screen;
+  background: repeating-linear-gradient(
+    177deg,
+    rgba(150, 196, 255, 0.16) 0 9px,
+    rgba(150, 196, 255, 0.02) 9px 21px
+  );
+  -webkit-mask-image: radial-gradient(ellipse 46% 42% at 50% 0, #000 30%, transparent 100%);
+  mask-image: radial-gradient(ellipse 46% 42% at 50% 0, #000 30%, transparent 100%);
+  animation: sway-light 9s ease-in-out infinite alternate;
+}
+@keyframes sway-light {
+  to {
+    transform: translate(10px, 3px);
+  }
+}
+
+/* Reflections in the varnish: brighter and tighter than the diffuse light,
+   each made of a few blobs that the pointer can scatter (desk.ts) */
+.desk__spec {
+  mix-blend-mode: screen;
+}
+.desk__spec i {
+  position: absolute;
+  will-change: transform, opacity;
+}
+/* the tube, mirrored in the table: a long upright streak near the left */
+.desk__spec--neon i {
+  left: 3%;
+  top: 14%;
+  width: 11%;
+  height: 62%;
+  background: radial-gradient(
+    ellipse 26% 50% at 50% 50%,
+    rgba(255, 170, 225, 0.5),
+    rgba(255, 64, 178, 0.22) 45%,
+    transparent 72%
+  );
+}
+.desk__spec--neon i:nth-child(2) {
+  left: 5.5%;
+  top: 20%;
+  height: 48%;
+  opacity: 0.8;
+}
+.desk__spec--neon i:nth-child(3) {
+  left: 1.5%;
+  top: 28%;
+  width: 8%;
+  height: 40%;
+}
+/* the lamp's bulb, mirrored as a warm hot spot */
+.desk__spec--lamp i {
+  right: 9%;
+  top: 16%;
+  width: 18%;
+  height: 20%;
+  background: radial-gradient(
+    ellipse 50% 50% at 50% 50%,
+    rgba(255, 236, 190, 0.55),
+    rgba(255, 186, 110, 0.2) 40%,
+    transparent 70%
+  );
+}
+.desk__spec--lamp i:nth-child(2) {
+  right: 12%;
+  top: 19%;
+  width: 11%;
+  height: 12%;
+}
+.desk__spec--lamp i:nth-child(3) {
+  right: 6%;
+  top: 13%;
+  width: 26%;
+  height: 28%;
+  opacity: 0.6;
+}
+/* the window, mirrored as a cool band at the far edge */
+.desk__spec--window i {
+  left: 22%;
+  top: 0;
+  width: 56%;
+  height: 16%;
+  background: radial-gradient(
+    ellipse 50% 40% at 50% 50%,
+    rgba(200, 225, 255, 0.32),
+    rgba(96, 160, 255, 0.12) 50%,
+    transparent 75%
+  );
+}
+.desk__spec--window i:nth-child(2) {
+  left: 30%;
+  width: 18%;
+  top: 3%;
+  height: 9%;
+}
+.desk__spec--window i:nth-child(3) {
+  left: 52%;
+  width: 20%;
+  top: 2%;
+  height: 10%;
+}
+.desk__spec--window i:nth-child(4) {
+  left: 40%;
+  width: 22%;
+  top: 6%;
+  height: 8%;
+  opacity: 0.7;
+}
+/* The near side of the table is out of the lights: dark toward the reader */
+.desk__shade {
+  background:
+    linear-gradient(0deg, rgba(12, 6, 14, 0.72), transparent 48%),
+    radial-gradient(ellipse 120% 100% at 50% 35%, transparent 50%, rgba(10, 5, 12, 0.6));
+}
+
+/* The same lights on the papers, faintly: they are on the same table */
+.desk__cast {
+  z-index: 2;
+  mix-blend-mode: soft-light;
+  background:
+    radial-gradient(ellipse 45% 80% at 0% 42%, rgba(255, 64, 178, 0.55), transparent 70%),
+    radial-gradient(ellipse 50% 46% at 92% 26%, rgba(255, 170, 90, 0.6), transparent 72%),
+    linear-gradient(180deg, rgba(110, 150, 255, 0.3), transparent 30%),
+    linear-gradient(0deg, rgba(0, 0, 0, 0.55), transparent 45%);
+}
