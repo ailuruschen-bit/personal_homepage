@@ -30,33 +30,14 @@
 /* Diffuse light: where each source lands on the table. It does not move with the eye */
 .desk__ambient {
   mix-blend-mode: screen;
-  /* the magenta tube on the left wall: steady, but a tube, so now and then
-     it catches */
+  /* the magenta tube on the left wall; the carriage's unsteady power makes
+     it stutter (desk.ts, power) */
   background: radial-gradient(
     ellipse 42% 75% at -4% 42%,
     rgba(255, 64, 178, 0.42),
     rgba(255, 64, 178, 0.12) 45%,
     transparent 72%
   );
-  animation: tube 11s steps(1) infinite;
-}
-@keyframes tube {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  63% {
-    opacity: 0.82;
-  }
-  63.6% {
-    opacity: 1;
-  }
-  64.2% {
-    opacity: 0.88;
-  }
-  64.8% {
-    opacity: 1;
-  }
 }
 /* The lamp on the right wall, its cone on the far right of the table. It
    hangs, so it sways with the carriage, and its light breathes with it */
@@ -234,40 +215,22 @@
 }
 .pass {
   position: absolute;
-  top: -10%;
-  bottom: 15%;
+  top: -6%;
   left: 0;
   will-change: transform;
 }
-.pass--mast {
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(40, 34, 60, 0.55) 35%,
-    rgba(40, 34, 60, 0.55) 65%,
-    transparent
-  );
-}
-.pass--box {
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(40, 34, 60, 0.45) 12%,
-    rgba(40, 34, 60, 0.45) 88%,
-    transparent
-  );
-}
-.pass--tree {
-  background:
-    radial-gradient(ellipse 30% 22% at 30% 30%, rgba(30, 40, 50, 0.5), transparent 70%),
-    radial-gradient(ellipse 35% 25% at 62% 50%, rgba(30, 40, 50, 0.45), transparent 70%),
-    radial-gradient(ellipse 28% 20% at 45% 72%, rgba(30, 40, 50, 0.4), transparent 70%);
+.pass svg {
+  display: block;
+  color: rgb(34, 28, 52);
+  fill: currentColor;
 }
 /* a lamp by the line: light thrown in, so on a layer that lightens */
 .desk__sweep--light {
   mix-blend-mode: screen;
 }
 .pass--lamp {
+  top: -10%;
+  height: 80%;
   background: radial-gradient(
     ellipse 50% 45% at 50% 30%,
     rgba(255, 214, 150, 0.42),

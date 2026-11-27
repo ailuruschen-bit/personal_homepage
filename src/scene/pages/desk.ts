@@ -1,3 +1,4 @@
+import { nextSilhouette } from './lineside';
 /**
  * The table under the papers, lit by what lights the compartment (docs/13):
  * the magenta tube on the left wall, the lamp on the right, the window's
@@ -165,9 +166,9 @@ ${MODE === 'pen' ? `<div class="desk__pen" aria-hidden="true">${PEN_SVG}</div>` 
 /**
  * The train is moving: what stands by the line outside throws its shadow
  * through the window as it passes, across the far end of the table and the
- * papers on it, from right to left as the city outside goes. Masts come at a
- * steady beat, now and then a signal box or a tree, and now and then a lamp
- * by the line throws a light instead. Returns its stop.
+ * papers on it, from right to left as the city outside goes (lineside.ts).
+ * Nearer things are bigger, softer and darker and pass quicker. Now and then
+ * a lamp by the line throws light instead. Returns its stop.
  */
 function passing(layer: HTMLElement, lights: HTMLElement): () => void {
   if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return () => {};
@@ -175,48 +176,146 @@ function passing(layer: HTMLElement, lights: HTMLElement): () => void {
   let live = true;
   const rand = (a: number, b: number) => a + Math.random() * (b - a);
 
-  const sweep = (cls: string, width: number, ms: number, delay = 0, into = layer) => {
-    const el = document.createElement('i');
-    el.className = cls;
-    el.style.width = `${width}px`;
+  const run = (el: HTMLElement, width: number, ms: number, into: HTMLElement) => {
     into.append(el);
     const w = window.innerWidth;
     const a = el.animate(
       [
-        { transform: `translate3d(${w + width}px,0,0) skewX(-14deg)` },
-        { transform: `translate3d(${-width * 2}px,0,0) skewX(-14deg)` },
+        { transform: `translate3d(${w + width * 0.2}px,0,0) skewX(-16deg)` },
+        { transform: `translate3d(${-width * 1.6}px,0,0) skewX(-16deg)` },
       ],
-      { duration: ms, delay, easing: 'linear' },
+      { duration: ms, easing: 'linear' },
     );
     a.onfinish = () => el.remove();
   };
 
+  const shadow = () => {
+    const s = nextSilhouette();
+    const h = window.innerHeight * 0.95;
+    // the box is 1000 units high, stretched to the window's light
+    const k = (h / 1000) * (0.8 + s.near * 0.7);
+    const width = s.width * k;
+    const el = document.createElement('i');
+    el.className = 'pass';
+    el.style.width = `${width}px`;
+    el.style.height = `${h * (0.8 + s.near * 0.7)}px`;
+    el.style.filter = `blur(${(1.5 + s.near * 7).toFixed(1)}px)`;
+    el.style.opacity = (0.32 + s.near * 0.3).toFixed(2);
+    el.innerHTML = `<svg viewBox="0 0 ${s.width.toFixed(0)} 1000" preserveAspectRatio="none" width="100%" height="100%">${s.svg}</svg>`;
+    // nearer passes quicker
+    run(el, width, rand(700, 820) * (1.25 - s.near * 0.5), layer);
+  };
+
+  const lamp = () => {
+    const el = document.createElement('i');
+    el.className = 'pass pass--lamp';
+    const width = rand(180, 260);
+    el.style.width = `${width}px`;
+    run(el, width, rand(480, 560), lights);
+  };
+
   const next = () => {
     if (!live) return;
-    const r = Math.random();
-    const ms = rand(520, 680);
-    if (r < 0.72) {
-      // a catenary mast: narrow and dark
-      sweep('pass pass--mast', rand(22, 34), ms);
-    } else if (r < 0.84) {
-      // a signal box or a hut: broad
-      sweep('pass pass--box', rand(110, 190), ms * 1.1);
-    } else if (r < 0.93) {
-      // a tree: broad, broken, soft
-      sweep('pass pass--tree', rand(140, 240), ms * 1.15);
-    } else {
-      // a lamp by the line: light, not shadow
-      sweep('pass pass--lamp', rand(160, 260), ms * 0.9, 0, lights);
-    }
-    // masts at a steady beat, with the odd gap
-    timer = window.setTimeout(next, rand(900, 1500) * (Math.random() < 0.15 ? 2.2 : 1));
+    if (Math.random() < 0.08) lamp();
+    else shadow();
+    // a steady beat with some give, and the odd longer gap
+    timer = window.setTimeout(next, rand(700, 1300) * (Math.random() < 0.12 ? 2.4 : 1));
   };
-  timer = window.setTimeout(next, 600);
+  timer = window.setTimeout(next, 500);
   return () => {
     live = false;
     clearTimeout(timer);
     layer.replaceChildren();
     lights.replaceChildren();
+  };
+}
+
+/**
+ * The carriage's power is not steady. The tube stutters and sags, at no
+ * regular interval: a few quick drops, a buzz, sometimes a long dip the lamp
+ * feels too. Its light, its reflection and the pointer's shadow (which it
+ * casts) all go with it. Returns its stop.
+ */
+function power(root: HTMLElement): () => void {
+  const tube = ['.desk__ambient', '.desk__spec--neon']
+    .map((q) => root.querySelector<HTMLElement>(q))
+    .filter((e): e is HTMLElement => !!e);
+  const shade = root.querySelector<HTMLElement>('.desk__shadows');
+  const lamp = ['.desk__lamp', '.desk__spec--lamp']
+    .map((q) => root.querySelector<HTMLElement>(q))
+    .filter((e): e is HTMLElement => !!e);
+  if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return () => {};
+  let timer = 0;
+  let live = true;
+  const rand = (a: number, b: number) => a + Math.random() * (b - a);
+
+  const play = (levels: [number, number][], lampToo: boolean) => {
+    // levels: [brightness, ms held]
+    const total = levels.reduce((t, [, ms]) => t + ms, 0);
+    let at = 0;
+    const frames = levels.map(([v, ms]) => {
+      const f = { offset: at / total, v };
+      at += ms;
+      return f;
+    });
+    frames.push({ offset: 1, v: 1 });
+    const opts = { duration: total, easing: 'steps(1, end)' as string };
+    for (const el of tube)
+      el.animate(
+        frames.map((f) => ({ offset: f.offset, opacity: f.v })),
+        opts,
+      );
+    shade?.animate(
+      frames.map((f) => ({ offset: f.offset, filter: `opacity(${f.v})` })),
+      opts,
+    );
+    if (lampToo)
+      for (const el of lamp)
+        el.animate(
+          frames.map((f) => ({
+            offset: f.offset,
+            filter: `brightness(${(0.7 + f.v * 0.3).toFixed(2)})`,
+          })),
+          { duration: total, easing: 'ease-in-out' },
+        );
+  };
+
+  const next = () => {
+    if (!live) return;
+    const r = Math.random();
+    if (r < 0.55) {
+      // a stutter: a few quick drops
+      const n = Math.floor(rand(2, 6));
+      const lv: [number, number][] = [];
+      for (let i = 0; i < n; i++)
+        lv.push([rand(0.1, 0.6), rand(30, 90)], [rand(0.75, 1), rand(30, 110)]);
+      play(lv, false);
+    } else if (r < 0.85) {
+      // a buzz: fast and shallow, a while
+      const lv: [number, number][] = [];
+      for (let i = 0; i < 14; i++) lv.push([rand(0.6, 0.95), rand(25, 45)]);
+      play(lv, false);
+    } else {
+      // a sag: the whole carriage dims, the tube nearly out, then catches
+      play(
+        [
+          [0.7, 140],
+          [0.45, 200],
+          [0.25, 160],
+          [0.05, 90],
+          [0.6, 60],
+          [0.15, 70],
+          [0.85, 120],
+        ],
+        true,
+      );
+    }
+    timer = window.setTimeout(next, rand(1200, 4200));
+  };
+  timer = window.setTimeout(next, rand(800, 2000));
+  return () => {
+    live = false;
+    clearTimeout(timer);
   };
 }
 
@@ -232,6 +331,7 @@ export function animateDesk(root: HTMLElement): () => void {
   const sweepLayer = root.querySelector<HTMLElement>('.desk__sweep');
   const lightLayer = root.querySelector<HTMLElement>('.desk__sweep--light');
   const stopPassing = sweepLayer && lightLayer ? passing(sweepLayer, lightLayer) : () => {};
+  const stopPower = power(root);
   const page = root.closest<HTMLElement>('.page') ?? root;
 
   let dpr = 1;
@@ -417,6 +517,7 @@ export function animateDesk(root: HTMLElement): () => void {
     window.removeEventListener('resize', onResize);
     cancelAnimationFrame(raf);
     stopPassing();
+    stopPower();
     page.classList.remove('with-pen');
   };
 }
