@@ -3,7 +3,7 @@ import { tr, type T } from '../../i18n';
 import { wornEdge } from './paper';
 import { DESK_MARKUP } from './desk';
 
-const PORTRAIT = `${import.meta.env.BASE_URL}assets/portrait.png`;
+const PORTRAIT = `${import.meta.env.BASE_URL}assets/portrait.webp`;
 
 /** A paper clip, drawn as wire */
 const CLIP = `<svg class="dos__clip" viewBox="0 0 12 34" aria-hidden="true">
@@ -61,7 +61,7 @@ export function renderAbout(): string {
       </div>
       <figure class="dos__photo">
         <div class="dos__slot">
-          <img src="${PORTRAIT}" alt="${tr(about.photoAlt)}" width="63" height="84" />
+          <img src="${PORTRAIT}" alt="${tr(about.photoAlt)}" width="543" height="724" />
           <i class="dos__scan" aria-hidden="true"></i>
         </div>
       </figure>

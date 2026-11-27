@@ -13,3 +13,7 @@ the photo gives only where things are; the drawing is done here.
    brows, eyes, nose, mouth and hair strands pixel by pixel.
 
 Writes `portrait-art.png`; copy it to `public/assets/portrait.png`.
+
+**In use now:** `public/assets/portrait.webp`, 543×724, generated with an AI
+image tool from the 履歴書 photo in this style, chosen by him. The scripts
+here made the earlier, hand-drawn version.
