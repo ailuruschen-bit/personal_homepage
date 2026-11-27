@@ -61,7 +61,7 @@ export function renderAbout(): string {
       </div>
       <figure class="dos__photo">
         <div class="dos__slot">
-          <img src="${PORTRAIT}" alt="${tr(about.photoAlt)}" width="84" height="112" />
+          <img src="${PORTRAIT}" alt="${tr(about.photoAlt)}" width="63" height="84" />
           <i class="dos__scan" aria-hidden="true"></i>
         </div>
       </figure>
