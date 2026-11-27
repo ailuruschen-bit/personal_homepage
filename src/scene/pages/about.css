@@ -165,21 +165,23 @@
 .dos__report {
   z-index: 2;
   margin: -22px 0 0 34px;
-  padding: 26px 30px 28px;
+  padding: 28px 30px 28px;
   background:
     repeating-linear-gradient(transparent 0 27px, rgba(80, 110, 160, 0.22) 27px 28px), #f1ead6;
   transform: rotate(0.8deg);
   line-height: 28px;
 }
+/* everything on the report sits on its rules: rows of 28px from the top */
 .dos__report h2 {
-  margin: 0 0 14px;
+  margin: 0 0 28px;
+  line-height: 28px;
   font-size: 15px;
   font-weight: 400;
   letter-spacing: 0.25em;
   color: var(--red);
 }
 .dos__report p {
-  margin: 0 0 14px;
+  margin: 0 0 28px;
   font-size: 15px;
 }
 .dos__signed {
