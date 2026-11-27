@@ -10,7 +10,8 @@ const all = (s: string): T => ({ zh: s, ja: s, en: s });
  * phone, date of birth, family and residence status are left out on purpose.
  */
 export const about = {
-  title: { zh: '履历表', ja: '履歴書', en: 'Résumé' },
+  /** What he calls it himself: a passenger's own account of who he is */
+  title: { zh: '乘客自述', ja: '乗客の自己申告', en: 'In his own words' },
   photo: { zh: '照片', ja: '写真', en: 'Photo' },
 
   name: {
