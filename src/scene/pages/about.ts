@@ -3,6 +3,8 @@ import { tr, type T } from '../../i18n';
 import { wornEdge } from './paper';
 import { DESK_MARKUP } from './desk';
 
+const PORTRAIT = `${import.meta.env.BASE_URL}assets/portrait.png`;
+
 /** A paper clip, drawn as wire */
 const CLIP = `<svg class="dos__clip" viewBox="0 0 12 34" aria-hidden="true">
   <path d="M4 31V6.5a3.2 3.2 0 0 1 6.4 0V27a1.9 1.9 0 0 1-3.8 0V9" fill="none" stroke="url(#wire)" stroke-width="1.3" stroke-linecap="round"/>
@@ -58,7 +60,10 @@ export function renderAbout(): string {
           .join('')}
       </div>
       <figure class="dos__photo">
-        <div class="dos__slot"><span>${tr(about.photo)}</span></div>
+        <div class="dos__slot">
+          <img src="${PORTRAIT}" alt="${tr(about.photoAlt)}" width="84" height="112" />
+          <i class="dos__scan" aria-hidden="true"></i>
+        </div>
       </figure>
     </div>
     ${section(about.education)}

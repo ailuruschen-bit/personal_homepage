@@ -209,7 +209,7 @@
   aspect-ratio: 3 / 4;
   display: grid;
   place-items: center;
-  border: 1px dashed rgba(38, 32, 43, 0.45);
+  border: 1px solid rgba(38, 32, 43, 0.35);
   background:
     var(--grain),
     repeating-linear-gradient(45deg, rgba(120, 90, 50, 0.08) 0 3px, transparent 3px 7px), #d6c9a8;
@@ -235,11 +235,57 @@
   bottom: 0;
   transform: rotate(180deg);
 }
-.dos__slot span {
-  font-size: 12px;
-  letter-spacing: 0.3em;
-  color: rgba(70, 55, 45, 0.55);
-  text-transform: uppercase;
+/* The photo: a print of the pixel portrait, a touch of gloss and grain on it,
+   and something of a case file's unknown: a faint scan passing down it now
+   and then, as if he were still being made out */
+.dos__slot img {
+  position: absolute;
+  inset: 3px;
+  width: calc(100% - 6px);
+  height: calc(100% - 6px);
+  image-rendering: pixelated;
+  filter: contrast(1.04) saturate(0.92);
+}
+.dos__slot::before,
+.dos__slot::after {
+  z-index: 2;
+}
+.dos__scan {
+  position: absolute;
+  inset: 3px;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+  background:
+    linear-gradient(155deg, rgba(255, 255, 255, 0.16), transparent 38%),
+    repeating-linear-gradient(transparent 0 2px, rgba(10, 6, 16, 0.12) 2px 3px);
+}
+.dos__scan::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 18%;
+  top: -20%;
+  background: linear-gradient(
+    transparent,
+    rgba(150, 230, 255, 0.16) 45%,
+    rgba(255, 255, 255, 0.3) 50%,
+    rgba(150, 230, 255, 0.16) 55%,
+    transparent
+  );
+  mix-blend-mode: screen;
+  animation: dos-scan 7s ease-in-out infinite;
+}
+@keyframes dos-scan {
+  0%,
+  55% {
+    top: -20%;
+  }
+  85%,
+  100% {
+    top: 102%;
+  }
 }
 .dos__clip {
   position: absolute;

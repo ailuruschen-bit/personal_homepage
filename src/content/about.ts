@@ -12,7 +12,11 @@ const all = (s: string): T => ({ zh: s, ja: s, en: s });
 export const about = {
   /** What he calls it himself: a passenger's own account of who he is */
   title: { zh: '乘客自述', ja: '乗客の自己申告', en: 'In his own words' },
-  photo: { zh: '照片', ja: '写真', en: 'Photo' },
+  photoAlt: {
+    zh: '陈靖的证件照（像素风）',
+    ja: '陳靖の証明写真（ピクセルアート）',
+    en: 'Portrait of Jing Chen, in pixel art',
+  },
 
   name: {
     label: { zh: '姓名', ja: '氏名', en: 'Name' },
