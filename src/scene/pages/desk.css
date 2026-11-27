@@ -66,95 +66,42 @@
   }
 }
 
-/* Reflections in the varnish: brighter and tighter than the diffuse light */
+/* Reflections in the varnish. A semi-gloss top blurs them, and the grain
+   breaks them up: each is one soft shape, masked by the grain */
 .desk__spec {
   mix-blend-mode: screen;
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='200'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.004 .11' numOctaves='3' seed='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 2.2 -.55'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='200'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.004 .11' numOctaves='3' seed='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 2.2 -.55'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+  -webkit-mask-size: 600px 200px;
+  mask-size: 600px 200px;
 }
-.desk__spec i {
-  position: absolute;
-}
-/* the tube, mirrored in the table: a long upright streak near the left */
-.desk__spec--neon i {
-  left: 3%;
-  top: 14%;
-  width: 11%;
-  height: 62%;
+/* the tube, mirrored: a tall soft streak near the left, brightest at its
+   middle and dying away up and down */
+.desk__spec--neon {
   background: radial-gradient(
-    ellipse 26% 50% at 50% 50%,
-    rgba(255, 170, 225, 0.5),
-    rgba(255, 64, 178, 0.22) 45%,
-    transparent 72%
+    ellipse 5.5% 30% at 6% 46%,
+    rgba(255, 175, 228, 0.34),
+    rgba(255, 64, 178, 0.14) 50%,
+    transparent 100%
   );
 }
-.desk__spec--neon i:nth-child(2) {
-  left: 5.5%;
-  top: 20%;
-  height: 48%;
-  opacity: 0.8;
-}
-.desk__spec--neon i:nth-child(3) {
-  left: 1.5%;
-  top: 28%;
-  width: 8%;
-  height: 40%;
-}
-/* the lamp's bulb, mirrored as a warm hot spot */
-.desk__spec--lamp i {
-  right: 9%;
-  top: 16%;
-  width: 18%;
-  height: 20%;
+/* the lamp's bulb: a warm hot spot under it */
+.desk__spec--lamp {
   background: radial-gradient(
-    ellipse 50% 50% at 50% 50%,
-    rgba(255, 236, 190, 0.55),
-    rgba(255, 186, 110, 0.2) 40%,
-    transparent 70%
+    ellipse 9% 8% at 86% 25%,
+    rgba(255, 236, 196, 0.42),
+    rgba(255, 186, 110, 0.14) 55%,
+    transparent 100%
   );
 }
-.desk__spec--lamp i:nth-child(2) {
-  right: 12%;
-  top: 19%;
-  width: 11%;
-  height: 12%;
-}
-.desk__spec--lamp i:nth-child(3) {
-  right: 6%;
-  top: 13%;
-  width: 26%;
-  height: 28%;
-  opacity: 0.6;
-}
-/* the window, mirrored as a cool band at the far edge */
-.desk__spec--window i {
-  left: 22%;
-  top: 0;
-  width: 56%;
-  height: 16%;
+/* the window: a cool band along the far edge */
+.desk__spec--window {
   background: radial-gradient(
-    ellipse 50% 40% at 50% 50%,
-    rgba(200, 225, 255, 0.32),
-    rgba(96, 160, 255, 0.12) 50%,
-    transparent 75%
+    ellipse 30% 7% at 50% 7%,
+    rgba(205, 226, 255, 0.26),
+    rgba(96, 160, 255, 0.1) 55%,
+    transparent 100%
   );
-}
-.desk__spec--window i:nth-child(2) {
-  left: 30%;
-  width: 18%;
-  top: 3%;
-  height: 9%;
-}
-.desk__spec--window i:nth-child(3) {
-  left: 52%;
-  width: 20%;
-  top: 2%;
-  height: 10%;
-}
-.desk__spec--window i:nth-child(4) {
-  left: 40%;
-  width: 22%;
-  top: 6%;
-  height: 8%;
-  opacity: 0.7;
 }
 /* The near side of the table is out of the lights: dark toward the reader */
 .desk__shade {
@@ -174,20 +121,37 @@
     linear-gradient(0deg, rgba(0, 0, 0, 0.55), transparent 45%);
 }
 
-/* The pointer's shadows, one from each light (desk.ts), over the papers too:
-   whatever casts them is above everything on the table */
+/* The pen's shadows (desk.ts), over the papers too, and the pen itself */
 .desk__shadows {
+  width: 100%;
+  height: 100%;
   opacity: 0;
-  transition: opacity 0.4s;
+  transition: opacity 0.35s;
   mix-blend-mode: multiply;
 }
 .desk__shadows.on {
   opacity: 1;
 }
-.desk__shadows i {
-  position: absolute;
+.desk__pen {
+  position: fixed;
   left: 0;
   top: 0;
-  transform-origin: center;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.25s;
+  transform-origin: 0 8px;
   will-change: transform;
+}
+.desk__pen.on {
+  opacity: 1;
+}
+.desk__pen .pen {
+  display: block;
+  transform-origin: 0 50%;
+  filter: drop-shadow(0 0 0.5px rgba(0, 0, 0, 0.6));
+}
+/* the pen is the pointer while it is shown */
+.page.with-pen,
+.page.with-pen * {
+  cursor: none;
 }

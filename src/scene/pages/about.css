@@ -17,9 +17,13 @@
   position: fixed;
   z-index: 2;
 }
-.page--about .page__in > .desk__cast {
+.page--about .page__in > .desk__pen {
   position: fixed;
   z-index: 3;
+}
+.page--about .page__in > .desk__cast {
+  position: fixed;
+  z-index: 4;
 }
 .dos {
   /* Paper: grain, fibres and uneven ageing, over a warm base */
