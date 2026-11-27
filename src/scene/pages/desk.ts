@@ -196,7 +196,7 @@ function passing(layer: HTMLElement, lights: HTMLElement): () => void {
     const k = (h / 1000) * (0.8 + s.near * 0.7);
     const width = s.width * k;
     const el = document.createElement('i');
-    el.className = 'pass';
+    el.className = 'desk-pass';
     el.style.width = `${width}px`;
     el.style.height = `${h * (0.8 + s.near * 0.7)}px`;
     // Two of it: the shadow itself, soft (light from a broad source, nearer
@@ -211,7 +211,7 @@ function passing(layer: HTMLElement, lights: HTMLElement): () => void {
 
   const lamp = () => {
     const el = document.createElement('i');
-    el.className = 'pass pass--lamp';
+    el.className = 'desk-pass desk-pass--lamp';
     const width = rand(180, 260);
     el.style.width = `${width}px`;
     run(el, width, rand(480, 560) * pace, lights);

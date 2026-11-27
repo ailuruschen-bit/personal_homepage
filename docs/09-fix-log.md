@@ -19,6 +19,32 @@ anything that is now load-bearing because of it.
 
 ---
 
+## F-010 Chrome: carriage faults return after work on the 档案 page
+
+**Symptom.** Rectangular faults over the carriage in Chrome again, after a
+round of work that touched only the about page and the cover.
+
+**Causes.** Two, both over the carriage, neither in the carriage's own code.
+
+1. **A class name clash.** The desk's passing shadows used `.pass`. The
+   carriage window already has a `.pass` (the light sweeping the glass). CSS is
+   global, so `desk.css` gave the window's element `will-change: transform` and
+   a new `top`: a new compositing layer inside the window, over the carriage.
+   The page itself was isolated (hidden, its loops stopped); its stylesheet
+   was not.
+2. **The cover kept animating while hidden.** The monologue's neon name and
+   its blinking caret ran their infinite animations in the hub, inside the
+   cover (`.hero`, opacity 0, `inset: 0`, over the whole stage).
+
+**Fix.** The desk's class is now `.desk-pass`; everything a page adds is
+prefixed with its own block (`.desk`, `.dos`, `.paper`). The cover's
+animations run only in `.idle`.
+
+**Rule.** Nothing new may be animated, or given a layer, anywhere over the
+carriage, visible or not; and page styles never use a bare class name the
+scene might already have. Check with `document.getAnimations()` at the hub:
+only the carriage's own animations should be running.
+
 ## F-009 Chrome: the language switch faults over the carriage
 
 **Symptom.** Switching language at the hub drew garbled rectangles over the

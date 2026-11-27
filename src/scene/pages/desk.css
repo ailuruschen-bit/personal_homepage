@@ -220,17 +220,17 @@
     repeating-linear-gradient(177deg, #000 0 7px, rgba(0, 0, 0, 0.28) 11px 17px, #000 21px);
   mask-composite: intersect;
 }
-.pass {
+.desk-pass {
   position: absolute;
   top: -6%;
   left: 0;
   will-change: transform;
 }
-.pass b {
+.desk-pass b {
   position: absolute;
   inset: 0;
 }
-.pass svg {
+.desk-pass svg {
   display: block;
   color: rgb(34, 28, 52);
   fill: currentColor;
@@ -239,7 +239,7 @@
 .desk__sweep--light {
   mix-blend-mode: screen;
 }
-.pass--lamp {
+.desk-pass--lamp {
   top: -10%;
   height: 80%;
   background: radial-gradient(
