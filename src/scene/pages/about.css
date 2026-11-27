@@ -3,9 +3,19 @@
 .page--about {
   background: #2a1713;
 }
-.page--about .page__in {
+/* The desk sits in the article (desk.ts) but is fixed behind it: everything
+   else in the article is lifted above it, the cast light above all */
+.page--about .page__in > * {
   position: relative;
   z-index: 1;
+}
+.page--about .page__in > .desk {
+  position: fixed;
+  z-index: 0;
+}
+.page--about .page__in > .desk__cast {
+  position: fixed;
+  z-index: 2;
 }
 .dos {
   /* Paper: grain, fibres and uneven ageing, over a warm base */
